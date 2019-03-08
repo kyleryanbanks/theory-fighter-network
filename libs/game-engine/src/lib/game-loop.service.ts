@@ -1,4 +1,4 @@
-import { Observable, of, fromEvent } from 'rxjs';
+import { Observable, of, fromEvent, combineLatest } from 'rxjs';
 import {
   expand,
   filter,
@@ -7,7 +7,8 @@ import {
   switchMap,
   takeUntil,
   tap,
-  distinctUntilChanged
+  distinctUntilChanged,
+  scan
 } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 
@@ -20,6 +21,9 @@ export interface IFrameData {
   providedIn: 'root'
 })
 export class GameLoopService {
+  connected$ = fromEvent<GamepadEvent>(window, 'gamepadconnected');
+  disconnected$ = fromEvent<GamepadEvent>(window, 'gamepaddisconnected');
+
   calculateStep: (prevFrame: IFrameData) => Observable<IFrameData> = (
     prevFrame: IFrameData
   ) => {
@@ -55,9 +59,6 @@ export class GameLoopService {
     );
   }
 
-  connected$ = fromEvent<GamepadEvent>(window, 'gamepadconnected');
-  disconnected$ = fromEvent<GamepadEvent>(window, 'gamepaddisconnected');
-
   getButtonsPerFrames() {
     return this.connected$.pipe(
       tap(console.log),
@@ -75,6 +76,62 @@ export class GameLoopService {
           takeUntil(this.disconnected$)
         );
       })
+    );
+  }
+
+  getMappedButtons() {
+    return this.getButtonsPerFrames().pipe(
+      map(buttons => {
+        return {
+          TAG: buttons['2'],
+          LP: buttons['3'],
+          HP: buttons['5'],
+          STONE: buttons['4'],
+          LK: buttons['0'],
+          HK: buttons['7']
+        };
+      })
+    );
+  }
+
+  getDirection(): Observable<number | null> {
+    return this.getButtonsPerFrames().pipe(
+      map(buttons => {
+        const UP: boolean = buttons['12'];
+        const DOWN: boolean = buttons['13'];
+        const LEFT: boolean = buttons['14'];
+        const RIGHT: boolean = buttons['15'];
+
+        if (UP && !RIGHT && !LEFT) {
+          return 0;
+        } else if (UP && RIGHT) {
+          return 1;
+        } else if (RIGHT && !UP && !DOWN) {
+          return 2;
+        } else if (DOWN && RIGHT) {
+          return 3;
+        } else if (DOWN && !RIGHT && !LEFT) {
+          return 4;
+        } else if (DOWN && LEFT) {
+          return 5;
+        } else if (LEFT && !UP && !DOWN) {
+          return 6;
+        } else if (UP && LEFT) {
+          return 7;
+        } else {
+          return null;
+        }
+      })
+    );
+  }
+
+  getInputs() {
+    return combineLatest(this.getDirection(), this.getMappedButtons()).pipe(
+      distinctUntilChanged((prev, next) => {
+        console.log(prev, next);
+        return prev === next;
+      }),
+      scan((acc, [direction, buttons]) => [...acc, { direction, buttons }], [])
     );
   }
 }
