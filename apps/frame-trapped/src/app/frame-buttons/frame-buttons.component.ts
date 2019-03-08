@@ -8,8 +8,9 @@ import { Component, OnInit, Input } from '@angular/core';
     <img *ngIf="buttons.LK" src="assets/LightKick.png" />
     <img *ngIf="buttons.HK" src="assets/HeavyKick.png" />
     <img *ngIf="buttons.TAG" src="assets/Tag.png" />
-    <img *ngIf="buttons.STONE" src="assets/Storm.png" />
+    <img *ngIf="buttons.STONE" src="assets/Surge.png" />
   `,
+
   styles: [
     `
       img {

@@ -10,6 +10,12 @@ import { Observable } from 'rxjs';
       <ft-frame-direction [direction]="direction$ | async"></ft-frame-direction>
       <ft-frame-buttons [buttons]="buttons$ | async"></ft-frame-buttons>
     </div>
+
+    <div>{{ buttons$ | async | json }}</div>
+    <div *ngFor="let frame of (frames$ | async)">
+      <ft-frame-direction [direction]="frame.direction"></ft-frame-direction>
+      <ft-frame-buttons [buttons]="frame.buttons"></ft-frame-buttons>
+    </div>
   `,
   styles: [
     `
