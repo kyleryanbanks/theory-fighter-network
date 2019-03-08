@@ -6,7 +6,8 @@ import {
   share,
   switchMap,
   takeUntil,
-  tap
+  tap,
+  distinctUntilChanged
 } from 'rxjs/operators';
 import { Injectable } from '@angular/core';
 
@@ -65,21 +66,12 @@ export class GameLoopService {
         return this.getFrames().pipe(
           map(() => {
             const pad = navigator.getGamepads()[id];
-            const buttons = pad.buttons.reduce((buttons, button, index) => {
+            return pad.buttons.reduce((buttons, button, index) => {
               buttons[index] = button.pressed;
               return buttons;
             }, {});
-
-            const axes = pad.axes.reduce((axes, axis, index) => {
-              axes[index] = axis;
-              return axes;
-            }, {});
-
-            return {
-              buttons,
-              axes
-            };
           }),
+          distinctUntilChanged(),
           takeUntil(this.disconnected$)
         );
       })
