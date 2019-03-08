@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="35px" height="35px" viewBox="0 0 35 35" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>Tag</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-137.000000, -69.000000)">
+            <g id="Tag" transform="translate(138.000000, 70.000000)">
+                <circle id="Oval" stroke="#574E6A" stroke-width="2" fill="#000000" cx="16.5" cy="16.5" r="16.5"></circle>
+                <polygon id="Path-11" stroke="#CBC7D3" fill="#DEDBE6" points="5.48095275 7.77993654 5.48095275 17.1530454 10.1553804 17.1530454 10.1553804 12.466491 33 12.466491 22.533509 2 22.533509 7.77993654"></polygon>
+                <polygon id="Path-11" stroke="#CBC7D3" fill="#DEDBE6" transform="translate(14.759524, 24.356459) rotate(180.000000) translate(-14.759524, -24.356459) " points="1 22.5598731 1 31.932982 5.67442761 31.932982 5.67442761 27.2464275 28.5190473 27.2464275 18.0525563 16.7799365 18.0525563 22.5598731"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

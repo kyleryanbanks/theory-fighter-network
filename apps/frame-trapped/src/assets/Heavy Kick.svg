@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="37px" height="36px" viewBox="0 0 37 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>Heavy Kick</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-31.000000, -69.000000)">
+            <g id="Heavy-Kick" transform="translate(31.000000, 70.000000)">
+                <circle id="Oval" stroke="#3C829F" stroke-width="2" fill="#000000" cx="18.5" cy="16.5" r="16.5"></circle>
+                <g id="Kick" transform="translate(1.000000, 4.000000)" fill="#298AD4" stroke="#41BEEE">
+                    <polygon id="Path" points="25.1806241 0 35 9.61674737 22.5057666 25 18.6833025 25 15.6728368 20.4521968 10.5326267 20.4521968 0 12.5 3.89185428 6.35038975 12.0585432 8.61432621 20.4267305 8.61432621"></polygon>
+                    <polyline id="Path-2" points="2.08358568 10 13.1962664 16.77628 18.7482436 16.77628 23.4913546 23"></polyline>
+                </g>
+                <text id="H" stroke="#3F3D87" stroke-width="3" fill="#FFFFFF" font-family="Roboto-Bold, Roboto" font-size="14" font-weight="bold">
+                    <tspan x="0.554199219" y="34">H</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>

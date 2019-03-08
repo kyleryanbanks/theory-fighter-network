@@ -7,5 +7,15 @@
     "tslint.json": "*",
     "nx.json": "*"
   },
-  "projects": {}
+  "projects": {
+    "game-engine": {
+      "tags": []
+    },
+    "frame-trapped": {
+      "tags": []
+    },
+    "frame-trapped-e2e": {
+      "tags": []
+    }
+  }
 }

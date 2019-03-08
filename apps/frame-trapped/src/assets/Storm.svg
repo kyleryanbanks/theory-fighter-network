@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="35px" height="35px" viewBox="0 0 35 35" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>Storm</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-137.000000, -115.000000)">
+            <g id="Storm" transform="translate(138.000000, 116.000000)">
+                <circle id="Oval" stroke="" stroke-width="2" fill="#000000" cx="16.5" cy="16.5" r="16.5"></circle>
+                <g id="Burst" transform="translate(1.000000, 0.000000)" fill="#C4C0C8" stroke="#FFFFFF">
+                    <circle id="Oval" transform="translate(15.539741, 16.533307) rotate(-15.000000) translate(-15.539741, -16.533307) " cx="15.5397409" cy="16.533307" r="11"></circle>
+                    <path d="" id="Path-12"></path>
+                    <path d="M16.6464466,31.3252995 C17.7940214,28.1041439 18.3678088,26.4935661 18.3678088,26.4935661 L20.6464466,31.4935661" id="Path-13" transform="translate(18.646447, 28.993566) rotate(165.000000) translate(-18.646447, -28.993566) "></path>
+                    <path d="M10.6464466,6.3252995 C11.7940214,3.10414389 12.3678088,1.49356609 12.3678088,1.49356609 L14.6464466,6.49356609" id="Path-13" transform="translate(12.646447, 3.993566) rotate(-15.000000) translate(-12.646447, -3.993566) "></path>
+                    <path d="M1.18088486,22.7148738 C2.37803555,19.2380957 2.9766109,17.4997067 2.9766109,17.4997067 L5.2224187,22.6391526" id="Path-13" transform="translate(3.201652, 20.107290) rotate(-109.000000) translate(-3.201652, -20.107290) "></path>
+                    <path d="M26,15.9717461 C27.1475748,12.7505905 27.7213622,11.1400127 27.7213622,11.1400127 L30,16.1400127" id="Path-13" transform="translate(28.000000, 13.640013) rotate(75.000000) translate(-28.000000, -13.640013) "></path>
+                    <polyline id="Path-14" points="18.6464466 6.33293633 24.0795757 0 23.0805961 5.44322301 22.4977754 8.61888644"></polyline>
+                    <polyline id="Path-14" transform="translate(27.110569, 22.630542) rotate(91.000000) translate(-27.110569, -22.630542) " points="24.6105691 24.5087368 29.6105691 18.6305423 28.6912282 23.6829101 28.15487 26.6305423"></polyline>
+                    <polyline id="Path-14" transform="translate(4.067547, 10.561113) rotate(270.000000) translate(-4.067547, -10.561113) " points="1.56754734 12.4393079 6.56754734 6.56111343 5.64820642 11.6134812 5.11184822 14.5611134"></polyline>
+                    <polyline id="Path-14" transform="translate(9.067547, 28.061113) rotate(186.000000) translate(-9.067547, -28.061113) " points="6.06754734 29.9393079 12.0675473 24.0611134 10.9643382 29.1134812 10.3207084 32.0611134"></polyline>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

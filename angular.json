@@ -2,7 +2,155 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "newProjectRoot": "",
-  "projects": {},
+  "projects": {
+    "game-engine": {
+      "root": "libs/game-engine",
+      "sourceRoot": "libs/game-engine/src",
+      "projectType": "library",
+      "prefix": "tfn",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/game-engine/tsconfig.lib.json",
+              "libs/game-engine/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/builders:jest",
+          "options": {
+            "jestConfig": "libs/game-engine/jest.config.js",
+            "tsConfig": "libs/game-engine/tsconfig.spec.json",
+            "setupFile": "libs/game-engine/src/test-setup.ts"
+          }
+        }
+      },
+      "schematics": {}
+    },
+    "frame-trapped": {
+      "root": "apps/frame-trapped/",
+      "sourceRoot": "apps/frame-trapped/src",
+      "projectType": "application",
+      "prefix": "ft",
+      "schematics": {
+        "@nrwl/schematics:component": {
+          "inlineTemplate": true,
+          "inlineStyle": true,
+          "style": "scss"
+        }
+      },
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/frame-trapped",
+            "index": "apps/frame-trapped/src/index.html",
+            "main": "apps/frame-trapped/src/main.ts",
+            "polyfills": "apps/frame-trapped/src/polyfills.ts",
+            "tsConfig": "apps/frame-trapped/tsconfig.app.json",
+            "assets": [
+              "apps/frame-trapped/src/favicon.ico",
+              "apps/frame-trapped/src/assets"
+            ],
+            "styles": ["apps/frame-trapped/src/styles.scss"],
+            "scripts": [],
+            "es5BrowserSupport": true
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/frame-trapped/src/environments/environment.ts",
+                  "with": "apps/frame-trapped/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot": true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "frame-trapped:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "frame-trapped:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "frame-trapped:build"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/frame-trapped/tsconfig.app.json",
+              "apps/frame-trapped/tsconfig.spec.json"
+            ],
+            "exclude": ["**/node_modules/**"]
+          }
+        },
+        "test": {
+          "builder": "@nrwl/builders:jest",
+          "options": {
+            "jestConfig": "apps/frame-trapped/jest.config.js",
+            "tsConfig": "apps/frame-trapped/tsconfig.spec.json",
+            "setupFile": "apps/frame-trapped/src/test-setup.ts"
+          }
+        }
+      }
+    },
+    "frame-trapped-e2e": {
+      "root": "apps/frame-trapped-e2e",
+      "projectType": "application",
+      "prefix": "",
+      "architect": {
+        "e2e": {
+          "builder": "@nrwl/builders:cypress",
+          "options": {
+            "cypressConfig": "apps/frame-trapped-e2e/cypress.json",
+            "tsConfig": "apps/frame-trapped-e2e/tsconfig.e2e.json",
+            "devServerTarget": "frame-trapped:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "frame-trapped:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": "apps/frame-trapped-e2e/tsconfig.e2e.json",
+            "exclude": ["**/node_modules/**"]
+          }
+        }
+      }
+    }
+  },
   "cli": {
     "warnings": {
       "typescriptMismatch": false,
@@ -10,5 +158,6 @@
     },
     "defaultCollection": "@nrwl/schematics"
   },
-  "schematics": {}
+  "schematics": {},
+  "defaultProject": "game-engine"
 }

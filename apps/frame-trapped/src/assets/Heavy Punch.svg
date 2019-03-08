@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="35px" height="36px" viewBox="0 0 35 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 53 (72520) - https://sketchapp.com -->
+    <title>Heavy Punch</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-86.000000, -69.000000)">
+            <g id="Heavy-Punch" transform="translate(85.000000, 70.000000)">
+                <circle id="Oval" stroke="#836516" stroke-width="2" fill="#000000" cx="18.5" cy="16.5" r="16.5"></circle>
+                <g id="Punch" fill="#BB6900" stroke="#ECB037">
+                    <polygon id="Path-4" points="1.80594175 11.7485331 20.3241625 0 24.9386747 0 26.6350573 6.48810875 30.2402365 12.9762175 28.6053807 19.6301388 31.3008418 25.2606285 30.2402365 28.0419912 20.3241625 33 15.8008418 28.0419912 9.8587418 26.4447003 1.80594175 15.4398119"></polygon>
+                    <polyline id="Path-5" points="27.1853784 7.56927398 15.8008418 13.4398119 17.9371099 18.1101003"></polyline>
+                    <path d="M7.56287763,24.0063842 L17.9371099,18.1101003" id="Path-6"></path>
+                    <path d="M5.040092,9.99852546 L12.7499938,21.0582422" id="Path-7"></path>
+                    <path d="M11.5549689,5.71713348 L15.8008418,12.8396872" id="Path-8"></path>
+                    <path d="M17.9371099,1.43574151 L22.5488412,9.99852546" id="Path-9"></path>
+                    <path d="M17.9371099,18.1101003 L22.5488412,18.1101003" id="Path-10"></path>
+                </g>
+                <text id="H" stroke="#653A24" stroke-width="3" fill="#FFFFFF" font-family="Roboto-Bold, Roboto" font-size="14" font-weight="bold">
+                    <tspan x="0.554199219" y="34">H</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>
