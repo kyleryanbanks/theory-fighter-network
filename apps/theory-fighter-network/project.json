@@ -1,0 +1,93 @@
+{
+  "name": "theory-fighter-network",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "prefix": "app",
+  "sourceRoot": "apps/theory-fighter-network/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@angular/build:application",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/theory-fighter-network",
+        "browser": "apps/theory-fighter-network/src/main.ts",
+        "tsConfig": "apps/theory-fighter-network/tsconfig.app.json",
+        "assets": [
+          {
+            "glob": "**/*",
+            "input": "apps/theory-fighter-network/public"
+          }
+        ],
+        "styles": [
+          "apps/theory-fighter-network/src/styles.css"
+        ],
+        "server": "apps/theory-fighter-network/src/main.server.ts",
+        "ssr": {
+          "entry": "apps/theory-fighter-network/src/server.ts"
+        },
+        "outputMode": "server"
+      },
+      "configurations": {
+        "production": {
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "500kb",
+              "maximumError": "1mb"
+            },
+            {
+              "type": "anyComponentStyle",
+              "maximumWarning": "4kb",
+              "maximumError": "8kb"
+            }
+          ],
+          "outputHashing": "all"
+        },
+        "development": {
+          "optimization": false,
+          "extractLicenses": false,
+          "sourceMap": true
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@angular/build:dev-server",
+      "defaultConfiguration": "development",
+      "configurations": {
+        "production": {
+          "buildTarget": "theory-fighter-network:build:production"
+        },
+        "development": {
+          "buildTarget": "theory-fighter-network:build:development"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": [
+        "{options.reportsDirectory}"
+      ],
+      "options": {
+        "reportsDirectory": "coverage/apps/theory-fighter-network"
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "theory-fighter-network:build",
+        "port": 4200,
+        "staticFilePath": "dist/apps/theory-fighter-network/browser",
+        "spa": true
+      }
+    }
+  }
+}

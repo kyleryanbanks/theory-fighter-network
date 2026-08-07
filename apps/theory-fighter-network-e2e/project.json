@@ -1,0 +1,12 @@
+{
+  "name": "theory-fighter-network-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/theory-fighter-network-e2e/src",
+  "tags": [],
+  "implicitDependencies": [
+    "theory-fighter-network"
+  ],
+  "// targets": "to see all targets run: nx show project theory-fighter-network-e2e --web",
+  "targets": {}
+}
