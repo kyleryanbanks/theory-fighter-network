@@ -32,9 +32,48 @@ Stages use the same inheritance behavior as moves: game-level universal stage zo
 
 ---
 
+## Community submission (publish) workflow
+
+Users can selectively publish entities (games, characters, moves, combos, teams, stages, matchups) to the community guide. Publishing is granular: users can publish a character without publishing all its moves, or publish specific combos without pushing the rest of the guide.
+
+**Publish flow:**
+
+1. User clicks "Publish to community" from their private guide.
+2. App scans all entities in the guide and displays a tree view:
+   - Games (with count of publishable children)
+   - Characters (with count of publishable moves/combos)
+   - Moves (grouped by character or game-universal)
+   - Combos (grouped by scope: universal, character, team)
+   - Teams
+   - Stages
+   - Matchups
+3. Tree is pre-populated based on **smart preselection**:
+   - Only entities that have **never been published** or have been **modified since last publish** (`updatedAt > lastPublishedAt`) are pre-checked.
+   - Entities already pushed with no local changes are left unchecked to avoid unnecessary writes.
+   - Each pre-checked entity includes a clear "new" or "modified" indicator.
+4. User can add/remove entities from the selection before submitting this push.
+5. On submit:
+   - Only selected entities with new or modified local data are written to community collections.
+   - First-time pushes create the community record and initialize convergence linking.
+   - Future pushes reuse the same `communityId` and update the existing community submission rather than creating a second published copy.
+   - `lastPublishedAt` is set to current time on each entity that was actually pushed.
+   - UI shows a success summary: "Published X games, Y characters, Z moves."
+
+**Timestamp logic:**
+- `updatedAt`: Updated on any local entity modification.
+- `lastPublishedAt`: Set/updated only when entity is explicitly published.
+- **Out-of-date detection**: If `updatedAt > lastPublishedAt` and entity has a `communityId`, show "Local changes not yet published" in the UI.
+- **Write minimization**: If `updatedAt <= lastPublishedAt`, skip that entity during publish so unchanged data is not sent again.
+
+---
+
 ### Identity link + merge notes
 
+
 - Programmatic exploration is powered by transition edges, sequence patterns, range profiles, and coverage metrics.
+- Move identity is determined by trigger plus preconditions, not by the user-defined move name.
+- When a game uses universal context rules such as close/far proximity, those distinctions must be represented through game-defined states consumed by move preconditions.
+- UI should explain that publishing a move compares trigger + preconditions to determine whether it aligns with an existing community move record; the move name is treated as variant display text only.
 - Combo arrays are handled atomically for identity/merge; same ordered move sequence = same base combo identity.
 - Timing-only differences for same move sequence are stored as separate combo variants rather than partial array edits.
 

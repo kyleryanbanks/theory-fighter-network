@@ -67,12 +67,15 @@ interface GameDocument {
   comboScalingSystem: ComboScalingSystem;
   guideVersion: GuideVersionReference;
 
+  // Character states that allow blocking. Subset of playerStateModel.stateTags keys.
+  // Example: ['standing', 'crouching'] for SF6, ['standing', 'crouching', 'airborne'] for MvC2.
+  blockStates: string[];
+
   stagesAffectGameplay: boolean;
   
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -87,10 +90,9 @@ interface StageDocument {
   comparativeAttributes: ComparativeAttribute[];
   guideVersion: GuideVersionReference;
 
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -267,10 +269,9 @@ interface CharacterDocument {
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -282,10 +283,7 @@ interface CharacterDocument {
 interface MoveDocument {
   id: string;
   gameId: string;
-  characterId?: string; // absent for game-universal moves
-  parentScope: 'game' | 'character';
-  canonicalKey: string;
-  aliasKeys?: string[];
+  characterId?: string; // absent for game-universal moves; presence/absence implies scope
 
   // Inheritance: only present on character-scoped moves seeded from a game-level move.
   // The game acts as a character template; character moves inherit all game-level field
@@ -294,61 +292,26 @@ interface MoveDocument {
   fieldOverrides?: (keyof MoveDocument)[]; // fields the character explicitly overrides
 
   name: string;
-  inputNotation?: string;
-  category: 'normal' | 'special' | 'super' | 'throw' | 'universal' | 'other';
-  actionFamilyKey?: string; // links state-variant moves produced from the same trigger family
+  categoryKey?: string; // references GameDocument move category definitions
 
   trigger: {
     triggerId?: string; // references GameDocument.actionTriggers
-    inputFormNotation?: string; // exact game-defined form used by this move variant
+    inputFrames?: TriggerInputFrame[]; // structured frame-by-frame input representation
   };
 
-  availability: {
+  // States required before this move can be triggered.
+  preconditions: {
     requiredAllPlayerStateTags?: string[];  // e.g. ["airborne"], ["blockstun"], ["neutral"]
     forbiddenPlayerStateTags?: string[];    // e.g. ["hitstun"]
     requiredAllOpponentStateTags?: string[]; // e.g. ["shocked"]
-    appliesOpponentStateTags?: string[];     // states this move creates on hit/use
     followUpOnlyFromMoveIds?: string[]; // move is only available as follow-up
     cancelFromMoveIds?: string[];       // move can be canceled into from these moves
   };
 
-  // Reach and route viability at different hit distances.
-  rangeProfile?: MoveRangeProfile;
-
-  // How this move interacts with the game's combo scaling / anti-infinite rules.
-  comboScalingEffects?: MoveComboScalingEffects;
-
-  // Present when this move spawns a projectile entity.
-  projectileProfile?: ProjectileProfile;
-
-  // Present when this move displaces the character's position.
-  positionalEffect?: PositionalEffect;
-
-  // Links moves that share an opening animation before branching.
-  sharedStartup?: {
-    sharedWithMoveIds: string[];
-    sharedStartupFrames?: number;   // frames shared before branch point
-    branchPointFrame?: number;      // frame at which input determines which branch fires
-    knowledgeStatus: 'observed' | 'measured' | 'verified';
-  };
-
   // Ordered phases within a single move — use when a move has distinct internal events
-  // (e.g. multiple projectiles at different timings, strike then reposition, counter window).
-  // Top-level frameData still captures overall startup/recovery.
+  // (e.g. multiple projectiles at different timings, strike then reposition, counter follow-up).
+  // Each phase defines its own effects, range, and scaling behavior.
   phases?: MovePhase[];
-
-  // Exact data fields are optional only because they may be unknown yet.
-  frameData?: {
-    startup?: number;
-    active?: number;
-    recovery?: number;
-    total?: number;
-    outcomes?: {
-      onBlock?: FrameOutcomeWindow;
-      onHit?: FrameOutcomeWindow;
-      onCounterHit?: FrameOutcomeWindow;
-    };
-  };
 
   frameDataKnowledge: {
     status: 'observed' | 'measured' | 'verified';
@@ -360,61 +323,10 @@ interface MoveDocument {
   comparativeAttributes: ComparativeAttribute[];
   comparativeConstraints?: ComparativeConstraint[];
   comparativeOrderings?: ComparativeOrderingRef[];
-  resourceEffects?: ResourceEffect[];
 
-  // Complexity contribution for combo difficulty computation.
-  inputComplexity: {
-    motionType:
-      | 'singleNormal'
-      | 'charge'
-      | 'quarterCircle'
-      | 'dragonPunch'
-      | 'halfCircle'
-      | 'doubleQuarterCircle'
-      | 'custom';
-    customMotionKey?: string;
-  };
-
-  // How this move interacts with stage zones (splat/break/durability effects).
-  stageInteraction?: {
-    targetZoneIds?: string[];        // optional precise zone targeting
-    targetZoneTypes?: Array<'wall' | 'floor' | 'ceiling'>;
-
-    causesSplat?: {
-      enabled: boolean;
-      appliesOpponentStateTag?: string; // game-defined state tag applied when splat occurs
-    };
-
-    causesBreak?: {
-      enabled: boolean;
-      appliesOpponentStateTag?: string; // game-defined state tag applied when break occurs
-    };
-
-    causesScreenTransition?: {
-      transitions: boolean;
-      repositionCharacters?: {
-        playerX?: number;
-        playerY?: number;
-        opponentX?: number;
-        opponentY?: number;
-      };
-      stillComboable?: boolean;
-    };
-
-    durabilityEffect?: {
-      applies: boolean;
-      points?: number;
-    };
-  };
-
-  // Describes how this move impacts opponent position.
-  // Suggestion logic combines attacker/opponent post-move positions with move ranges.
-  opponentPositionalEffect?: OpponentPositionalEffect;
-
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   guideVersion: GuideVersionReference;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -604,38 +516,117 @@ interface OpponentPositionalEffect {
 }
 
 interface MovePhase {
-  label?: string;              // e.g. "first fireball", "reposition", "counter window"
+  label?: string;              // e.g. "first fireball", "reposition", "counter follow-up"
   startFrame?: number;         // relative to move start
   frameData?: {
-    duration?: number;
+    startup?: number;
     active?: number;
-    outcomes?: {
-      onBlock?: FrameOutcomeWindow;
-      onHit?: FrameOutcomeWindow;
-      onCounterHit?: FrameOutcomeWindow;
-    };
+    recovery?: number;
   };
-  positionalEffect?: PositionalEffect;
-  projectileProfile?: ProjectileProfile;
-  resourceEffects?: ResourceEffect[];
-  counterWindow?: CounterWindow;
+  
+  // Reach and route viability at different hit distances.
+  rangeProfile?: MoveRangeProfile;
+  
+  // How this phase interacts with the game's combo scaling / anti-infinite rules.
+  comboScalingEffects?: MoveComboScalingEffects;
+  
+  // Effects describe what happens when this phase connects/is blocked/whiffs.
+  // Each outcome type has playerEffects and opponentEffects as siblings.
+  effects?: {
+    onHit?: MoveOutcomeEffect;
+    onBlock?: MoveOutcomeEffect;
+    onCounterHit?: MoveOutcomeEffect;
+    onWhiff?: MoveOutcomeEffect;
+    // Secondary trigger for counter/parry moves: what happens when the counter is successfully triggered
+    onSecondaryTrigger?: MoveOutcomeEffect;
+  };
+
+  cancelOptions?: {
+    onHit?: PhaseCancelRule[];
+    onBlock?: PhaseCancelRule[];
+    onCounterHit?: PhaseCancelRule[];
+    onWhiff?: PhaseCancelRule[];
+    onSecondaryTrigger?: PhaseCancelRule[];
+  };
+  
+  // Subset of GameDocument.blockStates that can block this phase.
+  // Empty array means unblockable. Absent or undefined means any game blockState can block it.
+  canBeBlocked?: string[];
+  
   knowledgeStatus: 'observed' | 'measured' | 'verified';
   notes?: string;
 }
 
-interface CounterWindow {
-  activeFrames?: number;
-  triggerCondition?: string;       // e.g. "opponent strikes during active frames"
-  followUpMoveId?: string;         // move that fires automatically on trigger
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
+interface MoveOutcomeEffect {
+  // Effects on the attacking player (position changes, resource costs/gains, state tags applied)
+  playerEffects?: {
+    positionalEffect?: PositionalEffect;
+    resourceEffects?: ResourceEffect[];
+    appliesStateTags?: string[];
+  };
+  
+  // Effects on the defending opponent (position changes, damage/meter, state tags applied)
+  opponentEffects?: {
+    positionalEffect?: PositionalEffect;
+    resourceEffects?: ResourceEffect[];
+    appliesStateTags?: string[];
+  };
+  
+  // How this phase interacts with stage zones (splat/break/durability effects).
+  stageInteraction?: {
+    targetZoneIds?: string[];
+    targetZoneTypes?: Array<'wall' | 'floor' | 'ceiling'>;
+    causesSplat?: {
+      enabled: boolean;
+      appliesOpponentStateTag?: string;
+    };
+    causesBreak?: {
+      enabled: boolean;
+      appliesOpponentStateTag?: string;
+    };
+    causesScreenTransition?: {
+      transitions: boolean;
+      repositionCharacters?: {
+        playerX?: number;
+        playerY?: number;
+        opponentX?: number;
+        opponentY?: number;
+      };
+      stillComboable?: boolean;
+    };
+    durabilityEffect?: {
+      applies: boolean;
+      points?: number;
+    };
+  };
+  
+  frameAdvantage?: FrameOutcomeWindow;
+  knowledgeStatus?: 'observed' | 'measured' | 'verified';
+}
+
+interface PhaseCancelRule {
+  windowStartFrame?: number;
+  windowEndFrame?: number;
+  allowedMoveIds?: string[];
+  requiredPlayerStateTags?: string[];
+  requiredOpponentStateTags?: string[];
   notes?: string;
+}
+
+interface TriggerInputFrame {
+  // Cardinal directions (numpad notation: 1-9, or empty array for neutral).
+  directions: number[];
+  
+  // Button keys defined in GameDocument.inputSystem.
+  buttons: string[];
+  
+  // How many frames this input state is held. Defaults to 1 if undefined.
+  durationFrames?: number;
 }
 
 interface ResourceEffect {
-  resourceKey: string;
-  effectType: 'cost' | 'gain' | 'drain' | 'set';
-  amount?: number;
-  condition?: 'onUse' | 'onHit' | 'onBlock' | 'onCounterHit' | 'onWhiff' | 'passive';
+  resourceKey: string;  // references key in GameDocument.resourceModel
+  amount: number;       // positive = gain, negative = cost
 }
 
 interface CharacterLoadoutOption {
@@ -665,10 +656,9 @@ interface TeamDocument {
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -712,10 +702,9 @@ interface ComboDocument {
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  visibility: 'public' | 'private';
   ownerId: string;
   communityId?: string;
-  convergence?: ConvergenceState;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -803,6 +792,12 @@ interface MatchupDocument {
   scenarioGraph: MatchupScenarioGraph;
   notes?: string;
   verification?: VerificationSectionMap;
+
+  ownerId: string;
+  communityId?: string;
+  lastPublishedAt?: Timestamp; // if absent, entity has not been published to community yet
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 interface MatchupSide {
@@ -872,6 +867,28 @@ interface SuggestionItem {
     | 'moveDetails'
     | 'sequences'
     | 'matchups';
+}
+```
+
+### Community guide aggregation
+
+```ts
+interface GuideDocument {
+  id: string;  // Firebase ID (the communityId that entities point to)
+  gameId: string;  // scoped to single game only
+  
+  // Published entities for this game only
+  publishedEntities: {
+    characterIds: string[];
+    moveIds: string[];
+    comboIds: string[];
+    teamIds: string[];
+    stageIds: string[];
+    matchupIds: string[];
+  };
+  
+  // Debug: ordered history of all published entity IDs
+  publishHistory: string[];
 }
 ```
 
