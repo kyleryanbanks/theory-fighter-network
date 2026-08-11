@@ -63,7 +63,6 @@ interface GameDocument {
   playerStateModel: PlayerStateModel;
   opponentStateModel: OpponentStateModel;
   resourceModel: ResourceModel;
-  actionTriggers: ActionTriggerDefinition[];
   comboScalingSystem: ComboScalingSystem;
   guideVersion: GuideVersionReference;
 
@@ -177,24 +176,6 @@ interface ResourceDefinition {
   customUnitLabel?: string;
 }
 
-interface ActionTriggerDefinition {
-  id: string;
-  label: string; // e.g. "Universal Defense", "Dash", "Quick Skill"
-  inputForms: TriggerInputForm[];
-}
-
-interface TriggerInputForm {
-  notation: string;      // game-defined notation for this trigger form
-  formType: 'raw' | 'macro' | 'shortcut';
-  consumesRawButtons: boolean; // false when trigger does not emit underlying raw buttons
-  holdDuration?: {
-    type: 'tap' | 'hold' | 'timed-hold';
-    minFrames?: number;   // minimum frames held to qualify as this input type
-    maxFrames?: number;   // upper bound for timed-hold windows
-    knowledgeStatus: 'observed' | 'measured' | 'verified';
-  };
-}
-
 interface SliderAxisDefinition {
   key: string;    // e.g. "startup", "damage", "rangeX" — matches ComparativeAttribute.property
   label: string;
@@ -294,10 +275,8 @@ interface MoveDocument {
   name: string;
   categoryKey?: string; // references GameDocument move category definitions
 
-  trigger: {
-    triggerId?: string; // references GameDocument.actionTriggers
-    inputFrames?: TriggerInputFrame[]; // structured frame-by-frame input representation
-  };
+  // Input sequence for this move, using buttons defined in GameDocument.inputSystem
+  inputFrames?: TriggerInputFrame[]; // structured frame-by-frame input representation
 
   // States required before this move can be triggered.
   preconditions: {

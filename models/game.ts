@@ -32,7 +32,6 @@ export interface GameDocument {
   playerStateModel: PlayerStateModel;
   opponentStateModel: OpponentStateModel;
   resourceModel: ResourceModel;
-  actionTriggers: ActionTriggerDefinition[];
   comboScalingSystem: ComboScalingSystem;
   guideVersion: GuideVersionReference;
 
@@ -81,30 +80,6 @@ export interface OpponentStateModel {
  */
 export interface ResourceModel {
   resources: ResourceDefinition[];
-}
-
-/**
- * Action trigger definition (macro, special command, etc.)
- */
-export interface ActionTriggerDefinition {
-  id: string;
-  label: string;
-  inputForms: TriggerInputForm[];
-}
-
-/**
- * Input form for an action trigger
- */
-export interface TriggerInputForm {
-  notation: string;
-  formType: 'raw' | 'macro' | 'shortcut';
-  consumesRawButtons: boolean;
-  holdDuration?: {
-    type: 'tap' | 'hold' | 'timed-hold';
-    minFrames?: number;
-    maxFrames?: number;
-    knowledgeStatus: 'observed' | 'measured' | 'verified';
-  };
 }
 
 /**

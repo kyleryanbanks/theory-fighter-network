@@ -22,10 +22,8 @@ export interface MoveDocument {
   name: string;
   categoryKey?: string;
 
-  trigger: {
-    triggerId?: string;
-    inputFrames?: TriggerInputFrame[];
-  };
+  // Input sequence for this move, using buttons defined in GameDocument.inputSystem
+  inputFrames?: TriggerInputFrame[];
 
   preconditions: {
     requiredAllPlayerStateTags?: string[];
