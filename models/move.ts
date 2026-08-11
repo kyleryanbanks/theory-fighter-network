@@ -35,10 +35,6 @@ export interface MoveDocument {
 
   phases?: MovePhase[];
 
-  frameDataKnowledge: {
-    status: 'observed' | 'measured' | 'verified';
-    sourceNotes?: string;
-  };
   verification?: VerificationSectionMap;
 
   comparativeAttributes: ComparativeAttribute[];

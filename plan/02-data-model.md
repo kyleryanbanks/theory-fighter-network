@@ -292,10 +292,6 @@ interface MoveDocument {
   // Each phase defines its own effects, range, and scaling behavior.
   phases?: MovePhase[];
 
-  frameDataKnowledge: {
-    status: 'observed' | 'measured' | 'verified';
-    sourceNotes?: string;
-  };
   verification?: VerificationSectionMap;
 
   // Relative values remain useful before exact measurements are known.
@@ -914,15 +910,14 @@ interface EntityLink {
 A move's knowledge classification (exact vs exploratory) is **inferred at runtime** from its data state, not stored explicitly:
 
 **A move is exact when all of:**
-- `frameDataKnowledge.status === 'verified'` or `'measured'` (NOT 'observed')
 - All `comparativeAttributes[].kind === 'exact'` (no 'observed' or 'inferred' attributes)
 - All `phases[].knowledgeStatus === 'verified'` or `'measured'` (if phases exist)
 - All `MoveOutcomeEffect.knowledgeStatus === 'verified'` or `'measured'` (if effects exist)
 - All `FrameOutcomeWindow` values are precise (base, min, max all present, not ranges)
+- No `comparativeConstraints` or `comparativeOrderings` (no comparative data)
 
 **A move is exploratory when:**
 - Any attribute is `'observed'` or `'inferred'`
-- `frameDataKnowledge.status === 'observed'`
 - `comparativeConstraints` or `comparativeOrderings` exist (comparative data)
 - Any `knowledgeStatus` field is `'observed'`
 - Range data uses bounds (`lowerBound`/`upperBound`) instead of exact values
