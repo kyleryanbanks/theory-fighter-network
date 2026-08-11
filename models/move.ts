@@ -20,7 +20,10 @@ export interface MoveDocument {
   fieldOverrides?: (keyof MoveDocument)[];
 
   name: string;
-  categoryKey?: string;
+  
+  // Game-defined move type/classification (e.g., 'strike', 'throw', 'projectile')
+  // References GameDocument.moveTypes
+  moveType?: string;
 
   // Input sequence for this move, using buttons defined in GameDocument.inputSystem
   inputFrames?: TriggerInputFrame[];

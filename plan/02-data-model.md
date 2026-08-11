@@ -63,6 +63,7 @@ interface GameDocument {
   playerStateModel: PlayerStateModel;
   opponentStateModel: OpponentStateModel;
   resourceModel: ResourceModel;
+  moveTypes: MoveTypeDefinition[];
   comboScalingSystem: ComboScalingSystem;
   guideVersion: GuideVersionReference;
 
@@ -176,6 +177,12 @@ interface ResourceDefinition {
   customUnitLabel?: string;
 }
 
+interface MoveTypeDefinition {
+  key: string;
+  label: string;
+  description?: string;
+}
+
 interface SliderAxisDefinition {
   key: string;    // e.g. "startup", "damage", "rangeX" — matches ComparativeAttribute.property
   label: string;
@@ -273,7 +280,7 @@ interface MoveDocument {
   fieldOverrides?: (keyof MoveDocument)[]; // fields the character explicitly overrides
 
   name: string;
-  categoryKey?: string; // references GameDocument move category definitions
+  moveType?: string; // game-defined move type/classification (e.g., 'strike', 'throw', 'projectile'); references GameDocument.moveTypes
 
   // Input sequence for this move, using buttons defined in GameDocument.inputSystem
   inputFrames?: TriggerInputFrame[]; // structured frame-by-frame input representation

@@ -32,6 +32,7 @@ export interface GameDocument {
   playerStateModel: PlayerStateModel;
   opponentStateModel: OpponentStateModel;
   resourceModel: ResourceModel;
+  moveTypes: MoveTypeDefinition[];
   comboScalingSystem: ComboScalingSystem;
   guideVersion: GuideVersionReference;
 
@@ -80,6 +81,15 @@ export interface OpponentStateModel {
  */
 export interface ResourceModel {
   resources: ResourceDefinition[];
+}
+
+/**
+ * Move type definition for game-specific attack classifications
+ */
+export interface MoveTypeDefinition {
+  key: string;
+  label: string;
+  description?: string;
 }
 
 /**
