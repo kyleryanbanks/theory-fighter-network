@@ -70,7 +70,6 @@ export interface ComparativeConstraint {
   property: ComparativeProperty;
   relation: 'lessThan' | 'greaterThan' | 'equalTo';
   otherMoveId: string;
-  knowledgeClass: 'private-exploratory' | 'shared-exploratory';
 }
 
 /**
@@ -79,7 +78,6 @@ export interface ComparativeConstraint {
 export interface ComparativeOrdering {
   id: string;
   property: ComparativeProperty;
-  knowledgeClass: 'private-exploratory' | 'shared-exploratory';
   groups: ComparativeOrderingGroup[];
 }
 
@@ -129,7 +127,6 @@ export interface ConvergenceState {
   alignedRecordCount: number;
   contradictoryVariantCount: number;
   distinctContributorCount: number;
-  knowledgeClass: 'exact' | 'exploratory';
   fieldAgreement?: Record<string, number>;
   lastAggregatedAt: Timestamp;
 }

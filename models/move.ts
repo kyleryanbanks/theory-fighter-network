@@ -94,7 +94,6 @@ export interface MovePhase {
 
   canBeBlocked?: string[];
 
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
   notes?: string;
 }
 
@@ -195,7 +194,6 @@ export interface MoveOutcomeEffect {
   };
 
   frameAdvantage?: FrameOutcomeWindow;
-  knowledgeStatus?: 'observed' | 'measured' | 'verified';
 }
 
 /**
@@ -276,7 +274,6 @@ export interface ProjectileProfile {
   durability: {
     priorityLevel?: number;
     durabilityPoints?: number;
-    knowledgeStatus: 'observed' | 'measured' | 'verified';
     customNotes?: string;
   };
 
@@ -296,5 +293,4 @@ export interface ProjectileClashResult {
   againstMoveId: string;
   result: 'wins' | 'ties' | 'loses' | 'passes-through' | 'unknown';
   conditionsNotes?: string;
-  knowledgeClass: 'observed' | 'measured' | 'verified';
 }

@@ -110,7 +110,6 @@ export interface HitstunScalingSystem {
   model: 'linear' | 'step' | 'proration-table' | 'custom';
   minimumHitstunFrames?: number;
   resetConditions?: string[];
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
   notes?: string;
 }
 
@@ -122,7 +121,6 @@ export interface DamageScalingSystem {
   model: 'linear' | 'step' | 'proration-table' | 'custom';
   minimumDamagePercent?: number;
   resetConditions?: string[];
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
   notes?: string;
 }
 
@@ -132,7 +130,6 @@ export interface DamageScalingSystem {
 export interface AntiInfiniteSystem {
   enabled: boolean;
   mechanics: string[];
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
   notes?: string;
 }
 
@@ -142,5 +139,4 @@ export interface AntiInfiniteSystem {
 export interface ProjectileDurabilitySystem {
   systemType: 'priority' | 'points' | 'priority-and-points' | 'none' | 'custom';
   description?: string;
-  knowledgeStatus: 'observed' | 'measured' | 'verified';
 }
