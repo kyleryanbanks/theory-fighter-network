@@ -908,3 +908,23 @@ interface EntityLink {
 - State-variant moves that share a trigger are linked by `actionFamilyKey` while remaining separate move records.
 - Game-level moves (`parentScope: 'game'`) act as character templates; character moves are seeded from them on character creation. Only fields listed in `fieldOverrides` differ from the game-level source — all other values resolve from the game-level move.
 - When a game-level move is updated, all character moves that have not overridden the changed field automatically reflect the new value. Character moves with an existing `fieldOverride` on that field are flagged for review via `VerificationSectionMap`.
+
+### Move knowledge classification (inferred)
+
+A move's knowledge classification (exact vs exploratory) is **inferred at runtime** from its data state, not stored explicitly:
+
+**A move is exact when all of:**
+- `frameDataKnowledge.status === 'verified'` or `'measured'` (NOT 'observed')
+- All `comparativeAttributes[].kind === 'exact'` (no 'observed' or 'inferred' attributes)
+- All `phases[].knowledgeStatus === 'verified'` or `'measured'` (if phases exist)
+- All `MoveOutcomeEffect.knowledgeStatus === 'verified'` or `'measured'` (if effects exist)
+- All `FrameOutcomeWindow` values are precise (base, min, max all present, not ranges)
+
+**A move is exploratory when:**
+- Any attribute is `'observed'` or `'inferred'`
+- `frameDataKnowledge.status === 'observed'`
+- `comparativeConstraints` or `comparativeOrderings` exist (comparative data)
+- Any `knowledgeStatus` field is `'observed'`
+- Range data uses bounds (`lowerBound`/`upperBound`) instead of exact values
+
+This inference avoids redundant state fields while allowing the UI and services to query the effective knowledge level on demand.
