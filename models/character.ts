@@ -5,6 +5,7 @@
 import { Timestamp } from 'firebase/firestore';
 import {
   GuideVersionReference,
+  CommunityMetadata,
   VerificationSectionMap,
   SliderAxisDefinition,
   StateTagDefinition,
@@ -15,7 +16,6 @@ export interface CharacterDocument {
   id: string;
   gameId: string;
   semanticKey: string; // hash(gameSemanticKey + normalizedCharacterName)
-  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   archetypes: string[];
 
@@ -29,9 +29,7 @@ export interface CharacterDocument {
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

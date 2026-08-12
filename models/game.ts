@@ -3,15 +3,14 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, SliderAxisDefinition, StateTagDefinition, ResourceDefinition } from './shared';
+import { GuideVersionReference, CommunityMetadata, SliderAxisDefinition, StateTagDefinition, ResourceDefinition } from './shared';
 
 // Re-export common types for convenience
-export { SliderAxisDefinition, StateTagDefinition, ResourceDefinition };
+export { SliderAxisDefinition, StateTagDefinition, ResourceDefinition, CommunityMetadata };
 
 export interface GameDocument {
   id: string;
   semanticKey: string; // hash(normalizedGameName + versionFamily)
-  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   releaseYear: number;
   publisher: string;
@@ -40,9 +39,7 @@ export interface GameDocument {
   blockStates: string[];
   stagesAffectGameplay: boolean;
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

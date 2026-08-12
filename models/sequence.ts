@@ -3,7 +3,7 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, VerificationSectionMap } from './shared';
+import { GuideVersionReference, CommunityMetadata, VerificationSectionMap } from './shared';
 
 export interface SequenceDocument {
   id: string;
@@ -17,7 +17,6 @@ export interface SequenceDocument {
   };
 
   semanticKey: string; // hash(gameSemanticKey + normalizedMoveSequence)
-  semanticFingerprint?: string; // published payload fingerprint
 
   name?: string;
   notation?: string;
@@ -29,9 +28,7 @@ export interface SequenceDocument {
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

@@ -3,22 +3,19 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, ComparativeAttribute } from './shared';
+import { GuideVersionReference, CommunityMetadata, ComparativeAttribute } from './shared';
 
 export interface StageDocument {
   id: string;
   gameId: string;
   semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
-  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   notes?: string;
 
   comparativeAttributes: ComparativeAttribute[];
   guideVersion: GuideVersionReference;
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -32,7 +29,6 @@ export interface StageZoneDocument {
   stageId?: string;
   parentScope: 'game' | 'stage';
   semanticKey: string; // hash(gameSemanticKey + stageSemanticKey + zoneType + side)
-  semanticFingerprint?: string; // published payload fingerprint
   inheritedFromZoneId?: string;
   fieldOverrides?: (keyof StageZoneDocument)[];
 
@@ -61,6 +57,7 @@ export interface StageZoneDocument {
   };
 
   guideVersion: GuideVersionReference;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
