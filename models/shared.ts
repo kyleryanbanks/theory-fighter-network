@@ -30,13 +30,12 @@ export interface ResourceDefinition {
 }
 
 /**
- * Versioning and convergence tracking for community guides
+ * Versioning tracking for guides
  */
 export interface GuideVersionReference {
   targetVersion: 'latest' | string;
   isVersionLocked: boolean;
   resolvedGameVersion: string;
-  convergenceKey: string; // `${gameCanonicalKey}@${resolvedGameVersion}`
   lastVerifiedAt?: Timestamp;
   lastKnownLatestVersion?: string;
   isOutOfDate?: boolean;
@@ -120,26 +119,6 @@ export interface GuideDocument {
   publishHistory: string[];
 }
 
-/**
- * Convergence tracking for community records
- */
-export interface ConvergenceState {
-  alignedRecordCount: number;
-  contradictoryVariantCount: number;
-  distinctContributorCount: number;
-  fieldAgreement?: Record<string, number>;
-  lastAggregatedAt: Timestamp;
-}
-
-/**
- * Entity linking for convergence and merge workflows
- */
-export interface EntityLink {
-  canonicalKey: string;
-  linkedEntityId?: string;
-  linkMatchStrength: 'manual' | 'high' | 'medium' | 'low';
-  lastComparedAt?: Timestamp;
-}
 
 /**
  * Exploration coverage tracking

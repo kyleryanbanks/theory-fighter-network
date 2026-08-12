@@ -16,6 +16,9 @@ export interface ComboDocument {
     requiredOrderedCharacterIds: string[];
   };
 
+  semanticKey: string; // hash(gameSemanticKey + normalizedMoveSequence)
+  semanticFingerprint?: string; // published payload fingerprint
+
   name?: string;
   notation?: string;
 
@@ -27,7 +30,7 @@ export interface ComboDocument {
   verification?: VerificationSectionMap;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -10,7 +10,8 @@ export { SliderAxisDefinition, StateTagDefinition, ResourceDefinition };
 
 export interface GameDocument {
   id: string;
-  canonicalKey: string;
+  semanticKey: string; // hash(normalizedGameName + versionFamily)
+  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   releaseYear: number;
   publisher: string;
@@ -40,7 +41,7 @@ export interface GameDocument {
   stagesAffectGameplay: boolean;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

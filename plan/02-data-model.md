@@ -140,12 +140,51 @@ Stages have:
 - Team combos and universal combos enable team-specific routing
 - Matchups track character-vs-character dynamics with specific routing and anti-strategy info
 
-### Community & Convergence
+### Community Publishing Model
 
-- Guides can be published to community with `publishHistory[]` (communityId tracking)
-- `GuideDocument` tracks which characters/moves/combos are published from a guide
-- `ConvergenceState` aggregates community data (aligned records, contradictions, distinct contributors)
-- Exact vs exploratory classification is inferred from data agreement and contradiction patterns
+- Each published entity gets a `publishedId` (Firestore doc ID) on first publish
+- Multiple users can publish independent versions of the same logical entity
+- All versions of an entity share a `semanticKey` (identity grouping)
+- Client-side queries aggregate all published versions by `semanticKey` to display confidence/variants
+- No server-side convergence logic; all aggregation happens client-side
+- `GuideDocument.publishHistory[]` tracks which `publishedId`s were published from this guide
+
+### Semantic Key System
+
+**Concept**: Semantic keys identify **logical entity identity** across variants and versions.
+
+**Computation**: `semanticKey = hash(identity_fields_only)` where identity fields are normalized values that define "is this the same entity?"
+
+**Semantics per entity type:**
+- **Game**: `normalizedGameName + versionFamily`
+- **Character**: `gameSemanticKey + normalizedCharacterName`
+- **Move**: `gameSemanticKey + (characterSemanticKey or empty) + normalizedInputFrames + normalizedPreconditions`
+- **Combo**: `gameSemanticKey + normalizedMoveSequence` (ordered move semanticKeys)
+- **Stage**: `gameSemanticKey + normalizedStageName`
+- **StageZone**: `gameSemanticKey + stageSemanticKey + zoneType + side`
+- **Team**: `gameSemanticKey + ordered character semanticKeys`
+- **Matchup**: `gameSemanticKey + ordered character pair semanticKeys`
+
+**Rules:**
+- Exclude metadata from semantic key (timestamps, ownerId, notes, etc.)
+- Include only fields that define entity identity
+- `semanticKey` is immutable per entity (changing identity = new entity)
+- Used for cross-version matching and community variant grouping
+
+### Semantic Fingerprinting
+
+**Concept**: Fingerprints identify **exact semantic equivalence** of published values.
+
+**Computation**: `semanticFingerprint = hash(same_fields_as_semanticKey + all_gameplay_values)`
+
+**When computed:**
+- At publish time (required) on the exact payload
+- Optional during local edit for UI preview
+
+**Use cases:**
+- Deduplicating identical variants (exact match = same fingerprint)
+- Confidence calculation (% of published versions matching top fingerprint)
+- Conflict detection (multiple distinct fingerprints = conflicting data)
 
 ---
 
@@ -185,4 +224,4 @@ All entities include `guideVersion: GuideVersionReference` to:
 - Track which game version a guide targets (`targetVersion: 'latest' | string`)
 - Lock guides to specific versions (`isVersionLocked`)
 - Detect staleness (`isOutOfDate`)
-- Enable convergence tracking across versions
+- Support version-aware queries and cross-version analysis

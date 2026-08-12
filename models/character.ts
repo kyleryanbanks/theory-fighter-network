@@ -14,7 +14,8 @@ import {
 export interface CharacterDocument {
   id: string;
   gameId: string;
-  canonicalKey: string;
+  semanticKey: string; // hash(gameSemanticKey + normalizedCharacterName)
+  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   archetypes: string[];
 
@@ -29,7 +30,7 @@ export interface CharacterDocument {
   verification?: VerificationSectionMap;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

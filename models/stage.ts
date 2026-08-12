@@ -8,7 +8,8 @@ import { GuideVersionReference, ComparativeAttribute } from './shared';
 export interface StageDocument {
   id: string;
   gameId: string;
-  canonicalKey: string;
+  semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
+  semanticFingerprint?: string; // published payload fingerprint
   name: string;
   notes?: string;
 
@@ -16,7 +17,7 @@ export interface StageDocument {
   guideVersion: GuideVersionReference;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -30,7 +31,8 @@ export interface StageZoneDocument {
   gameId: string;
   stageId?: string;
   parentScope: 'game' | 'stage';
-  canonicalKey: string;
+  semanticKey: string; // hash(gameSemanticKey + stageSemanticKey + zoneType + side)
+  semanticFingerprint?: string; // published payload fingerprint
   inheritedFromZoneId?: string;
   fieldOverrides?: (keyof StageZoneDocument)[];
 

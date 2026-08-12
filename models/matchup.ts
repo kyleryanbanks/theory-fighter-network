@@ -14,11 +14,14 @@ export interface MatchupDocument {
   scenarioGraph: MatchupScenarioGraph;
   notes?: string;
 
+  semanticKey: string; // hash(gameSemanticKey + ordered character pair semanticKeys)
+  semanticFingerprint?: string; // published payload fingerprint
+
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;

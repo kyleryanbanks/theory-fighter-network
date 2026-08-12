@@ -19,6 +19,9 @@ export interface MoveDocument {
   inheritedFromMoveId?: string;
   fieldOverrides?: (keyof MoveDocument)[];
 
+  semanticKey: string; // hash(gameSemanticKey + [characterSemanticKey] + normalizedInputFrames + normalizedPreconditions)
+  semanticFingerprint?: string; // published payload fingerprint
+
   name: string;
   
   // Game-defined move type/classification (e.g., 'strike', 'throw', 'projectile')
@@ -45,7 +48,7 @@ export interface MoveDocument {
   comparativeOrderings?: ComparativeOrderingRef[];
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   guideVersion: GuideVersionReference;
   createdAt: Timestamp;

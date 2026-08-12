@@ -12,11 +12,14 @@ export interface TeamDocument {
   slotSelections?: TeamSlotSelection[];
   label?: string;
 
+  semanticKey: string; // hash(gameSemanticKey + ordered character semanticKeys)
+  semanticFingerprint?: string; // published payload fingerprint
+
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
   ownerId: string;
-  communityId?: string;
+  publishedId?: string;
   lastPublishedAt?: Timestamp;
   createdAt: Timestamp;
   updatedAt: Timestamp;
