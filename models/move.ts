@@ -5,6 +5,7 @@
 import { Timestamp } from 'firebase/firestore';
 import {
   GuideVersionReference,
+  CommunityMetadata,
   ComparativeAttribute,
   ComparativeConstraint,
   ComparativeOrderingRef,
@@ -20,7 +21,6 @@ export interface MoveDocument {
   fieldOverrides?: (keyof MoveDocument)[];
 
   semanticKey: string; // hash(gameSemanticKey + [characterSemanticKey] + normalizedInputFrames + normalizedPreconditions)
-  semanticFingerprint?: string; // published payload fingerprint
 
   name: string;
   
@@ -47,9 +47,7 @@ export interface MoveDocument {
   comparativeConstraints?: ComparativeConstraint[];
   comparativeOrderings?: ComparativeOrderingRef[];
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   guideVersion: GuideVersionReference;
   createdAt: Timestamp;
   updatedAt: Timestamp;

@@ -42,6 +42,22 @@ export interface GuideVersionReference {
 }
 
 /**
+ * Community publishing metadata
+ * Consolidated fields for all community-related state across entities
+ */
+export interface CommunityMetadata {
+  // Entity ownership (always present)
+  ownerId: string;
+
+  // Publishing state (populated on first publish to community)
+  publishedId?: string;
+  lastPublishedAt?: Timestamp;
+
+  // Community alignment (computed at publish time for convergence detection)
+  semanticFingerprint?: string;
+}
+
+/**
  * Comparative attributes for exploratory research
  */
 export interface ComparativeAttribute {

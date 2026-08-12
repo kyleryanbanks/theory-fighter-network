@@ -3,7 +3,7 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, VerificationSectionMap } from './shared';
+import { GuideVersionReference, CommunityMetadata, VerificationSectionMap } from './shared';
 
 export interface MatchupDocument {
   id: string;
@@ -15,14 +15,11 @@ export interface MatchupDocument {
   notes?: string;
 
   semanticKey: string; // hash(gameSemanticKey + ordered character pair semanticKeys)
-  semanticFingerprint?: string; // published payload fingerprint
 
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
-  ownerId: string;
-  publishedId?: string;
-  lastPublishedAt?: Timestamp;
+  community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
