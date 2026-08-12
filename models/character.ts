@@ -7,9 +7,7 @@ import {
   GuideVersionReference,
   CommunityMetadata,
   VerificationSectionMap,
-  SliderAxisDefinition,
-  StateTagDefinition,
-  ResourceDefinition,
+  StateModel,
 } from './shared';
 
 export interface CharacterDocument {
@@ -19,12 +17,7 @@ export interface CharacterDocument {
   name: string;
   archetypes: string[];
 
-  customSliderAxes: SliderAxisDefinition[];
-  selectableLoadouts?: CharacterLoadoutOption[];
-  selectableAssists?: CharacterAssistOption[];
-  customPlayerStates?: StateTagDefinition[];
-  customOpponentStates?: StateTagDefinition[];
-  customResources?: ResourceDefinition[];
+  states: StateModel;
 
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
@@ -32,22 +25,4 @@ export interface CharacterDocument {
   community: CommunityMetadata;
   createdAt: Timestamp;
   updatedAt: Timestamp;
-}
-
-/**
- * Loadout option for character
- */
-export interface CharacterLoadoutOption {
-  key: string;
-  label: string;
-  description?: string;
-}
-
-/**
- * Assist option for character
- */
-export interface CharacterAssistOption {
-  key: string;
-  label: string;
-  description?: string;
 }
