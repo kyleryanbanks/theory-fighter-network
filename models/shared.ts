@@ -5,39 +5,6 @@
 import { Timestamp } from 'firebase/firestore';
 
 /**
- * Individual state definition (reusable lookup entry)
- */
-export interface State {
-  semanticKey: string;  // hash(gameSemanticKey + [characterSemanticKey] + category + name + duration + min + max + unit)
-  name: string;
-  description?: string;
-  duration?: number;
-  min?: number;
-  max?: number;
-  unit?: string;
-}
-
-/**
- * Collection of states by semanticKey
- */
-export type StateCollection = Record<string, State>;
-
-/**
- * Universal state model used identically at game and character level
- */
-export interface StateModel {
-  attacks: StateCollection;
-  blocks: StateCollection;
-  knockdowns: StateCollection;
-  juggles: StateCollection;
-  positions: StateCollection;
-  stageMechanics: StateCollection;
-  characters: StateCollection;
-  resources: StateCollection;
-  comboMechanics: StateCollection;
-}
-
-/**
  * Community publishing metadata
  * Consolidated fields for all community-related state across entities
  */
@@ -66,15 +33,14 @@ export interface EntityMetadata {
  * Community guide aggregation
  */
 export interface GuideDocument {
-  id: string;
   gameKey: string;
   publishedEntities: {
-    characterIds: string[];
-    moveIds: string[];
-    comboIds: string[];
-    teamIds: string[];
-    stageIds: string[];
-    matchupIds: string[];
+    characterKeys: string[];
+    moveKeys: string[];
+    sequenceKeys: string[];
+    teamKeys: string[];
+    stageKeys: string[];
+    matchupKeys: string[];
   };
   publishHistory: string[];
 }

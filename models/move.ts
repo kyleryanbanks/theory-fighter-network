@@ -11,20 +11,15 @@ import {
 } from './shared';
 
 export interface MoveDocument {
-  id: string;
   gameKey: string;
   characterKey?: string;
+  semanticKey: string; // hash(gameSemanticKey + characterSemanticKey + normalizedInputFrames + normalizedPreconditions)
 
-  inheritedFromMoveId?: string;
+  inheritedFromMoveKey?: string;
   fieldOverrides?: (keyof MoveDocument)[];
-
-  semanticKey: string; // hash(gameSemanticKey + [characterSemanticKey] + normalizedInputFrames + normalizedPreconditions)
 
   name: string;
   
-  // Attack classification from game state model (e.g., 'strike', 'throw', 'projectile')
-  attackClassification?: string;
-
   // Input sequence for this move, using input values from GameDocument.inputs
   inputFrames?: TriggerInputFrame[];
 
@@ -32,8 +27,8 @@ export interface MoveDocument {
     requiredAllPlayerStateTags?: string[];
     forbiddenPlayerStateTags?: string[];
     requiredAllOpponentStateTags?: string[];
-    followUpOnlyFromMoveIds?: string[];
-    cancelFromMoveIds?: string[];
+    followUpOnlyFromMoveKeys?: string[];
+    cancelFromMoveKeys?: string[];
   };
 
   phases?: MovePhase[];
@@ -117,7 +112,7 @@ export interface RangeBand {
 export interface RangeAxisProfile {
   axis: 'x' | 'y' | 'z';
   comparisons?: Array<{
-    otherMoveId: string;
+  otherMoveKey: string;
     relation: 'shorter' | 'same' | 'longer';
   }>;
 }
@@ -161,7 +156,7 @@ export interface MoveOutcomeEffect {
   };
 
   stageInteraction?: {
-    targetZoneIds?: string[];
+    targetZoneKeys?: string[];
     targetZoneTypes?: Array<'wall' | 'floor' | 'ceiling'>;
     causesSplat?: {
       enabled: boolean;
@@ -207,7 +202,7 @@ export interface FrameOutcomeWindow {
 export interface PhaseCancelRule {
   windowStartFrame?: number;
   windowEndFrame?: number;
-  allowedMoveIds?: string[];
+  allowedMoveKeys?: string[];
   requiredPlayerStateTags?: string[];
   requiredOpponentStateTags?: string[];
   notes?: string;
@@ -284,7 +279,7 @@ export interface ProjectileProfile {
  * Projectile clash result
  */
 export interface ProjectileClashResult {
-  againstMoveId: string;
+  againstMoveKey: string;
   result: 'wins' | 'ties' | 'loses' | 'passes-through' | 'unknown';
   conditionsNotes?: string;
 }

@@ -2,16 +2,12 @@
  * Stage entity and zone types
  */
 
-import { CommunityMetadata, ComparativeAttribute, EntityMetadata } from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
 
 export interface StageDocument {
-  id: string;
   gameKey: string;
-  semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
   name: string;
-  notes?: string;
-
-  comparativeAttributes: ComparativeAttribute[];
+  semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
 
   community: CommunityMetadata;
   meta: EntityMetadata;
@@ -21,37 +17,16 @@ export interface StageDocument {
  * Stage zone for environmental interactions
  */
 export interface StageZoneDocument {
-  id: string;
   gameKey: string;
-  stageId?: string;
-  parentScope: 'game' | 'stage';
-  semanticKey: string; // hash(gameSemanticKey + stageSemanticKey + zoneType + side)
-  inheritedFromZoneId?: string;
+  stageKey?: string; // optional - if not present, zone is game-level/universal
+  name: string;
+  semanticKey: string; // hash(gameSemanticKey + [stageSemanticKey] + name)
+  
+  inheritedFromZoneKey?: string;
   fieldOverrides?: (keyof StageZoneDocument)[];
 
-  zoneType: 'wall' | 'floor' | 'ceiling';
-  side?: 'left' | 'right' | 'center';
-  notes?: string;
-
-  splatBehavior?: {
-    causesSplatStateTag?: string;
-    notes?: string;
-  };
-
-  breakBehavior?: {
-    isBreakable: boolean;
-    breakStateTag?: string;
-    breakOnZeroDurability?: boolean;
-  };
-
-  durability?: {
-    maxPoints: number;
-    currentPoints?: number;
-    resetConditions?: {
-      resetEvery?: 'round' | 'match';
-      resetOnScreenTransition?: boolean;
-    };
-  };
+  // Reference to stageMechanic state(s) that define behavior and properties
+  mechanicStateKeys: string[];
 
   community: CommunityMetadata;
   meta: EntityMetadata;

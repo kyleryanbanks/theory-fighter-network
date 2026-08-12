@@ -2,14 +2,10 @@
  * Character entity and configuration types
  */
 
-import {
-  CommunityMetadata,
-  EntityMetadata,
-  StateModel,
-} from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
+import { StateModel } from './state';
 
 export interface CharacterDocument {
-  id: string;
   gameKey: string;
   semanticKey: string; // hash(gameSemanticKey + normalizedCharacterName)
   name: string;

@@ -2,13 +2,13 @@
  * Game entity and related configuration types
  */
 
-import { CommunityMetadata, EntityMetadata, StateModel } from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
+import { StateModel } from './state';
 
-// Re-export common types for convenience
-export { StateModel, CommunityMetadata };
+// Re-export StateModel for convenience
+export { StateModel } from './state';
 
 export interface GameDocument {
-  id: string;
   name: string;
   version: string;
   semanticKey: string; // hash(normalizedGameName + versionFamily)
