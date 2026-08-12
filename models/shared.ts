@@ -8,7 +8,7 @@ import { Timestamp } from 'firebase/firestore';
  * Individual state definition (reusable lookup entry)
  */
 export interface State {
-  semanticKey: string;  // hash(gameSemanticKey + [characterSemanticKey] + name + duration + min + max + unit)
+  semanticKey: string;  // hash(gameSemanticKey + [characterSemanticKey] + category + name + duration + min + max + unit)
   name: string;
   description?: string;
   duration?: number;
