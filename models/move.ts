@@ -2,20 +2,18 @@
  * Move entity and related effect/phase types
  */
 
-import { Timestamp } from 'firebase/firestore';
 import {
-  GuideVersionReference,
   CommunityMetadata,
+  EntityMetadata,
   ComparativeAttribute,
   ComparativeConstraint,
   ComparativeOrderingRef,
-  VerificationSectionMap,
 } from './shared';
 
 export interface MoveDocument {
   id: string;
-  gameId: string;
-  characterId?: string;
+  gameKey: string;
+  characterKey?: string;
 
   inheritedFromMoveId?: string;
   fieldOverrides?: (keyof MoveDocument)[];
@@ -27,7 +25,7 @@ export interface MoveDocument {
   // Attack classification from game state model (e.g., 'strike', 'throw', 'projectile')
   attackClassification?: string;
 
-  // Input sequence for this move, using buttons defined in GameDocument.inputSystem
+  // Input sequence for this move, using input values from GameDocument.inputs
   inputFrames?: TriggerInputFrame[];
 
   preconditions: {
@@ -40,24 +38,20 @@ export interface MoveDocument {
 
   phases?: MovePhase[];
 
-  verification?: VerificationSectionMap;
-
   comparativeAttributes: ComparativeAttribute[];
   comparativeConstraints?: ComparativeConstraint[];
   comparativeOrderings?: ComparativeOrderingRef[];
 
   community: CommunityMetadata;
-  guideVersion: GuideVersionReference;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }
 
 /**
  * Frame-by-frame input representation
  */
 export interface TriggerInputFrame {
-  directions: string[];  // e.g., ["5", "6"] from InputSystemProfile.validInputs
-  buttons: string[];     // e.g., ["mp", "hp"] from InputSystemProfile.validInputs
+  directions: string[];  // e.g., ["5", "6"] from GameDocument.inputs.directions values
+  buttons: string[];     // e.g., ["mp", "hp"] from GameDocument.inputs.buttons values
   durationFrames?: number;
 }
 

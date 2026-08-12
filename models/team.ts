@@ -2,31 +2,26 @@
  * Team entity for team-based games
  */
 
-import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, CommunityMetadata, VerificationSectionMap } from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
 
 export interface TeamDocument {
   id: string;
-  gameId: string;
-  orderedCharacterIds: string[];
+  gameKey: string;
+  orderedCharacterKeys: string[];
   slotSelections?: TeamSlotSelection[];
   label?: string;
 
   semanticKey: string; // hash(gameSemanticKey + ordered character semanticKeys)
 
-  guideVersion: GuideVersionReference;
-  verification?: VerificationSectionMap;
-
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }
 
 /**
  * Slot selection for team member
  */
 export interface TeamSlotSelection {
-  characterId: string;
+  characterKey: string;
   slotIndex: number;
   selectedLoadoutKey?: string;
   selectedAssistKey?: string;

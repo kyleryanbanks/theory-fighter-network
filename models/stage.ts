@@ -2,22 +2,19 @@
  * Stage entity and zone types
  */
 
-import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, CommunityMetadata, ComparativeAttribute } from './shared';
+import { CommunityMetadata, ComparativeAttribute, EntityMetadata } from './shared';
 
 export interface StageDocument {
   id: string;
-  gameId: string;
+  gameKey: string;
   semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
   name: string;
   notes?: string;
 
   comparativeAttributes: ComparativeAttribute[];
-  guideVersion: GuideVersionReference;
 
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }
 
 /**
@@ -25,7 +22,7 @@ export interface StageDocument {
  */
 export interface StageZoneDocument {
   id: string;
-  gameId: string;
+  gameKey: string;
   stageId?: string;
   parentScope: 'game' | 'stage';
   semanticKey: string; // hash(gameSemanticKey + stageSemanticKey + zoneType + side)
@@ -56,8 +53,6 @@ export interface StageZoneDocument {
     };
   };
 
-  guideVersion: GuideVersionReference;
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }

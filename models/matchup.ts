@@ -2,12 +2,11 @@
  * Matchup entity and related scenario graph types
  */
 
-import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, CommunityMetadata, VerificationSectionMap } from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
 
 export interface MatchupDocument {
   id: string;
-  gameId: string;
+  gameKey: string;
 
   playerSide: MatchupSide;
   opponentSide: MatchupSide;
@@ -16,19 +15,15 @@ export interface MatchupDocument {
 
   semanticKey: string; // hash(gameSemanticKey + ordered character pair semanticKeys)
 
-  guideVersion: GuideVersionReference;
-  verification?: VerificationSectionMap;
-
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }
 
 /**
  * Side of a matchup (player or opponent)
  */
 export interface MatchupSide {
-  characterId?: string;
+  characterKey?: string;
   teamId?: string;
 }
 

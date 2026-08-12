@@ -3,34 +3,29 @@
  */
 
 import { Timestamp } from 'firebase/firestore';
-import { GuideVersionReference, CommunityMetadata, VerificationSectionMap } from './shared';
+import { CommunityMetadata, EntityMetadata } from './shared';
 
 export interface SequenceDocument {
   id: string;
-  gameId: string;
+  gameKey: string;
 
   sequenceScope: 'universal' | 'character' | 'team';
-  characterId?: string;
+  characterKey?: string;
   teamId?: string;
   teamApplicability?: {
-    requiredOrderedCharacterIds: string[];
+    requiredOrderedCharacterKeys: string[];
   };
 
   semanticKey: string; // hash(gameSemanticKey + normalizedMoveSequence)
 
   name?: string;
   notation?: string;
-
   moveRefs: SequenceMoveRef[];
   delayAfterStepFrames?: number[];
-
   computedDifficulty: SequenceDifficulty;
-  guideVersion: GuideVersionReference;
-  verification?: VerificationSectionMap;
 
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
 }
 
 /**
@@ -39,7 +34,7 @@ export interface SequenceDocument {
 export interface SequenceMoveRef {
   moveId: string;
   scope: 'game' | 'character';
-  characterId?: string;
+  characterKey?: string;
   selectedRangeBandKeys?: Partial<Record<'x' | 'y' | 'z', string>>;
 }
 
@@ -63,11 +58,11 @@ export interface SequenceDifficulty {
  */
 export interface MoveTransitionEdge {
   id: string;
-  gameId: string;
+  gameKey: string;
   fromMoveId: string;
   toMoveId: string;
   scope: 'universal' | 'character' | 'team';
-  characterId?: string;
+  characterKey?: string;
   teamId?: string;
 
   triggerOutcome: 'onHit' | 'onBlock' | 'onCounterHit';
@@ -96,9 +91,9 @@ export interface ResourceRequirement {
  */
 export interface SequencePattern {
   id: string;
-  gameId: string;
+  gameKey: string;
   scope: 'universal' | 'character' | 'team';
-  characterId?: string;
+  characterKey?: string;
   teamId?: string;
   moveRefs: SequenceMoveRef[];
 

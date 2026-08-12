@@ -54,11 +54,20 @@ export interface CommunityMetadata {
 }
 
 /**
+ * Record-level metadata shared by stored entities.
+ */
+export interface EntityMetadata {
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  validatedVersion?: string;
+}
+
+/**
  * Community guide aggregation
  */
 export interface GuideDocument {
   id: string;
-  gameId: string;
+  gameKey: string;
   publishedEntities: {
     characterIds: string[];
     moveIds: string[];

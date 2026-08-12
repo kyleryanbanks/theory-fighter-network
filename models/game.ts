@@ -2,28 +2,39 @@
  * Game entity and related configuration types
  */
 
-import { Timestamp } from 'firebase/firestore';
-import { CommunityMetadata, StateModel } from './shared';
+import { CommunityMetadata, EntityMetadata, StateModel } from './shared';
 
 // Re-export common types for convenience
 export { StateModel, CommunityMetadata };
 
 export interface GameDocument {
   id: string;
-  semanticKey: string; // hash(normalizedGameName + versionFamily)
   name: string;
   version: string;
+  semanticKey: string; // hash(normalizedGameName + versionFamily)
 
-  isTeamFighter: boolean;
-  teamSize?: number;
-
-  buttons: string[];
-
+  teamSize: number;
+  inputs: Inputs;
   states: StateModel;
 
-  blockStates: string[];
-
   community: CommunityMetadata;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  meta: EntityMetadata;
+}
+
+/**
+ * Game input vocabulary and optional numeric ranges for analog/digital values.
+ */
+export interface Inputs {
+  directions: Input[];
+  buttons: Input[];
+}
+
+/**
+ * Input token definition used by direction/button lists.
+ */
+export interface Input {
+  label: string;
+  value?: string;
+  min?: number;
+  max?: number;
 }
