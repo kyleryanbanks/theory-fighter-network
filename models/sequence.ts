@@ -1,15 +1,15 @@
 /**
- * Combo entity and related transition/sequence types
+ * Sequence entity and related move ref/difficulty types
  */
 
 import { Timestamp } from 'firebase/firestore';
 import { GuideVersionReference, VerificationSectionMap } from './shared';
 
-export interface ComboDocument {
+export interface SequenceDocument {
   id: string;
   gameId: string;
 
-  comboScope: 'universal' | 'character' | 'team';
+  sequenceScope: 'universal' | 'character' | 'team';
   characterId?: string;
   teamId?: string;
   teamApplicability?: {
@@ -22,10 +22,10 @@ export interface ComboDocument {
   name?: string;
   notation?: string;
 
-  moveRefs: ComboMoveRef[];
+  moveRefs: SequenceMoveRef[];
   delayAfterStepFrames?: number[];
 
-  computedDifficulty: ComboDifficulty;
+  computedDifficulty: SequenceDifficulty;
   guideVersion: GuideVersionReference;
   verification?: VerificationSectionMap;
 
@@ -37,9 +37,9 @@ export interface ComboDocument {
 }
 
 /**
- * Reference to a move within a combo
+ * Reference to a move within a sequence
  */
-export interface ComboMoveRef {
+export interface SequenceMoveRef {
   moveId: string;
   scope: 'game' | 'character';
   characterId?: string;
@@ -47,9 +47,9 @@ export interface ComboMoveRef {
 }
 
 /**
- * Computed difficulty for a combo
+ * Computed difficulty for a sequence
  */
-export interface ComboDifficulty {
+export interface SequenceDifficulty {
   score: number;
   factors: {
     comboLength: number;
@@ -103,7 +103,7 @@ export interface SequencePattern {
   scope: 'universal' | 'character' | 'team';
   characterId?: string;
   teamId?: string;
-  moveRefs: ComboMoveRef[];
+  moveRefs: SequenceMoveRef[];
 
   intentTags: Array<
     'neutralControl'

@@ -25,10 +25,10 @@ Complete Firestore and local file schema for Theory Fighter Network.
 /games/{gameId}/stages/{stageId}/zones/{zoneId}
 /characters/{characterId}/moves/{moveId}
 
-/games/{gameId}/universal-combos/{comboId}
-/characters/{characterId}/combos/{comboId}
+/games/{gameId}/universal-sequences/{sequenceId}
+/characters/{characterId}/sequences/{sequenceId}
 /games/{gameId}/teams/{teamId}
-/games/{gameId}/teams/{teamId}/combos/{comboId}
+/games/{gameId}/teams/{teamId}/sequences/{sequenceId}
 ```
 
 ---
@@ -118,7 +118,7 @@ Comparative data sharing context (private guide vs shared community) is inferred
 
 - `ComboScalingSystem` defines how game-wide scaling works
 - Individual moves define `comboScalingEffects` per phase (hitstun/damage modifiers, prorating, resets, etc.)
-- `ComboDifficulty` computes execution difficulty from combo length, timing strictness, and input complexity
+- `SequenceDifficulty` computes execution difficulty from sequence length, timing strictness, and input complexity
 
 ### Projectile System
 
@@ -134,10 +134,10 @@ Stages have:
 - Zone definitions for wall/floor/ceiling interactions and positioning reference
 - Stage zones link to universal stage zones for cross-game comparison
 
-### Team & Matchup Tracking
+### Team & Sequence Tracking
 
-- Teams group characters with combo-specific knowledge
-- Team combos and universal combos enable team-specific routing
+- Teams group characters with sequence-specific knowledge
+- Team sequences and universal sequences enable team-specific routing
 - Matchups track character-vs-character dynamics with specific routing and anti-strategy info
 
 ### Community Publishing Model
@@ -159,7 +159,7 @@ Stages have:
 - **Game**: `normalizedGameName + versionFamily`
 - **Character**: `gameSemanticKey + normalizedCharacterName`
 - **Move**: `gameSemanticKey + (characterSemanticKey or empty) + normalizedInputFrames + normalizedPreconditions`
-- **Combo**: `gameSemanticKey + normalizedMoveSequence` (ordered move semanticKeys)
+- **Sequence**: `gameSemanticKey + normalizedMoveSequence` (ordered move semanticKeys)
 - **Stage**: `gameSemanticKey + normalizedStageName`
 - **StageZone**: `gameSemanticKey + stageSemanticKey + zoneType + side`
 - **Team**: `gameSemanticKey + ordered character semanticKeys`

@@ -12,5 +12,5 @@ export * from './stage';
 export * from './character';
 export * from './move';
 export * from './team';
-export * from './combo';
+export * from './sequence';
 export * from './matchup';
