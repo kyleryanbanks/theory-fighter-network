@@ -24,9 +24,8 @@ export interface MoveDocument {
 
   name: string;
   
-  // Game-defined move type/classification (e.g., 'strike', 'throw', 'projectile')
-  // References GameDocument.moveTypes
-  moveType?: string;
+  // Attack classification from game state model (e.g., 'strike', 'throw', 'projectile')
+  attackClassification?: string;
 
   // Input sequence for this move, using buttons defined in GameDocument.inputSystem
   inputFrames?: TriggerInputFrame[];
@@ -57,8 +56,8 @@ export interface MoveDocument {
  * Frame-by-frame input representation
  */
 export interface TriggerInputFrame {
-  directions: number[];
-  buttons: string[];
+  directions: string[];  // e.g., ["5", "6"] from InputSystemProfile.validInputs
+  buttons: string[];     // e.g., ["mp", "hp"] from InputSystemProfile.validInputs
   durationFrames?: number;
 }
 
