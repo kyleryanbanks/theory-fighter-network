@@ -6,12 +6,11 @@ import { Timestamp } from 'firebase/firestore';
 import { CommunityMetadata, EntityMetadata } from './shared';
 
 export interface SequenceDocument {
-  id: string;
   gameKey: string;
 
   sequenceScope: 'universal' | 'character' | 'team';
   characterKey?: string;
-  teamId?: string;
+  teamKey?: string;
   teamApplicability?: {
     requiredOrderedCharacterKeys: string[];
   };
@@ -32,7 +31,7 @@ export interface SequenceDocument {
  * Reference to a move within a sequence
  */
 export interface SequenceMoveRef {
-  moveId: string;
+  moveKey: string;
   scope: 'game' | 'character';
   characterKey?: string;
   selectedRangeBandKeys?: Partial<Record<'x' | 'y' | 'z', string>>;
@@ -59,11 +58,11 @@ export interface SequenceDifficulty {
 export interface MoveTransitionEdge {
   id: string;
   gameKey: string;
-  fromMoveId: string;
-  toMoveId: string;
+  fromMoveKey: string;
+  toMoveKey: string;
   scope: 'universal' | 'character' | 'team';
   characterKey?: string;
-  teamId?: string;
+  teamKey?: string;
 
   triggerOutcome: 'onHit' | 'onBlock' | 'onCounterHit';
   requiredPlayerStateTags?: string[];
@@ -94,7 +93,7 @@ export interface SequencePattern {
   gameKey: string;
   scope: 'universal' | 'character' | 'team';
   characterKey?: string;
-  teamId?: string;
+  teamKey?: string;
   moveRefs: SequenceMoveRef[];
 
   intentTags: Array<
