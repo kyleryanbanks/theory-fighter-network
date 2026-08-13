@@ -5,9 +5,7 @@
 import {
   CommunityMetadata,
   EntityMetadata,
-  ComparativeAttribute,
-  ComparativeConstraint,
-  ComparativeOrderingRef,
+  DataValue,
 } from './shared';
 
 export interface MoveDocument {
@@ -33,10 +31,6 @@ export interface MoveDocument {
 
   phases?: MovePhase[];
 
-  comparativeAttributes: ComparativeAttribute[];
-  comparativeConstraints?: ComparativeConstraint[];
-  comparativeOrderings?: ComparativeOrderingRef[];
-
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
@@ -57,13 +51,12 @@ export interface MovePhase {
   label?: string;
   startFrame?: number;
   frameData?: {
-    startup?: number;
-    active?: number;
-    recovery?: number;
+    startup?: DataValue;
+    active?: DataValue;
+    recovery?: DataValue;
   };
 
   rangeProfile?: MoveRangeProfile;
-  comboScalingEffects?: MoveComboScalingEffects;
 
   effects?: {
     onHit?: MoveOutcomeEffect;
@@ -214,8 +207,8 @@ export interface PhaseCancelRule {
 export interface PositionalEffect {
   displacesCharacter: boolean;
   displacement?: {
-    x?: ComparativeAttribute;
-    y?: ComparativeAttribute;
+    x?: DataValue;
+    y?: DataValue;
   };
   displacementStartFrame?: number;
   displacementDuration?: number;
@@ -228,8 +221,8 @@ export interface PositionalEffect {
  */
 export interface OpponentPositionalEffect {
   displacement?: {
-    x?: ComparativeAttribute;
-    y?: ComparativeAttribute;
+    x?: DataValue;
+    y?: DataValue;
   };
   displacementStartFrame?: number;
   displacementDuration?: number;
@@ -241,7 +234,7 @@ export interface OpponentPositionalEffect {
  */
 export interface ResourceEffect {
   resourceKey: string;
-  amount: number;
+  amount: DataValue;
 }
 
 /**

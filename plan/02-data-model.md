@@ -105,7 +105,53 @@ Games can define arbitrary attack type classifications via `GameDocument.moveTyp
 - Tracks section-by-section verification status (unknown, observed, verified-current, needs-review, etc.)
 - Allows partial verification (e.g., startup frames verified but active frames still measured)
 
-### Comparative Data Model
+### Exact vs Relative Values: DataValue Pattern
+
+**Pattern**: Game properties (frame data, damage, resources, displacement, etc.) may have either exact values or user-positioned relative values.
+
+**DataValue Type**:
+```typescript
+type DataValue = {
+  exact?: number;      // Precise value if user knows it (e.g., startup is 5 frames)
+  relative?: number;   // Positioned within bounds as percentage (0-100)
+  notes?: string;      // Context for how value was determined
+}
+```
+
+**State Models define the bounds**:
+- Games define `StateModel<T>` with bounds for properties that have them
+- Example: `stateModel.damage = { min: 0, max: 100 }` (game-level bounds discovered)
+- Example: `stateModel.ki = { min: 0, max: 200 }` (user learned bounds)
+- If property not in StateModel, default bounds [0, 100] apply (percentage scale)
+
+**How DataValue interacts with State**:
+
+1. **User enters exact value** → stored as `{ exact: 25 }`
+   - Used directly, independent of bounds
+   - Example: User knows damage is 25 frames
+
+2. **User positions value relatively** → stored as `{ relative: 50 }`
+   - 50% on whatever scale is active
+   - If `stateModel.startup = { min: 0, max: 60 }`: 50% = 30 frames
+   - If no bounds defined: 50% = default scale [0, 100]
+
+3. **User refines bounds later** → relative values rescale automatically
+   - User positions damage at 50 (default [0, 100])
+   - Later learns damage range is [20, 80] → updates StateModel
+   - Same 50 now rescales: 50% of [20, 80] = 50
+   - Move data unchanged; only interpretation changes
+
+**Applications**:
+- `MovePhase.frameData.startup`, `active`, `recovery` — DataValue
+- `ResourceEffect.amount` — DataValue (for uncertain resource gains)
+- `PositionalEffect.displacement.x/y` — DataValue (for uncertain knockback distances)
+- Any numeric game property where user may not have precise data
+
+**Inference**: Knowledge completeness (exact vs exploratory) is inferred from DataValue presence:
+- All values are `{ exact: ... }` → exact knowledge for this property
+- Any `{ relative: ... }` present → exploratory/measured knowledge
+
+### Comparative Data Model (Legacy)
 
 For games without exact frame data, comparative analysis enables research:
 - `ComparativeAttribute`: relative value (startup is "faster" than another move)
@@ -113,6 +159,8 @@ For games without exact frame data, comparative analysis enables research:
 - `ComparativeOrdering`: group ordering (these 5 moves have the same startup in this order)
 
 Comparative data sharing context (private guide vs shared community) is inferred from entity ownership and publication history.
+
+**Note**: Modern approach uses `DataValue` pattern with relative positioning on discovered bounds instead of abstract comparative relationships.
 
 ### Combo Scaling & Meta-Mechanics
 

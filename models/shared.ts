@@ -5,6 +5,16 @@
 import { Timestamp } from 'firebase/firestore';
 
 /**
+ * Represents a numeric value that can be either exact or relative/comparative
+ * Used for game property values where users may not have precise data
+ */
+export type DataValue = {
+  exact?: number;      // Precise value if known
+  relative?: number;   // Positioned within bounds as percentage (0-100)
+  notes?: string;
+};
+
+/**
  * Community publishing metadata
  * Consolidated fields for all community-related state across entities
  */
