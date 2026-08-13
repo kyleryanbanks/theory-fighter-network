@@ -80,6 +80,7 @@ These 16 items represent foundational decisions about how fighting game mechanic
     - Moves have availability tags: required player state (neutral, active, airborne, blockstun, hitstun) plus game-specific states.
     - Moves can be `followUpOnlyFromMoveIds` (only after move X) or `cancelFromMoveIds` (cancellable from move X).
     - This prevents invalid transitions and enables combo validation.
+    - Attack height classifications (low/mid/high/overhead, etc.) are game-specific and modeled as configurable attack states in `StateModel.attacks`. UI provides templates (Street Fighter, Tekken, Guilty Gear, etc.) but users can customize for their game.
 
 12. **The app must model route viability by range band, state, timing, and post-move positioning, with deterministic outcome guarantees.**
     - Moves can change either the attacker's position or the opponent's position.

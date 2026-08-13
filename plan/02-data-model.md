@@ -80,6 +80,87 @@ Games can define arbitrary attack type classifications via `GameDocument.moveTyp
 - Moves reference types via `moveType` field
 - Enables games with secondary mechanics based on attack class (e.g., SF6's strike/throw counters)
 
+### Attack Height Taxonomies
+
+**Concept**: Different fighting games use completely different attack height classification systems. Rather than hardcoding a single taxonomy, heights are modeled as **configurable attack states** in `StateModel.attacks`.
+
+**How it works:**
+1. Games define height taxonomy in `states.attacks` during guide creation
+2. Moves reference height via attack state key in effects or preconditions
+3. Block states are keyed by height: `"sf6-blocks-low"`, `"sf6-blocks-mid"`, etc.
+4. UI provides **template defaults** but users can customize for their game
+
+**Common height taxonomies (as UX templates):**
+
+| Game Family | Heights | Notes |
+|---|---|---|
+| **Street Fighter** | low / mid / high / overhead | Based on required blocking stance |
+| **Tekken** | low / mid / high | Based on hurtbox region hit |
+| **Guilty Gear** | low / mid / high / unblockable / air-only | Adds unblockable class |
+| **Marvel vs Capcom** | low / mid / high / crossup | Allows mid-air attacks |
+| **Custom** | User-defined | Any taxonomy the game requires |
+
+**Example: Street Fighter game creation**
+
+User creates new guide, selects "Street Fighter" template:
+```typescript
+states: {
+  attacks: {
+    "sf6-attacks-height-low": {
+      name: "Low Attack",
+      description: "Must be blocked crouching"
+    },
+    "sf6-attacks-height-mid": {
+      name: "Mid Attack", 
+      description: "Blocked standing or crouching"
+    },
+    "sf6-attacks-height-high": {
+      name: "High Attack",
+      description: "Must be blocked standing; vulnerable to crouch"
+    },
+    "sf6-attacks-height-overhead": {
+      name: "Overhead Attack",
+      description: "Unblockable while crouching"
+    }
+  },
+  blocks: {
+    "sf6-blocks-low": { name: "Crouch Block", duration: 0 },
+    "sf6-blocks-mid": { name: "Standing Block", duration: 0 },
+    "sf6-blocks-high": { name: "Overhead Block", duration: 0 }
+  }
+}
+```
+
+Ryu's Hadoken move then references height:
+```typescript
+const hadoken: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        opponentEffects: {
+          appliesStateTags: ["sf6-attacks-height-mid"]  // Mid-height projectile
+        }
+      },
+      onBlock: {
+        opponentEffects: {
+          appliesStateTags: ["sf6-blocks-mid"]  // Requires mid-block stance
+        }
+      }
+    }
+  }]
+}
+```
+
+**Why this design:**
+- ✅ **Game-agnostic**: Works for any height system (2D, 3D, unique mechanics)
+- ✅ **User-customizable**: Games can add/remove/rename heights as needed
+- ✅ **Queryable**: UI can filter moves by height, show which blocks apply
+- ✅ **Data-driven**: No magic strings in code, all patterns user-defined
+- ✅ **Reduces friction**: Templates get users started quickly without blank slate
+
+**Implementation note:**
+During game guide creation, the UI should offer height template selection as part of game configuration wizard, with ability to customize before saving.
+
 ### Data-Driven Knowledge Inference
 
 **Philosophy**: Minimize maintenance burden by inferring derived state from actual data rather than storing it explicitly.
