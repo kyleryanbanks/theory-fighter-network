@@ -161,6 +161,172 @@ const hadoken: MoveDocument = {
 **Implementation note:**
 During game guide creation, the UI should offer height template selection as part of game configuration wizard, with ability to customize before saving.
 
+### Collision, Hurt, Hit, and Throw Box Regions
+
+**Concept**: Four distinct box systems are unified under a single region model, supporting both 2D (circles/rectangles) and 3D (spheres/cubes) games. Regions are pure geometry—shape is identified by field presence, not type discriminators.
+
+**Region shapes** (discriminated by presence of fields):
+- **2D Circle**: `{ x, y, radius }`
+- **2D Rectangle**: `{ x, y, width, height }`
+- **3D Sphere**: `{ x, y, z, radius }`
+- **3D Cube**: `{ x, y, z, width, height, depth }`
+
+**Character neutral boxes** (baseline, standing stance):
+```typescript
+const ryu: CharacterDocument = {
+  neutralRegions: {
+    collisionBoxes: [
+      { x: 0, y: 0, width: 40, height: 100 }  // Prevents overlap
+    ],
+    hurtBoxes: [
+      { x: 0, y: 0, width: 30, height: 100 },   // Torso
+      { x: 5, y: 90, width: 20, height: 15 }    // Head
+    ]
+  }
+}
+```
+
+**Move-phase region changes** (per frame stage):
+Moves override neutral boxes during startup, active, and recovery frames. Each stage independently optional.
+
+```typescript
+const crouch: MoveDocument = {
+  phases: [{
+    startup: {
+      duration: { exact: 1 },
+      collisionBoxes: [
+        { x: 0, y: 30, width: 50, height: 70 }  // Wider, shorter
+      ],
+      hurtBoxes: [
+        { x: 0, y: 30, width: 40, height: 70 }  // Lower profile
+      ]
+    },
+    active: {
+      duration: { exact: -1 }  // Infinite while held
+    },
+    recovery: {
+      duration: { exact: 1 }
+    }
+  }]
+}
+```
+
+Ryu's hadoken with phase-by-phase region changes:
+```typescript
+const hadoken: MoveDocument = {
+  phases: [{
+    startup: {
+      duration: { exact: 10 },
+      // Charge-up pose: tighter collision
+      collisionBoxes: [{ x: 0, y: 0, width: 30, height: 100 }]
+    },
+    active: {
+      duration: { exact: 20 },
+      // Extended arms create new hurt boxes
+      hurtBoxes: [
+        { x: 0, y: 0, width: 30, height: 100 },      // Torso
+        { x: -20, y: 30, width: 50, height: 40 }     // Extended arm
+      ],
+      // Projectile hit boxes
+      hitBoxes: [
+        { x: 0, y: 40, radius: 15 }  // Main projectile
+      ]
+    },
+    recovery: {
+      duration: { exact: 8 },
+      // Post-fireball pose with extended arm region
+      collisionBoxes: [{ x: 0, y: 0, width: 45, height: 100 }]
+    }
+  }]
+}
+```
+
+**Box removal semantics**:
+- **Omitted field** (undefined): inherit from previous stage or character defaults
+- **Empty array** `[]`: explicitly remove (invulnerability, teleport dash, etc.)
+- **Specified boxes** `[box1, box2, ...]`: override with these regions
+
+Teleport dash example (all boxes disappear):
+```typescript
+const teleportDash: MoveDocument = {
+  phases: [{
+    active: {
+      duration: { exact: 6 },
+      collisionBoxes: [],  // Gone
+      hurtBoxes: [],       // Invulnerable
+      hitBoxes: [],
+      throwBoxes: []
+    }
+  }]
+}
+```
+
+**Why this design:**
+- ✅ **Unified model**: Collision, hurt, hit, throw boxes use same Region type
+- ✅ **Pure geometry**: No semantic keys or metadata on regions—identity via parent
+- ✅ **2D + 3D support**: Games use appropriate shapes via field presence
+- ✅ **Deterministic**: Positions are DataValue (exact or relative), positions are reproducible
+- ✅ **Programmatically queryable**: Collision detection, range analysis, combo feasibility all enabled
+- ✅ **State-driven activation**: Regions change per move phase; hurt box state disabling handled separately
+- ✅ **Minimal friction**: Users only define what changes per stage
+
+**Integration points**:
+- **CharacterDocument**: `neutralRegions` (collision, hurt, throw boxes in neutral stance)
+- **MovePhase**: `startup`, `active`, `recovery` stages each with optional region overrides
+- **Query-time logic**: Resolve active boxes from character defaults + move phase overrides + state disabling
+
+### State and Region Changes are Atomic (Moves Couple State and Geometry)
+
+**Key principle**: When a player's state changes, their on-screen geometry changes. These are not separate concerns—they're linked via the move that triggers the state change.
+
+**Example: Crouching**
+
+User presses down. This triggers the "crouch" move:
+```typescript
+const crouch: MoveDocument = {
+  inputFrames: [{ directions: ["1"], durationFrames: 1 }],
+  preconditions: {
+    requiredAllPlayerStateTags: ["sf6-positions-standing"]
+  },
+  phases: [{
+    startup: {
+      duration: { exact: 1 },
+      // REGION CHANGE: Crouch stance is shorter and wider
+      collisionBoxes: [{ x: 0, y: 30, width: 50, height: 70 }],
+      hurtBoxes: [{ x: 0, y: 30, width: 40, height: 70 }]
+    },
+    active: {
+      duration: { exact: -1 }  // Infinite while held
+    },
+    recovery: {
+      duration: { exact: 1 }
+    },
+    effects: {
+      onHit: {
+        playerEffects: {
+          // STATE CHANGE: Player is now in crouching state
+          appliesStateTags: ["sf6-positions-crouching"]
+        }
+      }
+    }
+  }]
+}
+```
+
+**Result**: 
+- State changes from standing to crouching
+- Geometry changes from tall to short+wide
+- Both happen atomically via the same move
+- No separate state-to-geometry mapping needed
+- Invulnerability (hurt box removal) works the same way: move applies state + removes boxes
+
+This design eliminates the need for:
+- Explicit "state modifies hurt boxes" lookup tables
+- Separate "on state change, update geometry" logic
+- Magic linkages between state names and box lists
+
+Instead: **Move is the single source of truth for both state and geometry changes.**
+
 ### Data-Driven Knowledge Inference
 
 **Philosophy**: Minimize maintenance burden by inferring derived state from actual data rather than storing it explicitly.
@@ -169,13 +335,13 @@ During game guide creation, the UI should offer height template selection as par
 - **Exact move knowledge**: 
   - All `comparativeAttributes` have `kind === 'exact'` or `'measured'`
   - No `comparativeConstraints` or `comparativeOrderings` present
-  - All `phases[].frameData` fields fully populated (if phases exist)
+  - All `phases[].startup.duration`, `phases[].active.duration`, `phases[].recovery.duration` fields fully populated (if phases exist)
   - All `MoveOutcomeEffect` fields have specific values (not conceptual/noted ranges)
 
 - **Exploratory move knowledge**:
   - Any `comparativeAttributes` with `kind === 'observed'` or `'inferred'`
   - Presence of `comparativeConstraints[]` or `comparativeOrderings[]`
-  - `phases[].frameData` has missing or approximate values
+  - `phases[].startup.duration`, `phases[].active.duration`, or `phases[].recovery.duration` are missing or approximate values
   - `MoveOutcomeEffect` uses ranges, notes, or observed patterns
 
 **Inference rules**: Implementations should compute knowledge state at query time from field presence and value completeness rather than trusting a stored `knowledgeStatus` field.
@@ -223,7 +389,7 @@ type DataValue = {
    - Move data unchanged; only interpretation changes
 
 **Applications**:
-- `MovePhase.frameData.startup`, `active`, `recovery` — DataValue
+- `FrameStage.duration` — DataValue for startup/active/recovery frame counts
 - `ResourceEffect.amount` — DataValue (for uncertain resource gains)
 - `PositionalEffect.displacement.x/y` — DataValue (for uncertain knockback distances)
 - Any numeric game property where user may not have precise data
