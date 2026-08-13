@@ -234,6 +234,44 @@ Stages have:
 - Confidence calculation (% of published versions matching top fingerprint)
 - Conflict detection (multiple distinct fingerprints = conflicting data)
 
+### Determinism via Semantic Identity
+
+**Concept**: Semantic keys enable **deterministic move resolution and sequence simulation** critical for peer-to-peer online multiplayer and reproducible analysis.
+
+**How it works:**
+
+1. **semanticKey is immutable to gameplay**: It is computed **only** from identity fields (game key, character name, input frames, preconditions). Changes to:
+   - Frame data / gameplay values
+   - Community metadata (ownerId, timestamps, notes)
+   - ResourceEffects or OpponentEffects
+   - Do **not change** the semanticKey
+
+2. **Move references are deterministic**: When a sequence references a move by `moveSemanticKey`, it always resolves to the same move:
+   - Same `gameSemanticKey` + `inputFrames` + `preconditions` = always the same logical move
+   - Even if multiple users publish different frame data for that move, the move identity is stable
+   - Simulation engine queries by semanticKey, not by variant or published version
+
+3. **Sequence simulation becomes deterministic**:
+   - Given: `gameSemanticKey`, `gameStateContext`, and a `sequenceDocument` with ordered `moveSemanticKey[]`
+   - Engine resolves each move by key → looks up current game-level and character-level move definitions
+   - Same inputs + same starting state = same outcome (deterministic)
+   - Enables reproducible combo feasibility checks, whiff detection, and gap analysis
+
+4. **Scenario testing stays reproducible**:
+   - `MatchupScenario` stores `opponentOptionKey` (a move or sequence semanticKey)
+   - Simulation replays the same scenario identically on multiple runs
+   - Different players testing the same scenario reach the same conclusions about outcome (-1/0/+1)
+
+**Critical assumption for implementation:**
+- When querying a move by `moveSemanticKey`, **always use the same game/character/version context**
+- If game mechanics change (e.g., a patch), the move's gameplay values may differ, but semanticKey remains stable
+- Scenario contexts must explicitly store `gameVersion` to maintain determinism across patches
+
+**Why not include gameplay values in semanticKey?**
+- semanticKey identifies "what was tested", not "what the result was"
+- Multiple test results (observed vs measured vs verified) can be published for the same move
+- Determinism comes from **stable identity + resolved context**, not from freezing gameplay values
+
 ---
 
 ## Design Decisions

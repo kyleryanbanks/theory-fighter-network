@@ -38,7 +38,12 @@ Pre-implementation gates and 16-phase development plan.
 11. Team configuration:
    - Character guides define available assists/loadouts.
    - Team guides declare the specific assist/loadout/order selections actually chosen for a team context.
-12. Exploratory ordering:
+12. Determinism via semantic identity:
+   - Semantic keys are computed only from identity fields and are immutable to gameplay values or metadata changes.
+   - Resolving a move by `moveSemanticKey` + consistent `gameStateContext` always produces the same outcome.
+   - This enables deterministic sequence simulation for combo feasibility checks, scenario testing, and peer-to-peer online multiplayer.
+   - Scenario contexts must explicitly store `gameVersion` to maintain determinism across patches.
+13. Exploratory ordering:
    - Pairwise comparative constraints are supported.
    - Grouped ordering ladders are also supported for sortable exploratory move rankings.
 

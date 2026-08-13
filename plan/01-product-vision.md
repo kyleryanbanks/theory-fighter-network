@@ -81,10 +81,11 @@ These 16 items represent foundational decisions about how fighting game mechanic
     - Moves can be `followUpOnlyFromMoveIds` (only after move X) or `cancelFromMoveIds` (cancellable from move X).
     - This prevents invalid transitions and enables combo validation.
 
-12. **The app must model route viability by range band, state, timing, and post-move positioning.**
+12. **The app must model route viability by range band, state, timing, and post-move positioning, with deterministic outcome guarantees.**
     - Moves can change either the attacker's position or the opponent's position.
     - Same move may connect or whiff depending on resulting distance after those positional changes.
     - Suggestions use move ranges plus both characters' resulting positions to identify viable follow-ups.
+    - **Determinism guarantee**: Semantic keys are immutable to gameplay values and changes in metadata. Resolving a move by `moveSemanticKey` + consistent `gameStateContext` always produces the same outcome. This enables reproducible combo feasibility checks, scenario simulation, and peer-to-peer online multiplayer.
 
 ### Scaling & Balance
 
