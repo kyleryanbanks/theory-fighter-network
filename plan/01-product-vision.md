@@ -1,123 +1,219 @@
-# Product Vision & Domain Clarifications
+# Theory Fighter Network — Product Vision
 
-## Product Direction
+## What It Is
 
-Theory Fighter Network is:
+Theory Fighter Network (TFN) is a research tool that helps you understand fighting games better. It's your lab partner, your notebook, and your community's shared knowledge base—all in one place.
 
-- **Angular web app** for collaborative fighting-game research and documentation.
-- **Private work is local-first and file-based** by default. Users own their guides as `.tfn` workspace archives on their own devices.
-- **Community/cloud is opt-in via Firestore** to control free-tier cost. Users choose to publish or merge community data when beneficial.
-- **Progressive enhancement stays central**: use observed/comparative knowledge first, replace with measured values over time. Incomplete data is valuable data.
-- **Community merge flow is one-way**: users pull community data into their own private guides. They never push to shared collections—convergence happens through independent submission and alignment.
-- **Automated exploration and suggestions are a first-level requirement**: schema and features must preserve programmatic analysis capability. The app suggests unexplored combos, range bands, transitions, and blockstrings based on game mechanics.
-
-## Domain Clarifications (Locked)
-
-These 16 items represent foundational decisions about how fighting game mechanics are modeled. They prevent schema churn during implementation.
-
-### Frame Data & Knowledge Progression
-
-1. **All games have exact frame behavior in reality; some games just do not publish it.**
-   - Every game has deterministic timing. If frame data is missing, it's unknown, not nonexistent.
-   - Schema tracks knowledge status: `observed` → `measured` → `verified`.
-
-2. **Relative/comparative values are a temporary knowledge state until exact values are measured.**
-   - "Move A is faster than Move B" is valid knowledge even without frame counts.
-   - Users enter comparative relationships early; exact values replace them later.
-   - Both can coexist: comparative constraints guide exploration, exact values verify.
-   - Comparative slider inputs are normalized to a shared 0-100 scale so community alignment can tolerate small subjective differences.
-
-### Combo Modeling
-
-3. **`onBlock` and `onHit` outcomes must be modeled separately, including meaty timing effects.**
-   - Same move has different outcomes depending on opponent state (standing, crouching, wall-splat, etc.).
-   - `onBlock` includes frame advantage/disadvantage and potential special interactions.
-   - `onHit` tracks hitstun value and scaling effects. Meaty timing can grant bonus frame advantage.
-   - FrameOutcomeWindow captures base, min, max, and meatyAdvantageGain separately.
-
-4. **Combo base shape is an ordered move array.**
-   - A combo is fundamentally: [Move1, Move2, Move3, …]
-   - Frame delays between steps are optional metadata, not required.
-   - State-dependent move outputs (same trigger with different opponent states) are separate move records, not modifiers.
-
-5. **Optional exact frame delays between combo steps can be attached when known.**
-   - Delays capture timing windows: "2-6 frames of delay before next input allowed" or "no delay, links immediately".
-   - Useful for explaining why a combo works or fails under specific conditions.
-
-6. **Combo difficulty is computed on combo create/update, not manually set.**
-   - System calculates combo difficulty from motion types, hitstun scaling, and move properties.
-   - Difficulty is deterministic and auditable, not subjective or crowd-sourced.
-
-### Team & Scope Modeling
-
-7. **Team games must track character composition and order, but a valid combo can use only a subset of the team.**
-   - Marvel Tokon and MvC all play teams of 3. A combo may be 1-character or 2-character within that team.
-   - Combos are scoped to teams, but apply to subsets of the team roster.
-   - Allow for per-slot selections: assist choices, loadouts, mechanics available only on certain team compositions.
-
-8. **Core records are context-scoped, and stage data is modeled as its own entity with inheritance.**
-   - Universal, character, and team contexts determine where moves/combos are defined and applied.
-   - Stages are not embedded in the game document; they are separate records linked to the game.
-   - Stage zones/elements can inherit universal game defaults and apply stage-local overrides.
-   - Context determines which records are available in a given scenario.
-
-### Community & Convergence
-
-9. **Community exact data is represented by contributor-aligned variants, not confidence labels or voting.**
-   - No upvotes, downvotes, or reputation systems.
-   - Community views show how many distinct users submitted the same value set for a record.
-   - Contradictory variants remain visible and are explicitly marked so users can reconcile their guides.
-   - Convergence happens per game + version pair. Stale data (after a patch) is tracked separately.
-
-10. **Context-dependent outputs from the same trigger family are stored as distinct move records per state variant, not one move with modifiers.**
-    - Example: Loki in Marvel Tokon has tap L vs. hold L. These are two separate MoveDocuments linked by `actionFamilyKey`.
-    - Same trigger (L button) produces different moves depending on player state or input timing.
-    - Avoids feature creep: one move record = one outcome. Cleaner for analysis, suggestions, and combos.
-
-### Game State & Route Viability
-
-11. **Game state modeling must support availability constraints, follow-up-only moves, and cancel/follow-up chains.**
-    - Moves have availability tags: required player state (neutral, active, airborne, blockstun, hitstun) plus game-specific states.
-    - Moves can be `followUpOnlyFromMoveIds` (only after move X) or `cancelFromMoveIds` (cancellable from move X).
-    - This prevents invalid transitions and enables combo validation.
-    - Attack height classifications (low/mid/high/overhead, etc.) are game-specific and modeled as configurable attack states in `StateModel.attacks`. UI provides templates (Street Fighter, Tekken, Guilty Gear, etc.) but users can customize for their game.
-
-12. **The app must model route viability by range band, state, timing, and post-move positioning, with deterministic outcome guarantees.**
-    - Moves can change either the attacker's position or the opponent's position.
-    - Same move may connect or whiff depending on resulting distance after those positional changes.
-    - Suggestions use move ranges plus both characters' resulting positions to identify viable follow-ups.
-    - **Determinism guarantee**: Semantic keys are immutable to gameplay values and changes in metadata. Resolving a move by `moveSemanticKey` + consistent `gameStateContext` always produces the same outcome. This enables reproducible combo feasibility checks, scenario simulation, and peer-to-peer online multiplayer.
-
-### Scaling & Balance
-
-13. **The app must model combo/hitstun scaling rules at game level and move-level interactions with those rules to analyze realistic combo limits.**
-    - Games have global scaling rules: "hitstun decreases 1 frame per hit" or "combo damage capped at 30%".
-    - Individual moves can have custom interactions: "prevents scaling decay", "grants bonus hitstun", "resets scaling counter".
-    - System computes maximum combo damage and hitstun length based on scaling rules + move interactions.
-
-### Versioning & Patches
-
-14. **Guides default to targeting the latest known game version, but users can create version-locked guides for older patches when needed.**
-    - When a game updates, guides can stay on `'latest'` (moving alias) or lock to a specific version (e.g., `'1.2.0'`).
-    - `'latest'` automatically reflects new patches; locked guides remain stable.
-
-15. **Community convergence only occurs between guides for the same game and exact same target version.**
-    - Guides for MvC2 1.0 do NOT merge with MvC2 2.0 guides, even if both target the same game.
-    - Convergence key is `${gameCanonicalKey}@${resolvedGameVersion}`.
-
-### Knowledge Layers
-
-16. **Community exact facts and exploratory/comparative research must remain separate knowledge layers.**
-    - Exact data: frame counts, confirmed mechanics, verified by frame data.
-    - Exploratory data: comparative constraints, slider estimates, player theories (tagged `private-exploratory` or `shared-exploratory`).
-    - UI separates these layers. Exploratory data never auto-promotes to exact; users must explicitly verify.
+You capture what you learn about your game: move properties, combos, matchup decisions. As your documentation grows, TFN becomes more powerful, helping you discover new strategies, validate theories, and collaborate with your community to solve your game together.
 
 ---
 
-## How These Clarifications Guide Implementation
+## Why It Matters
 
-- **Schema design** tracks knowledge progression (`observed | measured | verified`) and keeps exploratory data separate from exact facts.
-- **Inheritance** remains central: universal records provide defaults, scoped records override where needed.
-- **Validation and suggestions** rely on state constraints, ranges, and positional outcomes to reject invalid routes and suggest unexplored viable ones.
-- **Community data** is presented as aligned and contradictory variants with contributor counts, scoped by game + version.
-- **Local-first operation** with version-awareness and crash recovery protects user-owned research.
+### The Problem
+
+When you're learning a fighting game, knowledge is scattered:
+- Frame data is buried in spreadsheets or forum posts
+- Combo routes are in Discord servers and Reddit threads
+- Why combos work requires understanding spacing, timing, and state interactions
+- You discover strategies away from the game but have nowhere to organize them
+- Communities re-discover the same combos over and over because knowledge isn't preserved
+
+### The Solution
+
+TFN lets you document what you learn, where you learn it. Waiting for training mode? Commute on the train? On your phone at work? Document a combo route, a punish, a mixup setup. Over time, you build a complete picture of your game.
+
+And because your documentation is structured (move properties, timing windows, positioning), TFN can:
+- **Suggest new combos** based on your existing data
+- **Validate theories** by checking spacing and timing
+- **Simulate outcomes** to test ideas before going to arcade/online
+- **Connect with your community** to see what others discovered
+
+### Connection to Existing Resources
+
+Resources like the **Footsies Guide** and **Capcom CFN seminars** teach you HOW fighting games work. TFN is where you **apply that knowledge** to YOUR game. 
+
+The Footsies Guide explains frame advantage, hitstun, and cancel windows. TFN is where you document your game's specific values and test those concepts. CFN seminars show you box definitions and state systems. TFN is where you model your game's boxes and states, then discover what they mean for your combos and matchups.
+
+---
+
+## Progressive Documentation
+
+You don't need to know everything to start. You document what you know. As you and your community learn more, the data converges.
+
+### Your Journey
+
+**Week 1: Start With What You Know**
+"I think this jab is faster than that kick" — Document it as a comparative relationship. TFN can already help you find follow-ups.
+
+**Week 3: Add Exact Data**
+"I timed the videos; jab is 5 frames" — Add exact values. Your suggestions become more precise.
+
+**Week 5: Publish Your Guide**
+You share your findings. A community member tries your combos, confirms your frame data, adds their own findings.
+
+**Week 6: See the Community Picture**
+TFN shows: "10 players confirmed jab is 5 frames. 2 players say 6 frames. Here's what varied in their testing..."
+
+You see where the community agrees and where the debate is. Multiple independent measurements converge on the same values, giving you confidence.
+
+**Week 12: Discover Together**
+You share a combo route you found. Three other players try it, discover variations, document state-specific versions. Each variant goes into the system. TFN shows the family tree of this combo across all the versions.
+
+**The magic**: Individual documentation becomes community knowledge. As more people document independently, their data converges. TFN surfaces that convergence. Communities solve games faster because knowledge compounds.
+
+---
+
+## How Knowledge Grows Into Power
+
+### Phase 1: You Learn One Route
+You discover: Ryu's crouching medium punch → Hadoken works on standing opponent.
+
+### Phase 2: You Document It
+You enter the move properties, the hitstun, the startup times. You record the positioning.
+
+### Phase 3: TFN Shows You More
+"You have 5 frames of hitstun here. These 8 other moves have 5-frame startup. You're missing 7 combo routes."
+
+### Phase 4: You Test & Document
+You try those routes. Some work, some don't. You document which states they require, which positioning changes them.
+
+### Phase 5: Your Community Learns Too
+Others download your guide. They validate your data, add their findings, spot contradictions. TFN shows where everyone agrees and where the debate is.
+
+### Phase 6: You Simulate Without Training Mode
+You're away from the arcade. But you can explore: "If I land this move, what are my guaranteed follow-ups?" TFN checks timing and spacing. You test it next session.
+
+**This cycle compounds.** Each person's documentation makes TFN better for everyone. Each idea tested in the tool gets brought back to the lab. Communities discover combos faster because the tool surfaces possibilities no one would find manually.
+
+---
+
+## Core Capabilities
+
+### Understand Your Game
+
+**Document moves exactly as they appear**:
+- Startup, active, recovery frames
+- Hitbox position and size (estimated from screenshots if needed)
+- Hurt box changes per frame stage
+- Hit and block outcomes (they can be completely different)
+- Frame advantage on hit, block, counter-hit
+- Positioning changes after the move connects
+- State changes (crouch, airborne, charging, etc.)
+
+### Organize Your Discovery
+
+**Build combos from your understanding**:
+- Select moves in sequence
+- Timing windows show when you can input next
+- Positioning tracks where both characters end up
+- Difficulty calculates automatically
+- Notes capture context ("only works corner", "tight link", etc.)
+
+### Explore Possibilities
+
+**Let the tool suggest what you might have missed**:
+- "You have 5 frames of hitstun; these 3 moves have 5-frame startup"
+- "You've cancelled jab into hadoken 8 times; have you tried shoryuken?"
+- "That move pushes opponent 20 units; these moves have 20+ range"
+
+### Document Decisions
+
+**Capture matchup knowledge**:
+- Key moves for this matchup
+- Vulnerable moments to punish
+- Spacing control and positioning advantages
+- If-then scenarios ("If opponent corners me, do X")
+
+### Work Away From the Game
+
+**On your phone, in a browser, on the train**:
+- Review your notes and strategies
+- Simulate: "What's guaranteed after this knockdown?"
+- Explore: "What if I tried this sequence?"
+- Organize: Bookmark your best combos and strategies
+- Collaborate: See what your community discovered
+
+### Share With Friends
+
+**Collaborate without publishing**:
+- Text or email a guide, combo, or matchup sequence to a teammate
+- They import it directly into their guide
+- Both of you see each other's findings and can work together
+- No need to publish to community; it stays between you and your team
+- Merge findings as you both discover new routes and properties
+
+---
+
+## The Superpowered Wiki
+
+Individual knowledge + structured data = community solutions.
+
+**Before TFN**: Knowledge lives in isolated corners. One player discovers a combo in their city. Another discovers the same combo a year later 1000 miles away. Neither knows the other found it.
+
+**With TFN**: The first player documents it. The tool surfaces how many people verified it, what variations exist, where the debate is. The second player finds it immediately. They add their own findings. The community sees the pattern.
+
+Over time, fighting game communities move from "Has anyone found a combo after this move?" to "Here are the 14 known routes after this move, ranked by difficulty, validated by 237 players."
+
+---
+
+## What You Can Do Now
+
+✅ Document moves with phases (startup/active/recovery)  
+✅ Track hit and block outcomes independently  
+✅ Model combo structures with timing windows  
+✅ Define your game's configuration (frame rate, states, attack types)  
+✅ Estimate hitboxes and hurt boxes from theory  
+✅ Calculate combo difficulty automatically  
+✅ Get combo suggestions based on your data  
+✅ Model matchup scenario trees (if opponent does X, I do Y)  
+✅ Export and import guides as files  
+
+---
+
+## What's Coming
+
+🔄 Cloud sync and community publishing  
+🔄 Variant comparison (when players disagree on frame data)  
+🔄 Video integration and clip linking  
+🔄 Real-time frame data capture from gameplay  
+🔄 Mobile app for offline reference  
+
+---
+
+## The Philosophy
+
+**Local-First**: Your research belongs to you, on your computer. Cloud is optional.
+
+**Progressive**: Start with what you know. Incomplete data is valuable. Upgrade as you learn.
+
+**Deterministic**: Same move in same state always produces same result. No randomness, no guessing.
+
+**Game-Agnostic**: Works for Street Fighter, Marvel, Tekken, Guilty Gear, indie games, anything frame-based.
+
+**Community-Transparent**: See what's aligned, what's debated, how many people verified it.
+
+---
+
+## Who This Is For
+
+- **Competitive players** building character mastery
+- **Casual players** learning why combos work
+- **Coaches** organizing and teaching character knowledge
+- **Content creators** using research for videos and guides
+- **Communities** solving games together
+- **Game designers** documenting mechanics precisely
+
+---
+
+## Important: No AI, No Black Box
+
+TFN uses only local data and deterministic mechanics. There's no AI or machine learning predicting your combos. Every suggestion is based purely on:
+- **The moves you documented** and their properties
+- **The math**: spacing, timing, hitstun values
+- **Your game's rules** as you defined them
+
+When TFN suggests a combo, it's checking: "Do you have enough hitstun? Does the next move have 5-frame startup or less? Is the opponent in range after being pushed?" 
+
+All transparent. All based on the data you enter. Communities trust TFN because they understand exactly how it works.
+
