@@ -4,6 +4,7 @@
 
 import { CommunityMetadata, EntityMetadata } from './shared';
 import { StateModel } from './state';
+import { Region } from './region';
 
 export interface CharacterDocument {
   gameKey: string;
@@ -12,6 +13,12 @@ export interface CharacterDocument {
   archetypes: string[];
 
   states: StateModel;
+
+  neutralRegions: {
+    collisionBoxes?: Region[];
+    hurtBoxes?: Region[];
+    throwBoxes?: Region[];
+  };
 
   community: CommunityMetadata;
   meta: EntityMetadata;

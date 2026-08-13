@@ -7,6 +7,7 @@ import {
   EntityMetadata,
   DataValue,
 } from './shared';
+import { Region } from './region';
 
 export interface MoveDocument {
   gameKey: string;
@@ -45,18 +46,25 @@ export interface TriggerInputFrame {
 }
 
 /**
+ * Single frame stage (startup, active, or recovery) with region and duration information
+ */
+export interface FrameStage {
+  duration?: DataValue;
+  collisionBoxes?: Region[];
+  hurtBoxes?: Region[];
+  hitBoxes?: Region[];
+  throwBoxes?: Region[];
+}
+
+/**
  * Phase within a move
  */
 export interface MovePhase {
   label?: string;
-  startFrame?: number;
-  frameData?: {
-    startup?: DataValue;
-    active?: DataValue;
-    recovery?: DataValue;
-  };
-
-  rangeProfile?: MoveRangeProfile;
+  
+  startup?: FrameStage;
+  active?: FrameStage;
+  recovery?: FrameStage;
 
   effects?: {
     onHit?: MoveOutcomeEffect;
@@ -74,40 +82,7 @@ export interface MovePhase {
     onSecondaryTrigger?: PhaseCancelRule[];
   };
 
-  canBeBlocked?: string[];
-
   notes?: string;
-}
-
-/**
- * Range profile for a move or phase
- */
-export interface MoveRangeProfile {
-  comparativeAxes?: RangeAxisProfile[];
-  bands: RangeBand[];
-}
-
-/**
- * Range band for precise distance tracking
- */
-export interface RangeBand {
-  key: string;
-  label: string;
-  axis: 'x' | 'y' | 'z';
-  minDistance?: number;
-  maxDistance?: number;
-  relativeSide?: 'front' | 'behind' | 'both';
-}
-
-/**
- * Comparative range axis
- */
-export interface RangeAxisProfile {
-  axis: 'x' | 'y' | 'z';
-  comparisons?: Array<{
-  otherMoveKey: string;
-    relation: 'shorter' | 'same' | 'longer';
-  }>;
 }
 
 /**
