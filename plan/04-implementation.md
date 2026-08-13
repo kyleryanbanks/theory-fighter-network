@@ -2,6 +2,22 @@
 
 Pre-implementation gates and 16-phase development plan.
 
+## CFN-Informed Mechanics (Gaps Solved) ✅
+
+The following model gaps identified from Capcom CFN mechanics documentation have been resolved:
+
+- ✅ **Hitstun/Blockstun** — Modeled as `effects.onHit.opponent.stun` and `effects.onBlock.opponent.stun` (implicit type from parent outcome)
+- ✅ **Hit Stop Timing** — Modeled as `effects.onHit.hitStop` and `effects.onBlock.hitStop` at MoveOutcomeEffect root
+- ✅ **Cancel Windows and Restrictions** — Cancel timing via `PhaseCancelRule.windowStartFrame/windowEndFrame`; cancel restrictions via target move `preconditions` (no duplication; state always checked on target move)
+- ✅ **Pushback and Spacing** — Modeled via `effects.opponent.positional.displacement`; combo feasibility requires both timing (hitstun ≥ startup) AND spacing (position + displacement ≤ range)
+- ✅ **Duration Units and Framerate** — `DataValue.unit` field defaults to frames; `GameDocument.frameRate` enables conversion; users measure durations however they can (watch duration in seconds = progressive documentation)
+- ✅ **Multi-hit Moves** — Two approaches supported: sequential phases (per-hit variation) or multiple hitboxes in single phase (simultaneous hits)
+- ✅ **Attack Height Classification** — Handled via state model: `states.attacks` contain attack type definitions (low/mid/high) as named states with optional descriptive properties
+
+**Documentation**: All gaps documented in [plan/02-data-model.md](./02-data-model.md) with examples and rationale.
+
+---
+
 ## Ready-to-implement gate (locked defaults)
 
 1. Canonical key policy:

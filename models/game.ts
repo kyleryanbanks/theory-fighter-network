@@ -13,6 +13,8 @@ export interface GameDocument {
   version: string;
   semanticKey: string; // hash(normalizedGameName + versionFamily)
 
+  frameRate?: number;  // Game's frame rate (e.g., 60 for 60fps, 59.94 for NTSC arcade)
+  
   teamSize: number;
   inputs: Inputs;
   states: StateModel;

@@ -551,6 +551,269 @@ Rather than duplicating game-level moves in every character:
 
 ---
 
+## Hit Stun and Block Stun (CFN Hours 10-12)
+
+**Concept**: Each attack has unique stun duration for opponent, determined by the attack's outcome type.
+
+**How it works:**
+- `MovePhase.effects.onHit.opponent.stun` — Hitstun: frames opponent cannot act after being hit
+- `MovePhase.effects.onBlock.opponent.stun` — Blockstun: frames opponent cannot act after blocking (usually shorter than hitstun)
+
+**Example:**
+```typescript
+const jab: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        opponent: {
+          stun: { exact: 5, unit: 'frames' }  // 5 frames hitstun
+        }
+      },
+      onBlock: {
+        opponent: {
+          stun: { exact: 2, unit: 'frames' }  // 2 frames blockstun
+        }
+      }
+    }
+  }]
+}
+```
+
+**Combo feasibility:**
+- Combo connects if: `nextMove.startup <= hitstun` (AND spacing condition met)
+- Example: Jab's 5-frame hitstun enables any move with 5-frame startup or less
+
+**DataValue.unit defaults to frames** when undefined, but can be overridden:
+```typescript
+stun: { exact: 83, unit: 'milliseconds' }  // Explicitly not frames
+stun: { exact: 5 }                          // Implicitly frames
+```
+
+---
+
+## Hit Stop Timing (CFN Hour 11)
+
+**Concept**: Brief visual pause when move connects, affecting perceived "weight" and cancel window.
+
+**How it works:**
+- `MovePhase.effects.onHit.hitStop` — Applies when move hits
+- `MovePhase.effects.onBlock.hitStop` — Applies when move is blocked (often different)
+
+**Example:**
+```typescript
+const hadoken: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        hitStop: { exact: 12, unit: 'frames' },  // Heavier feel on hit
+        opponent: { stun: { exact: 20 } }
+      },
+      onBlock: {
+        hitStop: { exact: 8, unit: 'frames' },   // Less heavy on block
+        opponent: { stun: { exact: 12 } }
+      }
+    }
+  }]
+}
+```
+
+**Impact:**
+- Longer hit stop = more time for player to input cancel commands
+- Cancel window is determined by hit stop duration (CFN: "timing is during hit stop")
+- Heavier attacks typically have longer hit stop (visual feedback of power)
+
+---
+
+## Cancel Windows and State Constraints (CFN Hour 14)
+
+**Concept**: Cancels have two independent constraints: timing window and state preconditions.
+
+**How it works:**
+- Cancel **timing**: `PhaseCancelRule.windowStartFrame/windowEndFrame` (WHEN cancel is available)
+- Cancel **restrictions**: Determined by target move's `preconditions` (IF move can be used)
+- No duplication: state is always checked on target move
+
+**Example: Ryu Jab → Hadoken cancel**
+```typescript
+const jab: MoveDocument = {
+  phases: [{
+    cancelOptions: {
+      onHit: [{
+        windowStartFrame: 2,               // Cancel available frames 2-5
+        windowEndFrame: 5,
+        allowedMoveKeys: ["hadoken", "shoryuken"]
+      }]
+    }
+  }]
+}
+
+const hadoken: MoveDocument = {
+  preconditions: {
+    // No state restrictions—can cancel into from any state
+  }
+}
+
+// Result: Cancel available frames 2-5; no state gate
+```
+
+**Per-game variability (CFN documents):**
+- Street Fighter II: Universal 4-frame grace period (cancel timer)
+- Super SFII: Per-character cancel timers (some 4F, some 5F)
+- SF3: Complex per-version differences
+- SF4/5: Different cancel timer per move type
+
+Users document via `PhaseCancelRule` + target move `preconditions`.
+
+---
+
+## Duration Units and Framerate Conversion
+
+**Concept**: Users may measure durations with a watch (seconds) or know frame counts. DataValue supports both.
+
+**How it works:**
+- `DataValue.unit` clarifies measurement unit (defaults to frames if undefined)
+- `GameDocument.frameRate` enables conversion: `frames = seconds * frameRate`
+- UI layer handles display and conversion
+
+**Example: Street Fighter at 60fps**
+```typescript
+const game: GameDocument = {
+  frameRate: 60,  // 60 frames per second
+  // ...
+}
+
+// User measures with stopwatch: "Jab stun is about 83 milliseconds"
+const jab: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        opponent: {
+          stun: { exact: 83, unit: 'milliseconds' }  // Explicit unit
+        }
+      }
+    }
+  }]
+}
+
+// UI converts to frames: 83ms ÷ 1000 * 60fps = ~5 frames
+// Alternative: User enters frames directly
+stun: { exact: 5 }  // Implicitly frames; UI shows as "5 frames" or "83.3ms" depending on context
+```
+
+**Progressive documentation helper:**
+- Frame-only knowledge: `{ exact: 5 }` is clear
+- Second-based measurement: `{ exact: 0.083, unit: 'seconds' }` captures user intent
+- No data loss; unit clarifies interpretation
+
+---
+
+## Pushback and Spacing (CFN Hours 11-13)
+
+**Concept**: Opponent displacement on hit/block affects combo feasibility. Located in positional effects.
+
+**How it works:**
+- `MovePhase.effects.onHit.opponent.positional.displacement` — Opponent pushed back on hit
+- `MovePhase.effects.onBlock.opponent.positional.displacement` — Opponent pushed back on block (often less)
+
+**Example:**
+```typescript
+const jab: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        opponent: {
+          stun: { exact: 5, unit: 'frames' },
+          positional: {
+            displacesCharacter: true,
+            displacement: { x: { exact: 20 } }  // Pushed back 20 units
+          }
+        }
+      },
+      onBlock: {
+        opponent: {
+          positional: {
+            displacement: { x: { exact: 10 } }  // Less pushback on block
+          }
+        }
+      }
+    }
+  }]
+}
+```
+
+**Combo spacing condition:**
+- Combo connects if: `(position + pushbackDistance) <= nextMove.range`
+- Example: Jab pushes opponent 20 units; next move needs 20+ range to connect
+- Corner mechanics: Pushback may be applied to attacker instead (game-specific rule)
+
+---
+
+## Multi-hit Move Structure
+
+**Concept**: Moves can hit multiple times via multiple phases or multiple hitboxes in single phase.
+
+**Approach A: Sequential hits (multiple phases)**
+```typescript
+const multiHit: MoveDocument = {
+  phases: [
+    {
+      label: 'First hit',
+      active: { duration: { exact: 5 } },
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 8 },
+            positional: { displacement: { x: { exact: 15 } } }
+          }
+        }
+      }
+    },
+    {
+      label: 'Second hit',
+      active: { duration: { exact: 5 } },
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 8 },
+            positional: { displacement: { x: { exact: 15 } } }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+**Approach B: Simultaneous/overlapping hits (multiple hitboxes)**
+```typescript
+const multiHit: MoveDocument = {
+  phases: [{
+    active: {
+      duration: { exact: 10 },
+      hitBoxes: [
+        { x: -10, y: 30, width: 20, height: 30 },  // First hitbox active frames 1-5
+        { x: 10, y: 30, width: 20, height: 30 }    // Second hitbox active frames 6-10
+      ]
+    },
+    effects: {
+      onHit: {
+        opponent: {
+          stun: { exact: 12 }  // Total stun for entire move
+        }
+      }
+    }
+  }]
+}
+```
+
+**Hitstun scaling:**
+- Multi-hit combos apply per-game scaling rules (handled at query time, not in model)
+- Each hit contributes to combo counter (prevents infinites via damage scaling)
+- Approach A (phases) naturally represents per-hit variation
+- Approach B (hitboxes) requires per-hitbox properties for advanced games (future enhancement)
+
+---
+
 ## Version Management
 
 All entities include `guideVersion: GuideVersionReference` to:

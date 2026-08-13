@@ -11,6 +11,7 @@ import { Timestamp } from 'firebase/firestore';
 export type DataValue = {
   exact?: number;      // Precise value if known
   relative?: number;   // Positioned within bounds as percentage (0-100)
+  unit?: 'frames' | 'seconds' | 'milliseconds' | string;  // Measurement unit (defaults to frames if undefined)
   notes?: string;
 };
 

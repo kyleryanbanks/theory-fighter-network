@@ -111,15 +111,18 @@ export interface MoveComboScalingEffects {
  * Outcome effects when a move connects, is blocked, etc.
  */
 export interface MoveOutcomeEffect {
-  playerEffects?: {
-    positionalEffect?: PositionalEffect;
-    resourceEffects?: ResourceEffect[];
+  hitStop?: DataValue;  // Brief visual pause when move connects (defaults to frames)
+
+  player?: {
+    positional?: PositionalEffect;
+    resources?: ResourceEffect[];
     appliesStateTags?: string[];
   };
 
-  opponentEffects?: {
-    positionalEffect?: PositionalEffect;
-    resourceEffects?: ResourceEffect[];
+  opponent?: {
+    stun?: DataValue;  // Hitstun on hit, blockstun on block, etc. (type implicit in parent outcome)
+    positional?: PositionalEffect;
+    resources?: ResourceEffect[];
     appliesStateTags?: string[];
   };
 
