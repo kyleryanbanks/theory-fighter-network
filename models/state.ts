@@ -40,6 +40,14 @@ export type RuntimeStateValues<T extends Record<string, State>> = Partial<{
 }>;
 
 /**
+ * Map a StateModel to runtime values organized by category
+ * Represents the full runtime state snapshot of a game moment
+ */
+export type RuntimeStateModel<TStateModel extends StateModel = StateModel> = {
+  [K in keyof TStateModel]: RuntimeStateValues<TStateModel[K]>;
+};
+
+/**
  * Universal state model used identically at game and character level
  * Generic parametrization ensures type safety for runtime state matching
  */
@@ -71,32 +79,14 @@ export interface StateModel<
  * Type parameters ensure every runtime value key exists in the corresponding StateCollection
  */
 export interface GameStateContext<
-  A extends StateCollection = StateCollection,
-  B extends StateCollection = StateCollection,
-  K extends StateCollection = StateCollection,
-  J extends StateCollection = StateCollection,
-  P extends StateCollection = StateCollection,
-  S extends StateCollection = StateCollection,
-  C extends StateCollection = StateCollection,
-  R extends StateCollection = StateCollection,
-  CM extends StateCollection = StateCollection
+  TStateModel extends StateModel = StateModel
 > {
   gameKey: string;
   stageKey?: string;
   activeCharacterKey: string;
   
   // Runtime values organized by state category - types ensure keys are valid
-  runtimeState: {
-    attacks: RuntimeStateValues<A>;
-    blocks: RuntimeStateValues<B>;
-    knockdowns: RuntimeStateValues<K>;
-    juggles: RuntimeStateValues<J>;
-    positions: RuntimeStateValues<P>;
-    stageMechanics: RuntimeStateValues<S>;
-    characters: RuntimeStateValues<C>;
-    resources: RuntimeStateValues<R>;
-    comboMechanics: RuntimeStateValues<CM>;
-  };
+  runtimeState: RuntimeStateModel<TStateModel>;
   
   frame: number;
   roundNumber: number;

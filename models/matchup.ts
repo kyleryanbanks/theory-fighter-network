@@ -1,62 +1,67 @@
 /**
- * Matchup entity and related scenario graph types
+ * Matchup entity and scenario comparison types
  */
 
 import { CommunityMetadata, EntityMetadata } from './shared';
+import { RuntimeStateModel } from './state';
 
+/**
+ * Matchup document for comparing two characters/teams
+ */
 export interface MatchupDocument {
-  id: string;
   gameKey: string;
+  stageKey?: string;
 
-  playerSide: MatchupSide;
-  opponentSide: MatchupSide;
-  scenarioGraph: MatchupScenarioGraph;
+  semanticKey: string; // hash(gameSemanticKey + attackerKey + defenderKey + name)
+  name: string;
   notes?: string;
 
-  semanticKey: string; // hash(gameSemanticKey + ordered character pair semanticKeys)
+  attackerKey: string;
+  defenderKey: string;
+
+  scenarios: MatchupScenario[];
 
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
 
 /**
- * Side of a matchup (player or opponent)
+ * A specific scenario within a matchup
+ * Represents a single game state where opponent will execute a sequence
+ * User tries different responses to find solutions
+ * 
+ * If parentScenarioKey is provided, attacker/defender roles flip implicitly (counter-scenario)
  */
-export interface MatchupSide {
-  characterKey?: string;
-  teamId?: string;
-}
-
-/**
- * Scenario graph for matchup navigation
- */
-export interface MatchupScenarioGraph {
-  nodes: MatchupScenarioNode[];
-  edges: MatchupScenarioEdge[];
-}
-
-/**
- * Node in a scenario graph
- */
-export interface MatchupScenarioNode {
+export interface MatchupScenario {
   id: string;
-  phase: 'neutral' | 'pressure' | 'confirm' | 'combo' | 'oki' | 'reset' | 'defense';
-  label: string;
-  sequencePatternId?: string;
-}
-
-/**
- * Edge in a scenario graph
- */
-export interface MatchupScenarioEdge {
-  id: string;
-  fromNodeId: string;
-  toNodeId: string;
-  actingSide: 'player' | 'opponent';
-  optionLabel: string;
-  counteredByEdgeIds?: string[];
-  projectedSuccessRate?: number;
-  rewardScore?: number;
-  riskScore?: number;
+  semanticKey: string; // hash(matchupKey + opponentOptionKey + initialState + playerInitialPosition + opponentInitialPosition)
+  name?: string;
   notes?: string;
+
+  // The move or sequence the opponent executes
+  opponentOptionKey: string; // move or sequence semanticKey (uniqueness guaranteed)
+
+  // Starting game state for this scenario
+  initialState?: Partial<RuntimeStateModel>;
+
+  // Initial character positioning
+  playerInitialPosition?: number;
+  opponentInitialPosition?: number;
+
+  // Link to parent scenario if this is a response/counter
+  // If present, attacker/defender roles flip from parent
+  parentScenarioKey?: string;
+
+  responses: ScenarioResponse[];
+}
+
+/**
+ * A player response to the opponent option in a scenario
+ * Captures what the player tried and the outcome
+ */
+export interface ScenarioResponse {
+  semanticKey: string; // hash(scenarioKey + playerOptionKey)
+  playerOptionKey: string; // move or sequence semanticKey (uniqueness guaranteed)
+  notes?: string;
+  outcome: -1 | 0 | 1; // -1 loss, 0 draw, +1 win
 }
