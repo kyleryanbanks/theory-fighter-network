@@ -39,64 +39,74 @@ The following model gaps identified from Capcom CFN mechanics documentation have
 
 ---
 
-## Ready-to-implement gate (locked defaults)
+## Ready-to-implement gate (local-first offline features)
 
-1. Canonical key policy:
-   - Games/characters: exact canonical naming with guided reuse of existing community entries.
-   - Moves: canonical identity based on trigger input + availability state context.
-   - Aliases are supported for display without changing canonical identity.
-2. Convergence thresholds:
-   - Community data remains visible as variants with contributor counts.
-   - Contradictory variants are explicitly labeled and remain reviewable.
-   - Exploratory comparative data is shared separately and never promoted into canonical exact data.
-   - Comparative slider alignment uses normalized 0-100 scales with default +/-5% tolerance before marking submissions contradictory.
-3. Merge semantics:
-   - Community -> private only.
-   - Combo identity is ordered move sequence; timing differences create variants.
-4. Range modeling:
-   - Comparative entry is relative to other known moves.
-   - Stored range output uses range bands, with optional future precise x/y(/z) stage-relative coordinates supported.
-5. Scaling simulation:
-   - **Updated**: Deterministic combo feasibility via state application: apply move1 effects → resolve resource state → check move2 feasibility
-   - Scaling resources (damage scaling, hitstun scaling) modify state at query time
-   - Hitstun scaling models both percentage-based (shrinks pool) and counter-based (forces knockdown at threshold)
-   - Resource bounds use DataValue pattern: `{ exact: 100 }` (verified bounds) vs `{ relative: "25-50%" }` (inferred from empirical data)
-6. Crash recovery/versioning:
-   - Restore to same version draft.
-   - Latest-target guides are the default; version-locked branching is supported with clear version labels in community views.
-   - `latest` resolves to a concrete game version for convergence and stale-guide detection.
-7. Firestore reads:
-   - Curated latest most-aligned exact variant by default; contradictory variants and history are explicit.
-8. Suggestions:
-   - Suggestions unlock progressively across phases: foundation -> universal systems -> roster -> move connectivity -> move balance -> move details -> sequences -> matchups.
-   - Damage scaling discovery suggestions: "Scaling appears to be -10% per hit, bounds 25-100%"
-   - Mobile data entry suggestions: suggest next move or sequence to test based on coverage gaps
-9. File compatibility:
-   - `.tfn` files carry a required schema version.
-   - The app supports forward migration from older schema versions and refuses unknown future schema versions.
-10. Verification:
-   - Verification is tracked per field/section, not only per guide.
-   - Users must be able to see exactly which parts of a guide are stale after a patch.
-   - Scaling bounds documented via DataValue: `{ exact: 100 }` when verified, or `{ relative: "..." }` when inferred from data
-11. Team configuration:
-   - Character guides define available assists/loadouts.
-   - Team guides declare the specific assist/loadout/order selections actually chosen for a team context.
-12. Determinism via semantic identity:
-   - Semantic keys are computed only from identity fields and are immutable to gameplay values or metadata changes.
-   - Resolving a move by `moveSemanticKey` + consistent `gameStateContext` always produces the same outcome.
-   - This enables deterministic sequence simulation for combo feasibility checks, scenario testing, and peer-to-peer online multiplayer.
-   - Scenario contexts must explicitly store `gameVersion` to maintain determinism across patches.
-   - **Critical for scaling**: Move effects on resources must be deterministic; same input state → same resource modifications
-13. Exploratory ordering:
-   - Pairwise comparative constraints are supported.
-   - Grouped ordering ladders are also supported for sortable exploratory move rankings.
-14. Resource effects:
-   - **New**: Move effects can modify resources via `ResourceEffect` with multiple modes
-   - `delta`: Modify by amount (e.g., `delta: -10` reduces scaling by 10%)
-   - `multiply`: Multiply by factor (e.g., `multiply: 0.9` scales resource to 90%)
-   - `exact`: Set to exact value (e.g., `exact: 100` resets scaling)
-   - `amount`: Legacy gain/spend (e.g., `amount: 20` adds 20 to meter)
-   - Validation: Resources referenced in effects must exist in `game.states.resources`
+These are locked design decisions for Phases 1-10 (offline, local-first). Community 
+and cloud features (Phases 11-14) have separate planning documents.
+
+1. **Canonical identity via semantic keys** ✅ IMPLEMENTED
+   - Games/characters: Hash(canonicalName + versionFamily)
+   - Moves: Hash(gameSemanticKey + characterSemanticKey + inputFrames + preconditions)
+   - Aliases supported for display without changing canonical identity
+   - Enables deterministic move resolution: same key + context = same outcome
+
+2. **Range modeling (local features)**
+   - Move range documented via DataValue: `{ exact: 150 }` (precise) or `{ relative: 75 }` (estimate)
+   - Range bands for grouping: `short` | `medium` | `long` | `fullscreen`
+   - Stored in sequences via `selectedRangeBandKeys`
+   - Note: Comparative move ordering (Phase 7) is separate
+
+3. **Scaling as state resources** ✅ LOCKED IN
+   - Damage scaling, hitstun scaling: Game-configurable resources in `StateModel.resources`
+   - Resource bounds: `{ min, max, initialValue }` defined per game
+   - Resource effects: Move effects modify resources via four modes
+    - `delta`: Change by amount (e.g., reduce scaling by 10%)
+    - `multiply`: Scale by factor (e.g., scale hitstun to 90%)
+    - `exact`: Set to value (e.g., reset scaling to 100%)
+    - `amount`: Legacy gain/spend (e.g., add 20 to meter)
+   - Query-time combo feasibility: Apply move1 effects → resolve resource state → check move2
+   - Validation: Resources referenced in effects must exist in game.states.resources
+
+4. **Determinism via semantic identity** ✅ IMPLEMENTED
+   - Same `moveSemanticKey` + `gameStateContext` always produces same outcome
+   - Enables: Deterministic sequence simulation, scenario testing, peer-to-peer sync
+   - `gameVersion` stored in scenario contexts for cross-patch determinism
+   - Critical: Move effects on resources must be deterministic; same state → same modifications
+
+5. **Schema versioning and file compatibility**
+   - `.tfn` files carry required schema version
+   - App supports forward migration from older schema versions
+   - App refuses unknown future schema versions
+   - Per-entity tracking: `validatedVersion` field tracks last tested game version
+
+6. **Field-level verification tracking** ✅ IMPLEMENTED
+   - Verification tracked per field/section, not per guide only
+   - Users can see exactly which parts are stale after patches
+   - Scaling bounds documented via DataValue pattern
+    - `{ exact: 100 }` = verified from testing
+    - `{ relative: "25-50%" }` = inferred from empirical data
+
+7. **Team and character scope semantics** ✅ IMPLEMENTED
+   - Character guides define available assists/loadouts
+   - Team guides declare specific assist/loadout/order selections for team context
+   - Team values override character values (explicit scoping)
+
+8. **Determinism in multi-user scenarios** ✅ LOCKED IN
+   - Two users with same game + moves + sequence = same combo outcome
+   - Peer-to-peer sync enabled by semantic identity
+   - No convergence/consensus needed; each user can have local variants
+   - Publishing publishes variants, not forcing convergence
+
+---
+
+## Community & Cloud Gates (Phases 11-14)
+
+To be planned separately in phase-specific documents:
+
+- **Phase 11 gates**: Compare/merge between local and community entities
+- **Phase 12 gates**: Firestore reads, auth, cloud sync decisions
+- **Phase 13 gates**: Convergence thresholds, variant alignment, contradictory labeling
+- **Phase 14 gates**: Progressive suggestion UI strategy
 
 ---
 
