@@ -373,11 +373,94 @@ type DataValue = {
 - All values are `{ exact: ... }` → exact knowledge for this property
 - Any `{ relative: ... }` present → exploratory/measured knowledge
 
-### Combo Scaling & Meta-Mechanics
+### Combo Resources and Scaling
 
-- `ComboScalingSystem` defines how game-wide scaling works
-- Individual moves define `comboScalingEffects` per phase (hitstun/damage modifiers, prorating, resets, etc.)
-- `SequenceDifficulty` computes execution difficulty from sequence length, timing strictness, and input complexity
+**Concept**: Scaling systems (damage scaling, hitstun scaling, etc.) are game-configurable resources that modify state during combos.
+
+**How it works:**
+- Games define scaling resources in `StateModel.resources`:
+  ```typescript
+  game.states.resources: {
+    "damage-scaling": {
+      name: "Damage Scaling",
+      bounds: { min: 25, max: 100 },
+      initialValue: 100
+    },
+    "hitstun-scaling": {
+      name: "Hitstun Scaling", 
+      bounds: { min: 50, max: 100 },
+      initialValue: 100
+    }
+  }
+  ```
+- Games without scaling don't define these resources (optional per-game)
+
+**Hitstun as a combo resource:**
+- Opening move grants `opponent.resources.hitstun` (e.g., 5 frames)
+- Each subsequent move costs startup frames: `opponent.resources.hitstun -= nextMove.startup`
+- If hitstun remaining < 0: combo ends, move whiffs
+- Scaling modifies hitstun pool: `opponent.resources.hitstun *= 0.9` per hit
+- Certain moves reset: apply `reset opponent.resources.hitstun to 100%` effect
+- Corner/position effects modify bounds: `hitstun.max *= 1.2 (in corner)`
+
+**Combo feasibility with resources:**
+- Combo connects if: `opponent.resources.hitstun - nextMove.startup >= 0` (AND spacing valid)
+- Scaling automatically tightens windows: less hitstun = fewer moves available
+- Move effects modify resources at query time: `opponent.resources.damageScaling -= 10%`
+
+**Move effects on resources:**
+```typescript
+const hadoken: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        damage: { exact: 100 },
+        opponent: {
+          stun: { exact: 20 },
+          modifiesResource: {
+            "damage-scaling": { delta: -10 }  // reduces scaling by 10%
+          }
+        }
+      }
+    }
+  }]
+}
+
+const meterBurn: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        damage: { exact: 150 },
+        opponent: {
+          modifiesResource: {
+            "damage-scaling": { exact: 100 }  // reset scaling to 100%
+          }
+        }
+      }
+    }
+  }]
+}
+```
+
+**User discovery workflow:**
+1. User captures per-hit damage in sequences
+2. TFN infers scaling: `observed damage / base damage = scaling factor`
+3. TFN suggests bounds from empirical data: "Scaling appears to be 25-100%, -10% per hit"
+4. User confirms bounds in game config
+5. User documents move effects that modify resources
+6. TFN validates future sequences against discovered rules
+
+**Why this design:**
+- ✅ **Game-agnostic**: Any game defines any resources it needs
+- ✅ **Deterministic**: Resource state + move effects = predictable outcome
+- ✅ **Unified**: Scaling, hitstun, meter all follow same state modification pattern
+- ✅ **Discovery-driven**: Users empirically find bounds, not guess them
+- ✅ **Composable**: Multiple resource types (damage scaling, hitstun scaling, stun decay, etc.) work together
+
+### Combo Difficulty and Sequence Analysis
+
+- `SequenceDifficulty` computes execution difficulty from sequence length, input complexity, and timing strictness
+- Query-time validation: Can this sequence connect given current game/character/resource state?
 
 ### Projectile System
 
@@ -794,9 +877,13 @@ const jab: MoveDocument = {
 Both conditions must be satisfied for a combo to connect:
 
 1. **Timing condition**: Opponent must still be in hitstun when next move starts
-   - `nextMove.startup <= hitstun + frameAdvantage.base`
-   - Meaty timing adds extra window: `nextMove.startup <= hitstun + frameAdvantage.base + meatyAdvantageGain`
-   - Example: Jab hits (5-frame hitstun, +1 frame advantage); next move must have 6-frame startup or less
+   - Base: `nextMove.startup <= currentHitstun + frameAdvantage.base`
+   - With meaty timing: `nextMove.startup <= currentHitstun + frameAdvantage.base + meatyAdvantageGain`
+   - **Hitstun scaling applies during the combo**: Each hit modifies the hitstun resource via effects
+     - Move applies hitstun scalar: `opponent.resources.hitstun *= 0.9` (each hit reduces by 10%)
+     - Or as counter: `opponent.resources.hitCount++` until `hitCount >= threshold` → forced knockdown
+   - Example: Jab hits with 5-frame hitstun; hadoken reduces hitstun to 4.5 frames via scaling; next move needs 4-frame startup or less
+   - **Scaling tightens windows**: As hitstun shrinks, fewer moves can combo into
 
 2. **Spacing condition**: Next move must reach opponent after pushback
    - `playerPosition + playerDisplacement + nextMove.range >= opponentPosition + opponentDisplacement`
@@ -804,12 +891,33 @@ Both conditions must be satisfied for a combo to connect:
 
 **Query-time validation** (both must pass AND):
 ```typescript
-canCombo(move1, move2) {
-  const timingValid = move2.startup <= (move1.hitstun + move1.frameAdvantage);
+canCombo(move1, move2, currentState) {
+  // Apply move1's effects to current state (including hitstun scaling)
+  const stateAfterMove1 = applyEffects(currentState, move1.effects);
+  
+  // Check if move2 can connect with scaled hitstun
+  const currentHitstun = stateAfterMove1.opponent.resources.hitstun;
+  const timingValid = move2.startup <= (currentHitstun + move2.frameAdvantage);
+  
+  // Check if spacing condition is met
   const spacingValid = (pos1 + move1.pushback + move2.range) >= (pos2 + move2.spacing);
-  return timingValid && spacingValid;
+  
+  // Check for forced knockdown state (if using hit counter system)
+  const forcedKnockdown = stateAfterMove1.opponent.resources.hitCount >= hitCountThreshold;
+  
+  return timingValid && spacingValid && !forcedKnockdown;
 }
 ```
+
+**Hitstun scaling mechanics (game-specific):**
+- **Percentage-based scaling**: Each hit reduces hitstun by % (e.g., -10% per hit)
+  - Starting hitstun depletes as combo progresses
+  - Eventually hitstun drops to minimum bound (e.g., 1 frame), forcing combo end
+- **Hit counter system**: Each hit increments counter; at threshold, triggers forced knockdown
+  - Combo must end when counter reaches threshold
+  - Some moves may reset or modify counter
+  - Separate from hitstun duration (both can apply)
+- **Hybrid**: Both systems in same game (e.g., hitstun scaling AND hit counter that triggers dizzy)
 
 **Corner mechanics**: Pushback may be applied to attacker instead (game-specific rule)
 

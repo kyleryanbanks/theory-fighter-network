@@ -212,7 +212,12 @@ export interface OpponentPositionalEffect {
  */
 export interface ResourceEffect {
   resourceKey: string;
-  amount: DataValue;
+  
+  // One of the following must be present:
+  amount?: DataValue;        // Add/subtract from resource (legacy: gain meter, spend meter)
+  delta?: DataValue;         // Modify resource by delta amount (reduce scaling by 10%)
+  multiply?: DataValue;      // Multiply resource by factor (scale hitstun by 0.9)
+  exact?: DataValue;         // Set resource to exact value (reset scaling to 100%)
 }
 
 /**

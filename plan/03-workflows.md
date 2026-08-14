@@ -165,6 +165,51 @@ Users can create specific scenarios and use TFN to drive opponent actions determ
 
 ---
 
+## Damage scaling helper workflow
+
+Users capture per-hit damage in sequences, and TFN infers scaling patterns to help discover game configuration.
+
+**Empirical data collection:**
+1. User tests sequence in training mode and records damage of each hit:
+   - "Ryu Jab → Hadoken → Kick combo"
+   - Hit 1: Jab base damage 40 → observed 40 damage
+   - Hit 2: Hadoken base damage 100 → observed 90 damage
+   - Hit 3: Kick base damage 80 → observed 56 damage
+2. User enters observed damage per hit in sequence UI
+3. TFN calculates scaling factor for each hit:
+   - Hit 1: `40 / 40 = 100%` (initial scaling)
+   - Hit 2: `90 / 100 = 90%` (scaling reduced 10%)
+   - Hit 3: `56 / 80 = 70%` (scaling reduced 20% from hit 2)
+
+**Pattern discovery:**
+1. TFN analyzes inferred scaling across multiple sequences:
+   - "Damage scaling drops approximately 10% per hit"
+   - "Lowest observed damage: 35 (70% of base 50)"
+   - "Highest observed damage: 100 (matches base move damage)"
+   - "Does scaling reset when meter-burn move is used?"
+2. UI surfaces discoveries as hypotheses:
+   - "Scaling hypothesis: `min: 25%, max: 100%, -10% per hit`"
+   - "Reset hypothesis: meter-burn moves reset scaling to 100%"
+3. User confirms/adjusts hypotheses based on testing
+
+**Game configuration:**
+1. User applies discovered bounds to game settings:
+   - `game.states.resources.damage-scaling: { min: 25, max: 100, initialValue: 100 }`
+2. User documents scaling modifiers on moves:
+   - Regular moves: apply `-10% damage-scaling` effect
+   - Meter-burn: apply `reset damage-scaling to 100%` effect
+3. TFN validates against hypothesis:
+   - New sequence at 5 hits: expected final scaling ~50%, move says 55% → note discrepancy
+
+**Why this matters:**
+- **Discovery-driven**: Users don't guess scaling formula; TFN helps them find it
+- **Game-agnostic**: Works for any game with or without scaling
+- **Data-backed**: Inferred from actual gameplay, not theory
+- **Iterative refinement**: Users test edge cases (corner, resources, state changes) to refine bounds
+- **Live validation**: Once configured, TFN flags anomalies in new sequences
+
+---
+
 ## Mobile-guided data collection workflow
 
 TFN helps users fill in missing move data and test sequences/scenarios using phone-optimized quick-entry interface, with real-time sync to desktop.
