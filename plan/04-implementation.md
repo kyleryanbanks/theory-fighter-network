@@ -60,7 +60,7 @@ The following model gaps identified from Capcom CFN mechanics documentation have
    - **Updated**: Deterministic combo feasibility via state application: apply move1 effects → resolve resource state → check move2 feasibility
    - Scaling resources (damage scaling, hitstun scaling) modify state at query time
    - Hitstun scaling models both percentage-based (shrinks pool) and counter-based (forces knockdown at threshold)
-   - Evidence-level labeling (`observed` | `measured` | `verified`) tracks certainty in scaling bounds
+   - Resource bounds use DataValue pattern: `{ exact: 100 }` (verified bounds) vs `{ relative: "25-50%" }` (inferred from empirical data)
 6. Crash recovery/versioning:
    - Restore to same version draft.
    - Latest-target guides are the default; version-locked branching is supported with clear version labels in community views.
@@ -77,7 +77,7 @@ The following model gaps identified from Capcom CFN mechanics documentation have
 10. Verification:
    - Verification is tracked per field/section, not only per guide.
    - Users must be able to see exactly which parts of a guide are stale after a patch.
-   - Scaling resource bounds verification: user marks as verified once tested
+   - Scaling bounds documented via DataValue: `{ exact: 100 }` when verified, or `{ relative: "..." }` when inferred from data
 11. Team configuration:
    - Character guides define available assists/loadouts.
    - Team guides declare the specific assist/loadout/order selections actually chosen for a team context.

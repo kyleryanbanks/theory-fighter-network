@@ -488,7 +488,7 @@ Stages have:
 - **Character sequences** (scoped to character): Character-specific combos or pressure strings
 - **Team sequences** (scoped to team): Team-specific mixups or synergy routes
 - Each sequence contains ordered `moveSemanticKey[]` (deterministic move references)
-- `MoveTransitionEdge[]` tracks feasibility between moves with `evidenceLevel` (observed/measured/verified for combo viability)
+- `MoveTransitionEdge[]` tracks feasibility between moves; combo viability determined by timing/spacing query with current state
 
 **Matchups** analyze character-versus-character dynamics:
 - `MatchupDocument` defines both sides with character and game context
@@ -587,7 +587,7 @@ Stages have:
 
 **Why not include gameplay values in semanticKey?**
 - semanticKey identifies "what was tested", not "what the result was"
-- Multiple test results (observed vs measured vs verified) can be published for the same move
+- Multiple test results can be published for the same move (each documented via DataValue: exact vs relative)
 - Determinism comes from **stable identity + resolved context**, not from freezing gameplay values
 
 ---
