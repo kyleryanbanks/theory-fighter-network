@@ -57,11 +57,9 @@ export interface FrameStage {
 }
 
 /**
- * Phase within a move
+ * Phase within a move (startup, active, recovery)
  */
 export interface MovePhase {
-  label?: string;
-  
   startup?: FrameStage;
   active?: FrameStage;
   recovery?: FrameStage;
@@ -81,8 +79,6 @@ export interface MovePhase {
     onWhiff?: PhaseCancelRule[];
     onSecondaryTrigger?: PhaseCancelRule[];
   };
-
-  notes?: string;
 }
 
 /**

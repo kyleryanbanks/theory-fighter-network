@@ -12,7 +12,7 @@ export type DataValue = {
   exact?: number;      // Precise value if known
   relative?: number;   // Positioned within bounds as percentage (0-100)
   unit?: 'frames' | 'seconds' | 'milliseconds' | string;  // Measurement unit (defaults to frames if undefined)
-  notes?: string;
+  notes?: string;      // Notes about the data source or uncertainty (e.g., "estimated from video", "needs verification")
 };
 
 /**
@@ -33,11 +33,14 @@ export interface CommunityMetadata {
 
 /**
  * Record-level metadata shared by stored entities.
+ * Contains organizational/descriptive fields that don't affect game behavior.
  */
 export interface EntityMetadata {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   validatedVersion?: string;
+  label?: string;  // User-facing name or label (separate from semantic name/key)
+  notes?: string;  // General documentation/commentary
 }
 
 /**
