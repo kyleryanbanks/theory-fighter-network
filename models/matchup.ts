@@ -14,7 +14,6 @@ export interface MatchupDocument {
 
   semanticKey: string; // hash(gameSemanticKey + attackerKey + defenderKey + name)
   name: string;
-  notes?: string;
 
   attackerKey: string;
   defenderKey: string;

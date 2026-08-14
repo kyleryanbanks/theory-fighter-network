@@ -7,7 +7,6 @@ import { CommunityMetadata, EntityMetadata } from './shared';
 export interface TeamDocument {
   gameKey: string;
   orderedCharacterKeys: string[];
-  label?: string;
 
   semanticKey: string; // hash(gameSemanticKey + ordered character semanticKeys)
 

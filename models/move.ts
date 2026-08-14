@@ -59,12 +59,9 @@ export interface FrameStage {
 }
 
 /**
- * Phase within a move
+ * Phase within a move (startup, active, recovery)
  */
 export interface MovePhase {
-  label?: string;
-
-  hitStop?: DataValue;  // Brief visual pause when move connects (defaults to frames)
   startup?: FrameStage;
   active?: FrameStage;
   recovery?: FrameStage;
