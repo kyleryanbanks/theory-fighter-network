@@ -15,11 +15,10 @@ export interface GameDocument {
 
   frameRate?: number;  // Game's frame rate (e.g., 60 for 60fps, 59.94 for NTSC arcade)
   is3d: boolean;       // Whether game uses 3D space (affects position/velocity dimensions)
-  
   teamSize: number;
   inputs: Inputs;
+  
   states: StateModel;
-
   /**
    * Deterministic execution order for state.onFrameAdvance callbacks during simulation.
    * Specified states run in this order, then remaining states run in arbitrary (but consistent) order.

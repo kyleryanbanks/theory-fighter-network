@@ -75,6 +75,14 @@ export type RuntimeStateModel<TStateModel extends StateModel = StateModel> = {
 };
 
 /**
+ * Partial runtime state update payload organized by category.
+ * Used when effects or simulation steps apply targeted state changes.
+ */
+export type RuntimeStatePatch<TStateModel extends StateModel = StateModel> = Partial<{
+  [K in keyof TStateModel]: Partial<RuntimeStateModel<TStateModel>[K]>;
+}>;
+
+/**
  * Universal state model used identically at game and character level
  * Generic parametrization ensures type safety for runtime state matching
  */
@@ -89,7 +97,7 @@ export interface StateModel<
   R extends StateCollection = StateCollection,
   CM extends StateCollection = StateCollection,
   PR extends StateCollection = StateCollection
-> {
+> extends Record<string, StateCollection> {
   attacks: A;
   blocks: B;
   knockdowns: K;

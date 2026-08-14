@@ -6,6 +6,8 @@
  * Users define projectile properties using the game's states.projectiles category.
  */
 
+import { MoveOutcomeEffect } from './move';
+import { Region } from './region';
 import {
   CommunityMetadata,
   EntityMetadata,
@@ -61,7 +63,10 @@ export interface ProjectileDocument<
 /**
  * Single phase of a projectile's lifetime
  */
-export interface ProjectilePhase {
+export interface ProjectilePhase<
+  TStateModel extends StateModel = StateModel
+> 
+ {
   label?: string;
 
   /**
@@ -122,10 +127,9 @@ export interface ProjectilePhase {
    * Effects this projectile applies when it connects
    */
   effects?: {
-    onHit?: MoveOutcomeEffect;        // Hit opponent character/projectile
-    onBlock?: MoveOutcomeEffect;      // Opponent blocked the projectile
-    onCounterHit?: MoveOutcomeEffect; // Hit opponent during their active frames
-    onWhiff?: MoveOutcomeEffect;      // Missed entirely
+    onHit?: MoveOutcomeEffect<TStateModel>;        // Hit opponent character/projectile
+    onBlock?: MoveOutcomeEffect<TStateModel>;      // Opponent blocked the projectile
+    onCounterHit?: MoveOutcomeEffect<TStateModel>; // Hit opponent during their active frames
   };
 
   /**
@@ -135,65 +139,6 @@ export interface ProjectilePhase {
   destroyedAfter?: boolean;
 
   notes?: string;
-}
-
-/**
- * Collision geometry (hitbox, hurtbox, collision box)
- * Defined as offset from entity origin
- */
-export interface Region {
-  x?: number;
-  y?: number;
-  z?: number;       // Only used if game.is3d
-  width?: number;   // For rectangular regions
-  height?: number;  // For rectangular regions
-  depth?: number;   // For rectangular regions (3D)
-  radius?: number;  // For circular regions
-}
-
-/**
- * Outcome effects (re-export from move.ts for convenience)
- */
-export interface MoveOutcomeEffect {
-  source?: {
-    displacement?: DisplacementEffect;
-    resources?: ResourceEffect[];
-    appliesStateTags?: string[];
-  };
-
-  target?: {
-    stun?: DataValue;
-    displacement?: DisplacementEffect;
-    resources?: ResourceEffect[];
-    appliesStateTags?: string[];
-  };
-
-  projectileDestroyed?: boolean;
-}
-
-/**
- * Displacement effect structure
- */
-export interface DisplacementEffect {
-  x?: DataValue;
-  y?: DataValue;
-  z?: DataValue;
-  velocity?: {
-    x?: DataValue;
-    y?: DataValue;
-    z?: DataValue;
-  };
-  delay?: DataValue;
-  duration?: DataValue;
-  notes?: string;
-}
-
-/**
- * Resource effect structure
- */
-export interface ResourceEffect {
-  resourceKey: string;
-  amount: DataValue;
 }
 
 /**
