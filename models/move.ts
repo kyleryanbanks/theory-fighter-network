@@ -17,8 +17,8 @@ export interface MoveDocument {
   name: string;
 
   // Inheritence from game-level or character-level move, if applicable
-  ParentKey?: string;
-  overrides?: (keyof MoveDocument)[];
+  parentKey?: string;
+  parentOverrides?: (keyof MoveDocument)[];
   
   // Input sequence for this move, using input values from GameDocument.inputs
   sequence?: Step[];

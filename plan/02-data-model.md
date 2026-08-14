@@ -72,13 +72,21 @@ Moves can be scoped as:
 - Each `TriggerInputFrame` specifies: `directions[]`, `buttons[]`, `durationFrames`
 - No intermediate trigger abstraction layer — moves directly reference game buttons
 
-### Move Type System
+### Move Attack Classification via States
 
-Games can define arbitrary attack type classifications via `GameDocument.moveTypes[]`:
-- Each game defines its own move type taxonomy
-- Examples: `strike`, `throw`, `projectile`, `counter`, `special`, `super`, etc.
-- Moves reference types via `moveType` field
-- Enables games with secondary mechanics based on attack class (e.g., SF6's strike/throw counters)
+Games define attack type classifications as states in `StateModel.attacks`, enabling flexible, customizable attack taxonomies:
+
+- **Custom definitions**: Each game defines its own attack classification states
+- **Examples**: `strike`, `throw`, `projectile`, `counter`, `special`, `super`, etc.
+- **Applied via effects**: Moves apply attack classifications by updating state via effect patches
+- **Enables mechanics**: Secondary mechanics based on attack class (e.g., SF6's strike/throw counters) work via state-driven game logic
+
+**Why this design:**
+- ✅ **Game-agnostic**: Games define any attack taxonomy they need
+- ✅ **State-driven**: Uses same State mechanism as all other mechanics
+- ✅ **Queryable**: UI can filter moves by attack type, show counter options
+- ✅ **Extensible**: Games can add custom attack types without schema changes
+- ✅ **Mechanic-enabling**: Counter systems, projectile interactions all use state logic
 
 ### Attack Height Taxonomies
 
@@ -483,19 +491,24 @@ type DataValue = {
 **Combo feasibility with resources:**
 - Combo connects if: `opponent.resources.hitstun - nextMove.startup >= 0` (AND spacing valid)
 - Scaling automatically tightens windows: less hitstun = fewer moves available
-- Move effects modify resources at query time: `opponent.resources.damageScaling -= 10%`
+- Move effects modify resources via RuntimeStatePatch: `target.resources: { damageScaling: 0.9 }`
 
-**Move effects on resources:**
+**Move effects on resources (via RuntimeStatePatch):**
+
+Effects now apply state changes directly through `source`, `target`, and `game` RuntimeStatePatch fields. Resources are just like any other state—modified by patching their runtime values:
+
 ```typescript
 const hadoken: MoveDocument = {
   phases: [{
     effects: {
       onHit: {
-        damage: { exact: 100 },
-        opponent: {
-          stun: { exact: 20 },
-          modifiesResource: {
-            "damage-scaling": { delta: -10 }  // reduces scaling by 10%
+        hitStop: { exact: 5 },     // Visual pause
+        stun: { exact: 20 },       // Hitstun duration
+        
+        // Direct state patch: target character's resources modified
+        target: {
+          resources: {
+            damageScaling: 0.9     // Reduce to 90% (equivalent to delta: -10%)
           }
         }
       }
@@ -507,10 +520,39 @@ const meterBurn: MoveDocument = {
   phases: [{
     effects: {
       onHit: {
-        damage: { exact: 150 },
-        opponent: {
-          modifiesResource: {
-            "damage-scaling": { exact: 100 }  // reset scaling to 100%
+        hitStop: { exact: 8 },
+        stun: { exact: 25 },
+        
+        // Reset scaling to 100%
+        target: {
+          resources: {
+            damageScaling: 1.0     // Full scaling (equivalent to exact: 100%)
+          }
+        }
+      }
+    }
+  }]
+}
+
+// More complex example: Multiple state modifications via single patch
+const superMove: MoveDocument = {
+  phases: [{
+    effects: {
+      onHit: {
+        hitStop: { exact: 12 },
+        stun: { exact: 30 },
+        
+        target: {
+          // All target changes applied atomically
+          resources: {
+            damageScaling: 1.0,    // Reset scaling
+            health: 80             // Additional damage (stored directly)
+          },
+          comboMechanics: {
+            hitstun: 30            // Extend hitstun
+          },
+          attacks: {
+            "sf6-counter-hit": true // Mark as counter hit
           }
         }
       }
@@ -518,6 +560,13 @@ const meterBurn: MoveDocument = {
   }]
 }
 ```
+
+**Why this unified approach is better:**
+- ✅ **Single pattern**: All state modifications use RuntimeStatePatch (source/target/game)
+- ✅ **Type-safe**: TypeScript ensures patches only reference valid state categories
+- ✅ **Composable**: Multiple patches to different state categories in one effect
+- ✅ **Deterministic**: State.onUpdate callbacks can read patch values, transform as needed
+- ✅ **No modes needed**: Direct values replace delta/multiply/exact abstractions
 
 **User discovery workflow:**
 1. User captures per-hit damage in sequences
@@ -746,24 +795,10 @@ Rather than duplicating game-level moves in every character:
 - Negative frame advantage: opponent can act first (or neutral if zero)
 - Example: If jab has 5-frame hitstun and 4-frame recovery, frame advantage is +1
 
-**Computing advantage per outcome:**
-- `FrameOutcomeWindow` tracks base advantage per outcome type:
-  ```typescript
-  frameAdvantage?: {
-    base: DataValue,           // Base advantage (hitstun - recovery)
-    min?: DataValue,           // Minimum with possible variation
-    max?: DataValue,           // Maximum with possible variation
-    meatyAdvantageGain?: DataValue  // Extra advantage from meaty timing
-  }
-  ```
-
 **Meaty Timing** (for games that support it):
 - Attack connects on a frame **after** the first active frame, but still causes the same effect (hitstun, damage, etc.)
 - Key insight: Opponent enters hitstun at a later time, but hitstun duration is the same
-- Result: Attacker recovers one frame earlier relative to when opponent recovers
-- Practical advantage: +1 frame of advantage vs connecting on frame 1
-- Example: Hadoken's active frames 1-20; meaty connect on frame 2 = +1 extra advantage
-- `meatyAdvantageGain` stores this bonus (typically 1-3 frames depending on active frame range)
+- Result: Attacker recovers earlier relative to when that same attack connects on its first active frame
 
 **Model structure:**
 ```typescript
@@ -778,10 +813,6 @@ const jab: MoveDocument = {
           stun: { exact: 5, unit: 'frames' }
         }
       },
-      frameAdvantage: {
-        base: { exact: 1 },      // 5 hitstun - 4 recovery = +1
-        meatyAdvantageGain: { exact: 1 }  // If hits frames 2-5 of active
-      }
     }
   }]
 }
