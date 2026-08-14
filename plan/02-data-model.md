@@ -327,31 +327,6 @@ This design eliminates the need for:
 
 Instead: **Move is the single source of truth for both state and geometry changes.**
 
-### Data-Driven Knowledge Inference
-
-**Philosophy**: Minimize maintenance burden by inferring derived state from actual data rather than storing it explicitly.
-
-**Knowledge classification** (exact vs exploratory) is inferred from data:
-- **Exact move knowledge**: 
-  - All `comparativeAttributes` have `kind === 'exact'` or `'measured'`
-  - No `comparativeConstraints` or `comparativeOrderings` present
-  - All `phases[].startup.duration`, `phases[].active.duration`, `phases[].recovery.duration` fields fully populated (if phases exist)
-  - All `MoveOutcomeEffect` fields have specific values (not conceptual/noted ranges)
-
-- **Exploratory move knowledge**:
-  - Any `comparativeAttributes` with `kind === 'observed'` or `'inferred'`
-  - Presence of `comparativeConstraints[]` or `comparativeOrderings[]`
-  - `phases[].startup.duration`, `phases[].active.duration`, or `phases[].recovery.duration` are missing or approximate values
-  - `MoveOutcomeEffect` uses ranges, notes, or observed patterns
-
-**Inference rules**: Implementations should compute knowledge state at query time from field presence and value completeness rather than trusting a stored `knowledgeStatus` field.
-
-### Verification Tracking
-
-- Each entity can have `verification?: VerificationSectionMap`
-- Tracks section-by-section verification status (unknown, observed, verified-current, needs-review, etc.)
-- Allows partial verification (e.g., startup frames verified but active frames still measured)
-
 ### Exact vs Relative Values: DataValue Pattern
 
 **Pattern**: Game properties (frame data, damage, resources, displacement, etc.) may have either exact values or user-positioned relative values.
@@ -398,17 +373,6 @@ type DataValue = {
 - All values are `{ exact: ... }` → exact knowledge for this property
 - Any `{ relative: ... }` present → exploratory/measured knowledge
 
-### Comparative Data Model (Legacy)
-
-For games without exact frame data, comparative analysis enables research:
-- `ComparativeAttribute`: relative value (startup is "faster" than another move)
-- `ComparativeConstraint`: pairwise relationships (move A is shorter than move B)
-- `ComparativeOrdering`: group ordering (these 5 moves have the same startup in this order)
-
-Comparative data sharing context (private guide vs shared community) is inferred from entity ownership and publication history.
-
-**Note**: Modern approach uses `DataValue` pattern with relative positioning on discovered bounds instead of abstract comparative relationships.
-
 ### Combo Scaling & Meta-Mechanics
 
 - `ComboScalingSystem` defines how game-wide scaling works
@@ -431,9 +395,33 @@ Stages have:
 
 ### Team & Sequence Tracking
 
-- Teams group characters with sequence-specific knowledge
-- Team sequences and universal sequences enable team-specific routing
-- Matchups track character-vs-character dynamics with specific routing and anti-strategy info
+**Teams** group related characters for multi-character games:
+- Teams define `characterSemanticKeys` in order (e.g., Ryu + Chun-Li)
+- Each team has `semanticKey` (computed from game + ordered character keys)
+- Used in team-vs-team games (Marvel vs Capcom, King of Fighters, etc.)
+
+**Sequences** document repeatable action chains:
+- **Universal sequences** (game-level): Applicable to any character (common combos, setups)
+- **Character sequences** (scoped to character): Character-specific combos or pressure strings
+- **Team sequences** (scoped to team): Team-specific mixups or synergy routes
+- Each sequence contains ordered `moveSemanticKey[]` (deterministic move references)
+- `MoveTransitionEdge[]` tracks feasibility between moves with `evidenceLevel` (observed/measured/verified for combo viability)
+
+**Matchups** analyze character-versus-character dynamics:
+- `MatchupDocument` defines both sides with character and game context
+- **MatchupScenario** (scenario tree): Specific position/state with defined opponent action
+  - Tracks opening (player position, state, resources)
+  - Opponent option key (move or sequence to test against)
+  - Outcome assessment (-1: loses, 0: neutral, +1: wins)
+  - Child scenarios branch from outcome (further exploration)
+- Enables community to build scenario trees exploring game depth
+- Example tree: Ryu at mid-range vs Hadoken → test jab combos → test throw vs tech attempts
+
+**Routing and anti-strategy**:
+- Sequences document optimal damage/positioning goals
+- Matchup scenarios document defensive and offensive option coverage
+- Community can discover whether a sequence works against specific opponent options
+- Anti-strategy information emerges from scenario outcomes (what beats what)
 
 ### Community Publishing Model
 
@@ -551,6 +539,64 @@ Rather than duplicating game-level moves in every character:
 
 ---
 
+## Frame Advantage and Meaty Timing (CFN Hours 10-12)
+
+**Concept**: Frame advantage describes the recovery difference between attacker and opponent after an attack connects.
+
+**How it works:**
+- **Frame Advantage** = `opponent.stun - attacker.recovery`
+- Positive frame advantage: attacker can act before opponent
+- Negative frame advantage: opponent can act first (or neutral if zero)
+- Example: If jab has 5-frame hitstun and 4-frame recovery, frame advantage is +1
+
+**Computing advantage per outcome:**
+- `FrameOutcomeWindow` tracks base advantage per outcome type:
+  ```typescript
+  frameAdvantage?: {
+    base: DataValue,           // Base advantage (hitstun - recovery)
+    min?: DataValue,           // Minimum with possible variation
+    max?: DataValue,           // Maximum with possible variation
+    meatyAdvantageGain?: DataValue  // Extra advantage from meaty timing
+  }
+  ```
+
+**Meaty Timing** (for games that support it):
+- Attack connects on a frame **after** the first active frame, but still causes the same effect (hitstun, damage, etc.)
+- Key insight: Opponent enters hitstun at a later time, but hitstun duration is the same
+- Result: Attacker recovers one frame earlier relative to when opponent recovers
+- Practical advantage: +1 frame of advantage vs connecting on frame 1
+- Example: Hadoken's active frames 1-20; meaty connect on frame 2 = +1 extra advantage
+- `meatyAdvantageGain` stores this bonus (typically 1-3 frames depending on active frame range)
+
+**Model structure:**
+```typescript
+const jab: MoveDocument = {
+  phases: [{
+    startup: { duration: { exact: 4 } },
+    active: { duration: { exact: 5 } },
+    recovery: { duration: { exact: 4 } },
+    effects: {
+      onHit: {
+        opponent: {
+          stun: { exact: 5, unit: 'frames' }
+        }
+      },
+      frameAdvantage: {
+        base: { exact: 1 },      // 5 hitstun - 4 recovery = +1
+        meatyAdvantageGain: { exact: 1 }  // If hits frames 2-5 of active
+      }
+    }
+  }]
+}
+```
+
+**Why this matters:**
+- Players who optimize timing gain measurable advantage
+- Community guides can document which moves allow meaty setups
+- Combo feasibility analysis must account for both frame 1 and meaty variants
+
+---
+
 ## Hit Stun and Block Stun (CFN Hours 10-12)
 
 **Concept**: Each attack has unique stun duration for opponent, determined by the attack's outcome type.
@@ -579,9 +625,11 @@ const jab: MoveDocument = {
 }
 ```
 
-**Combo feasibility:**
-- Combo connects if: `nextMove.startup <= hitstun` (AND spacing condition met)
-- Example: Jab's 5-frame hitstun enables any move with 5-frame startup or less
+**Combo timing and frame advantage:**
+- Combo connects if: `nextMove.startup <= hitstun + (frameAdvantage.base || 0)` (AND spacing condition met)
+- Frame advantage determines when next move can combo: `effective_startup = nextMove.startup - frameAdvantage`
+- Example: Jab's 5-frame hitstun with +1 frame advantage allows combos from any move with 6-frame startup or less
+- Meaty timing increases available startup window: `effective_startup = nextMove.startup - (frameAdvantage.base + meatyAdvantageGain)`
 
 **DataValue.unit defaults to frames** when undefined, but can be overridden:
 ```typescript
@@ -741,10 +789,29 @@ const jab: MoveDocument = {
 }
 ```
 
-**Combo spacing condition:**
-- Combo connects if: `(position + pushbackDistance) <= nextMove.range`
-- Example: Jab pushes opponent 20 units; next move needs 20+ range to connect
-- Corner mechanics: Pushback may be applied to attacker instead (game-specific rule)
+**Combo feasibility (timing and spacing):**
+
+Both conditions must be satisfied for a combo to connect:
+
+1. **Timing condition**: Opponent must still be in hitstun when next move starts
+   - `nextMove.startup <= hitstun + frameAdvantage.base`
+   - Meaty timing adds extra window: `nextMove.startup <= hitstun + frameAdvantage.base + meatyAdvantageGain`
+   - Example: Jab hits (5-frame hitstun, +1 frame advantage); next move must have 6-frame startup or less
+
+2. **Spacing condition**: Next move must reach opponent after pushback
+   - `playerPosition + playerDisplacement + nextMove.range >= opponentPosition + opponentDisplacement`
+   - Example: Jab pushes opponent 20 units; next move needs 20+ range to connect
+
+**Query-time validation** (both must pass AND):
+```typescript
+canCombo(move1, move2) {
+  const timingValid = move2.startup <= (move1.hitstun + move1.frameAdvantage);
+  const spacingValid = (pos1 + move1.pushback + move2.range) >= (pos2 + move2.spacing);
+  return timingValid && spacingValid;
+}
+```
+
+**Corner mechanics**: Pushback may be applied to attacker instead (game-specific rule)
 
 ---
 
@@ -784,15 +851,15 @@ const multiHit: MoveDocument = {
 }
 ```
 
-**Approach B: Simultaneous/overlapping hits (multiple hitboxes)**
+**Approach B: Simultaneous/overlapping hits (multiple hitboxes in same active phase)**
 ```typescript
 const multiHit: MoveDocument = {
   phases: [{
     active: {
       duration: { exact: 10 },
       hitBoxes: [
-        { x: -10, y: 30, width: 20, height: 30 },  // First hitbox active frames 1-5
-        { x: 10, y: 30, width: 20, height: 30 }    // Second hitbox active frames 6-10
+        { x: -10, y: 30, width: 20, height: 30 },  // Left side hitbox (active entire 10 frames)
+        { x: 10, y: 30, width: 20, height: 30 }    // Right side hitbox (active entire 10 frames)
       ]
     },
     effects: {
@@ -806,18 +873,52 @@ const multiHit: MoveDocument = {
 }
 ```
 
+**When to use each approach:**
+- **Approach A (phases)**: Hits occur at different times during move (first hit frames 1-5, second hit frames 6-10)
+  - Each phase has its own timing, effects, and positioning
+  - Naturally represents per-hit variation
+- **Approach B (multiple hitboxes)**: Multiple hit areas active simultaneously during same frame range
+  - Move has multiple contact points that can hit at the same time (e.g., wide sweep hitting left and right)
+  - Single active phase with multiple hitboxes covering the move's geometry
+
 **Hitstun scaling:**
 - Multi-hit combos apply per-game scaling rules (handled at query time, not in model)
 - Each hit contributes to combo counter (prevents infinites via damage scaling)
-- Approach A (phases) naturally represents per-hit variation
-- Approach B (hitboxes) requires per-hitbox properties for advanced games (future enhancement)
+- Approach A naturally represents sequential hits with individual hitstun/scaling per hit
+- Approach B requires per-hitbox hit counting for advanced games (future enhancement)
 
 ---
 
 ## Version Management
 
-All entities include `guideVersion: GuideVersionReference` to:
-- Track which game version a guide targets (`targetVersion: 'latest' | string`)
-- Lock guides to specific versions (`isVersionLocked`)
-- Detect staleness (`isOutOfDate`)
-- Support version-aware queries and cross-version analysis
+**Concept**: Detect when documented moves or sequences become outdated due to game patches.
+
+**How it works:**
+- Each entity metadata stores `validatedVersion: string` (last game version it was tested/verified against)
+- Games have current `version: string` (e.g., "6.0", "1.5.2")
+- **Out of date**: Compare `meta.validatedVersion` against `game.version`
+  - If versions match: data is current and validated
+  - If versions differ: data may need review (game may have changed move properties)
+- UI flags entities where `meta.validatedVersion !== game.version`
+
+**Why this matters:**
+- Communities can see which guides are tested on current patch
+- Players avoid outdated frame data or move properties
+- Guides accumulate confidence as multiple players validate on same version
+- When game patches, community can quickly identify what needs re-testing
+
+**Example:**
+```typescript
+// Ryu jab documented and tested on SF6 v1.0
+const jab: MoveDocument = {
+  meta: { validatedVersion: "1.0" },
+  // frame data, effects, etc.
+}
+
+// Game is now at v1.5
+const game: GameDocument = {
+  version: "1.5"
+}
+
+// Comparison: if validatedVersion !== game.version, flag as "tested on older version"
+```
