@@ -62,31 +62,6 @@ export interface SequenceDifficulty {
 }
 
 /**
- * Transition edge between moves
- */
-export interface MoveTransitionEdge {
-  id: string;
-  gameId: string;
-  fromMoveId: string;
-  toMoveId: string;
-  scope: 'universal' | 'character' | 'team';
-  characterId?: string;
-  teamId?: string;
-
-  triggerOutcome: 'onHit' | 'onBlock' | 'onCounterHit';
-  requiredPlayerStateTags?: string[];
-  requiredOpponentStateTags?: string[];
-  requiredRangeBandKeys?: string[];
-  requiredScalingState?: string;
-  requiredResources?: ResourceRequirement[];
-  requiredDelayFrames?: number;
-
-  viability: 'consistent' | 'situational' | 'unconfirmed';
-  evidenceLevel: 'observed' | 'measured' | 'verified';
-  notes?: string;
-}
-
-/**
  * Resource requirement for a transition
  */
 export interface ResourceRequirement {
