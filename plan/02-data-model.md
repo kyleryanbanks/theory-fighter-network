@@ -67,7 +67,7 @@ Moves can be scoped as:
 
 ### Input Representation
 
-- Games define available buttons via `InputSystemProfile` (e.g., 6-button, 4-button, custom)
+- Games define available buttons and directions via `Inputs` interface (directions[], buttons[])
 - Moves own complete input sequences via `inputFrames[]` (frame-by-frame breakdown)
 - Each `TriggerInputFrame` specifies: `directions[]`, `buttons[]`, `durationFrames`
 - No intermediate trigger abstraction layer — moves directly reference game buttons
@@ -145,13 +145,21 @@ const hadoken: MoveDocument = {
   phases: [{
     effects: {
       onHit: {
-        opponentEffects: {
-          appliesStateTags: ["sf6-attacks-height-mid"]  // Mid-height projectile
+        hitStop: { exact: 5 },
+        stun: { exact: 20 },
+        target: {
+          attacks: {
+            "sf6-attacks-height-mid": true  // Mid-height projectile
+          }
         }
       },
       onBlock: {
-        opponentEffects: {
-          appliesStateTags: ["sf6-blocks-mid"]  // Requires mid-block stance
+        hitStop: { exact: 3 },
+        stun: { exact: 8 },
+        target: {
+          blocks: {
+            "sf6-blocks-mid": true  // Requires mid-block stance
+          }
         }
       }
     }
@@ -171,23 +179,46 @@ During game guide creation, the UI should offer height template selection as par
 
 ### Custom State Updaters for Game-Specific Mechanics
 
-**Concept**: Each `State` can optionally define custom update functions that run during simulation. This allows users to implement any game mechanic without requiring schema changes.
+**Concept**: Each `State` can optionally define custom update functions that run during simulation. This is a **CRITICAL architecture component** allowing games to implement any mechanic without schema changes.
 
 **Two updater types:**
 
-1. **`onUpdate(incomingValue, context)`** — Called when an effect applies a value to this state
-   - Receives the raw value from effect
-   - Can transform it before storage
-   - Example: hitstun scaling by combo counter
+1. **`onUpdate(incomingValue, context)`** — **Effect-driven transformation**
+   - Called when a move effect applies a value to this state (via RuntimeStatePatch)
+   - Receives the raw patch value, can read current state, and transform before storage
+   - Runs atomically: one effect application → one onUpdate call → value stored
+   - Example: Hitstun scaling by combo count (incoming 20 frames → scale by combo → store 16 frames)
+   - **Use for**: Attack modifier calculations, conditional state application, chaining effects
    
-2. **`onFrameAdvance(context)`** — Called once per frame during simulation
-   - Runs independently of effects
-   - Used for system-level mechanics
-   - Example: gravity, health regen, meter decay
+2. **`onFrameAdvance(context)`** — **System-driven mechanics**
+   - Called once per frame during simulation, independently of effects
+   - Runs according to `GameDocument.stateExecutionOrder` for deterministic behavior
+   - Example: Gravity acceleration, health regeneration, meter decay over time
+   - **Use for**: Continuous systems, frame-by-frame updates, dependencies on other state
+   - **Determinism**: Execution order matters! Gravity must run before position to avoid bugs
+
+**CRITICAL: stateExecutionOrder for Determinism**
+
+`GameDocument.stateExecutionOrder` is **ESSENTIAL** for correct simulation:
+- Specifies which states' `onFrameAdvance` callbacks execute first
+- Prevents race conditions: if position updates before gravity runs, projectiles move wrong
+- Example: `["stageMechanics.gravity", "positions", "comboMechanics"]` ensures:
+  1. Gravity updates velocity values
+  2. Positions calculated with new velocities
+  3. Combo state checked with final positions
+- Without this, frame-to-frame behavior becomes non-deterministic
+
+**Storage and Scope**:
+- Functions defined in **local TypeScript files**, not serialized to Firestore
+- Can be stored in:
+  - Separate utility files per game guide
+  - Inline in game configuration (if environment supports it)
+  - Git-tracked alongside other game data
+- At simulation time, engine loads and executes these functions
 
 **Examples:**
 
-Hitstun scaling by combo count (effect-driven):
+Hitstun scaling by combo count (effect-driven onUpdate):
 ```typescript
 states.comboMechanics.hitstun = {
   name: "Hitstun",
@@ -201,14 +232,18 @@ states.comboMechanics.hitstun = {
 }
 ```
 
-Gravity affecting motion (frame-driven):
+Gravity affecting motion (frame-driven onFrameAdvance):
 ```typescript
 states.stageMechanics.gravity = {
   name: "Gravity", min: 0, max: 10,
   onFrameAdvance: (context) => {
     const g = context.runtimeState.stageMechanics.gravity;
     // Apply gravity to all character/projectile velocities
-    // Update positions based on new velocities
+    // This runs FIRST per stateExecutionOrder, before position updates
+    const allEntities = context.runtimeState.characters;
+    Object.values(allEntities).forEach(char => {
+      if (char.velocity) char.velocity.y -= g;
+    });
     return context;
   }
 }
@@ -583,10 +618,12 @@ const superMove: MoveDocument = {
 - ✅ **Discovery-driven**: Users empirically find bounds, not guess them
 - ✅ **Composable**: Multiple resource types (damage scaling, hitstun scaling, stun decay, etc.) work together
 
-### Combo Difficulty and Sequence Analysis
+### Sequence Analysis
 
-- `SequenceDifficulty` computes execution difficulty from sequence length, input complexity, and timing strictness
-- Query-time validation: Can this sequence connect given current game/character/resource state?
+Sequences are subject to query-time validation: Can this sequence connect given current game/character/resource state? Feasibility depends on:
+- Move startup windows fitting within available hitstun
+- Spacing requirements between moves
+- Resource availability (meter, special states, etc.)
 
 ### Projectile System
 
@@ -598,7 +635,8 @@ const superMove: MoveDocument = {
 - **ProjectileInstance** — Runtime object during simulation with mutable state and position
 
 **Key Features**:
-- Projectiles defined using game's `states.projectiles` (user-defined properties)
+- Each projectile has initial state values (durability, priority, etc.) defined in `ProjectileDocument.state`
+- These properties are user-defined per game and projectile type
 - Each projectile phase specifies:
   - `velocity` (per frame motion in x/y or x/y/z)
   - `initialPosition` (starting position for phase)
@@ -609,12 +647,12 @@ const superMove: MoveDocument = {
 - Supports teleporting projectiles (discontinuous phases) and continuous motion
 
 **User-Defined Properties**:
-- Properties defined at game level: `states.projectiles = { durability: {...}, priority: {...} }`
-- Each projectile sets values from this template
+- Each game can define custom projectile property states (durability, priority, level, etc.)
 - Examples:
   - SF6: `durability: 1-4`, `priority: 1-5`
   - Marvel: `hits: 1-3`, `hitstunMod: 0.8-1.0`
   - Guilty Gear: `level: 1-3`
+- ProjectileDocument.state contains initial values, copied at spawn time
 
 **Spawning**:
 - `MovePhase.projectileKey` references projectile by semanticKey
@@ -622,14 +660,17 @@ const superMove: MoveDocument = {
 - Single move can have multiple phases, spawning different/same projectiles
 
 **Integration with State System**:
-- Projectile properties updated via `State.onUpdate` callback (for effect-driven changes)
-- System-level mechanics (gravity affecting projectile trajectory) via `State.onFrameAdvance`
-- Example: durability decrements via `onUpdate` when clash happens
-- Example: gravity acceleration via `onFrameAdvance` affecting all positions
+- Projectile properties modified via `State.onUpdate` callback (effect-driven transformation)
+  - Example: durability decrements when clash detected, stored as runtime state
+- System-level mechanics via `State.onFrameAdvance` (frame-driven)
+  - Example: gravity affecting projectile trajectory position updates
+- Projectile effects apply RuntimeStatePatch to game state like any other move effect
 
 **Collision & Destruction**:
-- Projectile destroyed via `MoveOutcomeEffect.projectileDestroyed: true`
-- Or via `destroyedAfter: true` at phase end (lifetime expiration)
+- Projectile destroyed when:
+  - Effect applies destruction (via RuntimeStatePatch if needed)
+  - `destroyedAfter: true` at phase end (lifetime expiration)
+  - Collision detection determines hit/block/whiff outcomes
 - Position-based collision detection during frame-by-frame simulation
 
 ### Stage Design
@@ -650,8 +691,8 @@ Stages have:
 - **Universal sequences** (game-level): Applicable to any character (common combos, setups)
 - **Character sequences** (scoped to character): Character-specific combos or pressure strings
 - **Team sequences** (scoped to team): Team-specific mixups or synergy routes
-- Each sequence contains ordered `moveSemanticKey[]` (deterministic move references)
-- `MoveTransitionEdge[]` tracks feasibility between moves; combo viability determined by timing/spacing query with current state
+- Each sequence documents a repeatable order of moves with associated timing
+- Detailed field specifications: See [`models/sequence.ts`](/models/sequence.ts)
 
 **Matchups** analyze character-versus-character dynamics:
 - `MatchupDocument` defines both sides with character and game context
@@ -766,14 +807,15 @@ Stages have:
 
 Example: Instead of storing `moveKnowledgeStatus: 'exact'`, check whether all frame data is populated. If it is, it's exact; if mixing observed/inferred with exact, it's exploratory.
 
-### Why Game-Level Move Types?
+### Why Attack Classification in States Matters
 
-Different games classify attacks differently:
-- Street Fighter: strike/throw distinction for defensive tech choices
-- Guilty Gear: normal/special/super with different meter costs
-- Marvel: projectile systems with durability/priority interactions
+Different games classify attacks differently, requiring flexible state-based definitions:
 
-Game designers define `moveTypes` to enable secondary mechanics and proper analysis.
+- **Street Fighter**: strike/throw distinction for defensive tech choices (button counters)
+- **Guilty Gear**: normal/special/super with different meter costs and clash interactions
+- **Marvel**: projectile systems with durability/priority interactions
+
+By defining attack classifications in `StateModel.attacks`, games can encode any taxonomy and enable mechanics that respond to attack types. Effects apply classifications via state tags in RuntimePatches, enabling all secondary mechanics (counters, clashes, etc.) to work through state-driven game logic.
 
 ### Inheritance Model for Characters
 
@@ -830,8 +872,9 @@ const jab: MoveDocument = {
 **Concept**: Each attack has unique stun duration for opponent, determined by the attack's outcome type.
 
 **How it works:**
-- `MovePhase.effects.onHit.opponent.stun` — Hitstun: frames opponent cannot act after being hit
-- `MovePhase.effects.onBlock.opponent.stun` — Blockstun: frames opponent cannot act after blocking (usually shorter than hitstun)
+- Hitstun: frames opponent cannot act after being hit
+- Blockstun: frames opponent cannot act after blocking (usually shorter than hitstun)
+- Applied via `stun` field in MoveOutcomeEffect (works for both onHit and onBlock)
 
 **Example:**
 ```typescript
@@ -839,13 +882,19 @@ const jab: MoveDocument = {
   phases: [{
     effects: {
       onHit: {
-        opponent: {
-          stun: { exact: 5, unit: 'frames' }  // 5 frames hitstun
+        stun: { exact: 5, unit: 'frames' },  // 5 frames hitstun
+        target: {
+          comboMechanics: {
+            hitstun: 5
+          }
         }
       },
       onBlock: {
-        opponent: {
-          stun: { exact: 2, unit: 'frames' }  // 2 frames blockstun
+        stun: { exact: 2, unit: 'frames' },  // 2 frames blockstun
+        target: {
+          comboMechanics: {
+            blockstun: 2
+          }
         }
       }
     }

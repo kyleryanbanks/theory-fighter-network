@@ -278,17 +278,6 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
 
 ---
 
-## Difficulty computation rules
-
-`computedDifficulty.score` is derived from:
-
-1. **Combo length**: more steps => harder.
-2. **Input complexity**: sum of move motion complexity weights.
-3. **Game buffer leniency**: generous buffer reduces effective difficulty.
-
-Recompute trigger: only when a combo is created or updated.
-UI displays difficulty as relative score (easy/moderate/hard) for quick scanning.
-
 ## Viability simulation rules
 
 - **Deterministic simulation** occurs when sufficient frame data and state values are known:
