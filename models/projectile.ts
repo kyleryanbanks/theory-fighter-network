@@ -25,8 +25,7 @@ export interface ProjectileDocument<
 > {
   gameKey: string;
   characterKey?: string;  // Character-specific projectile (or undefined for universal)
-  semanticKey: string;    // hash(gameSemanticKey + [characterSemanticKey] + projectileName)
-  name: string;
+  semanticKey: string;    // hash(gameSemanticKey + characterSemanticKey + normalizedProjectileProperties)
 
   /**
    * Phases describing projectile lifetime:
@@ -68,6 +67,7 @@ export interface ProjectilePhase<
 > 
  {
   label?: string;
+  notes?: string;
 
   /**
    * Duration of this phase (frames)
@@ -137,8 +137,6 @@ export interface ProjectilePhase<
    * If false, transitions to next phase.
    */
   destroyedAfter?: boolean;
-
-  notes?: string;
 }
 
 /**

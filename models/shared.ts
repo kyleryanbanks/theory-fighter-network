@@ -36,8 +36,8 @@ export interface CommunityMetadata {
  * Contains organizational/descriptive fields that don't affect game behavior.
  */
 export interface EntityMetadata {
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  createdAt: Date;
+  lastUpdatedAt: Date;
   validatedVersion?: string;
   label?: string;  // User-facing name or label (separate from semantic name/key)
   notes?: string;  // General documentation/commentary
@@ -49,11 +49,13 @@ export interface EntityMetadata {
 export interface GuideDocument {
   gameKey: string;
   publishedEntities: {
+    stageKeys: string[];
+    zoneKeys: string[];
     characterKeys: string[];
+    teamKeys: string[];
     moveKeys: string[];
     sequenceKeys: string[];
-    teamKeys: string[];
-    stageKeys: string[];
+    projectileKeys: string[];
     matchupKeys: string[];
   };
   publishHistory: string[];
