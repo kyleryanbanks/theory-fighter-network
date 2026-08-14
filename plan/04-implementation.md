@@ -50,48 +50,31 @@ and cloud features (Phases 11-14) have separate planning documents.
    - Aliases supported for display without changing canonical identity
    - Enables deterministic move resolution: same key + context = same outcome
 
-2. **Range modeling (local features)**
-   - Move range documented via DataValue: `{ exact: 150 }` (precise) or `{ relative: 75 }` (estimate)
-   - Range bands for grouping: `short` | `medium` | `long` | `fullscreen`
-   - Stored in sequences via `selectedRangeBandKeys`
-   - Note: Comparative move ordering (Phase 7) is separate
-
-3. **Scaling as state resources** ✅ LOCKED IN
+2. **Scaling as state resources** ✅ IMPLEMENTED
    - Damage scaling, hitstun scaling: Game-configurable resources in `StateModel.resources`
    - Resource bounds: `{ min, max, initialValue }` defined per game
-   - Resource effects: Move effects modify resources via four modes
-    - `delta`: Change by amount (e.g., reduce scaling by 10%)
-    - `multiply`: Scale by factor (e.g., scale hitstun to 90%)
-    - `exact`: Set to value (e.g., reset scaling to 100%)
-    - `amount`: Legacy gain/spend (e.g., add 20 to meter)
    - Query-time combo feasibility: Apply move1 effects → resolve resource state → check move2
    - Validation: Resources referenced in effects must exist in game.states.resources
 
-4. **Determinism via semantic identity** ✅ IMPLEMENTED
+3. **Determinism via semantic identity** ✅ IMPLEMENTED
    - Same `moveSemanticKey` + `gameStateContext` always produces same outcome
    - Enables: Deterministic sequence simulation, scenario testing, peer-to-peer sync
    - `gameVersion` stored in scenario contexts for cross-patch determinism
    - Critical: Move effects on resources must be deterministic; same state → same modifications
 
-5. **Schema versioning and file compatibility**
-   - `.tfn` files carry required schema version
-   - App supports forward migration from older schema versions
-   - App refuses unknown future schema versions
-   - Per-entity tracking: `validatedVersion` field tracks last tested game version
-
-6. **Field-level verification tracking** ✅ IMPLEMENTED
+4. **Field-level verification tracking** ✅ IMPLEMENTED
    - Verification tracked per field/section, not per guide only
    - Users can see exactly which parts are stale after patches
    - Scaling bounds documented via DataValue pattern
     - `{ exact: 100 }` = verified from testing
     - `{ relative: "25-50%" }` = inferred from empirical data
 
-7. **Team and character scope semantics** ✅ IMPLEMENTED
+5. **Team and character scope semantics** ✅ IMPLEMENTED
    - Character guides define available assists/loadouts
    - Team guides declare specific assist/loadout/order selections for team context
    - Team values override character values (explicit scoping)
 
-8. **Determinism in multi-user scenarios** ✅ LOCKED IN
+6. **Determinism in multi-user scenarios** ✅ LOCKED IN
    - Two users with same game + moves + sequence = same combo outcome
    - Peer-to-peer sync enabled by semantic identity
    - No convergence/consensus needed; each user can have local variants

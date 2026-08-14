@@ -129,10 +129,26 @@ You're away from the arcade. But you can explore: "If I land this move, what are
 
 **On your phone, in a browser, on the train**:
 - Review your notes and strategies
-- Simulate: "What's guaranteed after this knockdown?"
-- Explore: "What if I tried this sequence?"
-- Organize: Bookmark your best combos and strategies
-- Collaborate: See what your community discovered
+- **Simulate**: "What's guaranteed after this knockdown?" — Frame-accurate scenario testing with proper spacing, hitstun scaling, and projectile behavior
+- **Explore**: "What if I tried this sequence?" — TFN tests timing, positioning, and state interactions automatically
+- **Organize**: Bookmark your best combos and strategies
+- **Collaborate**: See what your community discovered
+
+### Power Users: Define Custom Game Mechanics
+
+**No limits to what you can model**:
+- Gravity affecting projectile arcs and juggle windows
+- Hitstun scaling based on combo count
+- Health regeneration over time
+- Projectile priority clashes with deterministic outcomes
+- Custom state transitions and resource interactions
+- Anything else your game does — you define it via state updaters
+- TFN runs your simulation and shows you the result
+
+**Two types of updates**:
+- **Effect-driven**: When a move applies damage/meter/stun, your rule transforms it (combo scaling hitstun, etc.)
+- **Frame-driven**: Each frame of simulation, your rule runs (gravity, regen, decay, etc.)
+- All updates run during simulation, making TFN's scenario testing truly accurate to your game
 
 ### Share With Friends
 
@@ -162,11 +178,14 @@ Over time, fighting game communities move from "Has anyone found a combo after t
 ✅ Document moves with phases (startup/active/recovery)  
 ✅ Track hit and block outcomes independently  
 ✅ Model combo structures with timing windows  
-✅ Define your game's configuration (frame rate, states, attack types)  
+✅ Define your game's configuration (frame rate, states, attack types, spatial dimensions)  
 ✅ Estimate hitboxes and hurt boxes from theory  
 ✅ Calculate combo difficulty automatically  
 ✅ Get combo suggestions based on your data  
 ✅ Model matchup scenario trees (if opponent does X, I do Y)  
+✅ **Document projectiles as independent entities with velocity, lifetime, and properties**  
+✅ **Run frame-accurate scenario simulations with your game's exact mechanics**  
+✅ **Define custom game mechanics via state updater functions (power users)**  
 ✅ Export and import guides as files  
 
 ---

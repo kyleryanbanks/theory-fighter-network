@@ -697,6 +697,48 @@ This document catalogs authoritative source materials on fighting game design, i
 
 ---
 
+#### Supplement B: Projectile Implementation Models
+
+**Overview**: Different games model projectiles with different durability/interaction systems. TFN's ProjectileDocument and custom state updaters support all of these.
+
+**Street Fighter 6 (Priority-Based Durability)**:
+- Projectiles have priority level (1-5)
+- Higher priority defeats lower priority in clash
+- User defines: `states.projectiles = { priority: { min: 1, max: 5 }, durability: { min: 1, max: 4 } }`
+- Hadoken: `{ priority: 3, durability: 1 }`
+- Shun Goku Satsu: `{ priority: 5, durability: 4 }`
+- Projectile lifecycle modeled with phases, despawned on hit or stage boundary
+
+**Marvel vs Capcom (Hit-Based Durability)**:
+- Projectiles survive N hits before destruction
+- Example: Beam assists (3-hit), Tatsu (1-hit), Missiles (1-2 hits)
+- User defines: `states.projectiles = { hits: { min: 1, max: 10 } }`
+- Different projectile types within same character
+- TFN model: Each projectile has `state.projectiles.hits = N`, decremented on hit via `onUpdate`
+
+**Tekken (Stage Position + Projectile Behavior)**:
+- 3D games: projectiles have x/y/z trajectory
+- Projectiles can be sidestepped
+- User enables 3D: `game.is3d = true`
+- ProjectilePhase defines velocity in all three dimensions
+- Hitboxes positioned in 3D space relative to projectile origin
+
+**Guilty Gear Strive (Complex Projectiles)**:
+- Some projectiles have levels/upgrades
+- Can spawn other projectiles
+- Interact with specific mechanics
+- User defines: `states.projectiles = { level: { min: 1, max: 3 }, canSpawnProjectiles: boolean }`
+- Projectile effects spawn additional projectiles via `MoveOutcomeEffect`
+
+**Conceptual Mapping to TFN**:
+- Durability tracking: `states.projectiles` categories (priority, hits, level, custom)
+- Projectile lifecycle: `ProjectilePhase` with duration and `destroyedAfter`
+- Custom interactions: `State.onUpdate` callbacks (durability loss on clash)
+- Complex behaviors: `State.onFrameAdvance` callbacks (spawning, level upgrades)
+- Spatial behavior: Velocity-based motion, position calculation, 3D support
+
+---
+
 ## Model Design Application
 
 ### How These Materials Inform TFN Architecture

@@ -161,6 +161,83 @@ const hadoken: MoveDocument = {
 **Implementation note:**
 During game guide creation, the UI should offer height template selection as part of game configuration wizard, with ability to customize before saving.
 
+### Custom State Updaters for Game-Specific Mechanics
+
+**Concept**: Each `State` can optionally define custom update functions that run during simulation. This allows users to implement any game mechanic without requiring schema changes.
+
+**Two updater types:**
+
+1. **`onUpdate(incomingValue, context)`** — Called when an effect applies a value to this state
+   - Receives the raw value from effect
+   - Can transform it before storage
+   - Example: hitstun scaling by combo counter
+   
+2. **`onFrameAdvance(context)`** — Called once per frame during simulation
+   - Runs independently of effects
+   - Used for system-level mechanics
+   - Example: gravity, health regen, meter decay
+
+**Examples:**
+
+Hitstun scaling by combo count (effect-driven):
+```typescript
+states.comboMechanics.hitstun = {
+  name: "Hitstun",
+  min: 0, max: 100,
+  onUpdate: (incomingHitstun, context) => {
+    const comboCount = context.runtimeState.comboMechanics.comboCount || 0;
+    const scaleFactor = 0.95 ** comboCount;  // Each hit = 5% less stun
+    context.runtimeState.comboMechanics.hitstun = incomingHitstun * scaleFactor;
+    return context;
+  }
+}
+```
+
+Gravity affecting motion (frame-driven):
+```typescript
+states.stageMechanics.gravity = {
+  name: "Gravity", min: 0, max: 10,
+  onFrameAdvance: (context) => {
+    const g = context.runtimeState.stageMechanics.gravity;
+    // Apply gravity to all character/projectile velocities
+    // Update positions based on new velocities
+    return context;
+  }
+}
+```
+
+Health regeneration (frame-driven, conditional):
+```typescript
+states.resources.health = {
+  name: "Health", min: 0, max: 100,
+  onFrameAdvance: (context) => {
+    // Only regen if not in hitstun and not blocking
+    const isInHitstun = context.runtimeState.comboMechanics.hitstun > 0;
+    const isBlocking = context.runtimeState.blocks.isBlocking;
+    
+    if (!isInHitstun && !isBlocking) {
+      context.runtimeState.resources.health = Math.min(
+        context.runtimeState.resources.health + 0.5,
+        100
+      );
+    }
+    return context;
+  }
+}
+```
+
+**Deterministic Execution Order:**
+`GameDocument.stateExecutionOrder` specifies which states' `onFrameAdvance` callbacks run first. Unspecified states run in consistent arbitrary order. Enables power users to manage dependencies (e.g., gravity before position calculation):
+
+```typescript
+stateExecutionOrder: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
+```
+
+**Storage:**
+- Functions defined in local guides (not published to Firestore)
+- Git-tracked with guide files or in separate TypeScript files
+- Called at simulation time by engine
+
 ### Collision, Hurt, Hit, and Throw Box Regions
 
 **Concept**: Four distinct box systems are unified under a single region model, supporting both 2D (circles/rectangles) and 3D (spheres/cubes) games. Regions are pure geometry—shape is identified by field presence, not type discriminators.
@@ -464,10 +541,47 @@ const meterBurn: MoveDocument = {
 
 ### Projectile System
 
-- Moves with `ProjectileProfile` define projectile behavior (motion, destruction, clash rules)
-- Supports varied projectile types: fixed-forward, arc, homing, stationary, custom
-- Durability tracked as: priority, points, or hybrid
-- Clash results capture relative matchups against other projectiles
+**Core Concept**: Projectiles are independent entities, not move properties.
+
+**Structure**:
+- **ProjectileDocument** — Reusable projectile template (similar to MoveDocument, but no `inputFrames`)
+- **ProjectilePhase** — Describes projectile motion, regions, effects, lifetime
+- **ProjectileInstance** — Runtime object during simulation with mutable state and position
+
+**Key Features**:
+- Projectiles defined using game's `states.projectiles` (user-defined properties)
+- Each projectile phase specifies:
+  - `velocity` (per frame motion in x/y or x/y/z)
+  - `initialPosition` (starting position for phase)
+  - Regions: `hitBoxes`, `hurtBoxes`, `collisionBoxes`
+  - Effects on hit/block/whiff
+  - `destroyedAfter` flag for lifetime expiration
+- Position calculated deterministically: `position(frame) = initialPosition + (velocity × frameCount)`
+- Supports teleporting projectiles (discontinuous phases) and continuous motion
+
+**User-Defined Properties**:
+- Properties defined at game level: `states.projectiles = { durability: {...}, priority: {...} }`
+- Each projectile sets values from this template
+- Examples:
+  - SF6: `durability: 1-4`, `priority: 1-5`
+  - Marvel: `hits: 1-3`, `hitstunMod: 0.8-1.0`
+  - Guilty Gear: `level: 1-3`
+
+**Spawning**:
+- `MovePhase.projectileKey` references projectile by semanticKey
+- Projectile spawns on first active frame of phase
+- Single move can have multiple phases, spawning different/same projectiles
+
+**Integration with State System**:
+- Projectile properties updated via `State.onUpdate` callback (for effect-driven changes)
+- System-level mechanics (gravity affecting projectile trajectory) via `State.onFrameAdvance`
+- Example: durability decrements via `onUpdate` when clash happens
+- Example: gravity acceleration via `onFrameAdvance` affecting all positions
+
+**Collision & Destruction**:
+- Projectile destroyed via `MoveOutcomeEffect.projectileDestroyed: true`
+- Or via `destroyedAfter: true` at phase end (lifetime expiration)
+- Position-based collision detection during frame-by-frame simulation
 
 ### Stage Design
 

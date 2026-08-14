@@ -14,10 +14,20 @@ export interface GameDocument {
   semanticKey: string; // hash(normalizedGameName + versionFamily)
 
   frameRate?: number;  // Game's frame rate (e.g., 60 for 60fps, 59.94 for NTSC arcade)
+  is3d: boolean;       // Whether game uses 3D space (affects position/velocity dimensions)
   
   teamSize: number;
   inputs: Inputs;
   states: StateModel;
+
+  /**
+   * Deterministic execution order for state.onFrameAdvance callbacks during simulation.
+   * Specified states run in this order, then remaining states run in arbitrary (but consistent) order.
+   * Enables power users to manage dependencies between state updates (e.g., gravity before position).
+   * 
+   * Example: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
+   */
+  stateExecutionOrder?: string[];  // Array of state semanticKeys in order to execute
 
   community: CommunityMetadata;
   meta: EntityMetadata;

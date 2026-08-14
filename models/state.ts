@@ -14,6 +14,33 @@ export interface State {
   min?: number;
   max?: number;
   unit?: string;
+
+  /**
+   * Optional custom update function called when a value is applied to this state (from effects).
+   * Users read the incoming value, check context state, and return updated context.
+   * 
+   * Example (hitstun scaling by combo count):
+   * onUpdate: (incomingValue, context) => {
+   *   const comboCount = context.runtimeState.comboMechanics.comboCount;
+   *   const scaleFactor = 0.95 ** comboCount;
+   *   context.runtimeState.comboMechanics.hitstun = incomingValue * scaleFactor;
+   *   return context;
+   * }
+   */
+  onUpdate?: (incomingValue: any, context: GameStateContext) => GameStateContext;
+
+  /**
+   * Optional custom frame advance function called once per frame during simulation.
+   * Useful for system-level updates that don't depend on incoming effect values.
+   * 
+   * Example (gravity-affected motion, health regeneration):
+   * onFrameAdvance: (context) => {
+   *   const gravity = context.runtimeState.stageMechanics.gravity;
+   *   // Apply gravity to positions, velocities
+   *   return context;
+   * }
+   */
+  onFrameAdvance?: (context: GameStateContext) => GameStateContext;
 }
 
 /**
@@ -60,7 +87,8 @@ export interface StateModel<
   S extends StateCollection = StateCollection,
   C extends StateCollection = StateCollection,
   R extends StateCollection = StateCollection,
-  CM extends StateCollection = StateCollection
+  CM extends StateCollection = StateCollection,
+  PR extends StateCollection = StateCollection
 > {
   attacks: A;
   blocks: B;
@@ -71,6 +99,7 @@ export interface StateModel<
   characters: C;
   resources: R;
   comboMechanics: CM;
+  projectiles: PR;  // User-defined projectile properties (durability, priority, etc.)
 }
 
 /**

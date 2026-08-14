@@ -13,19 +13,19 @@ export interface MoveDocument {
   gameKey: string;
   characterKey?: string;
   semanticKey: string; // hash(gameSemanticKey + characterSemanticKey + normalizedInputFrames + normalizedPreconditions)
-
-  inheritedFromMoveKey?: string;
-  fieldOverrides?: (keyof MoveDocument)[];
-
   name: string;
+
+  // Inheritence from game-level or character-level move, if applicable
+  ParentKey?: string;
+  overrides?: (keyof MoveDocument)[];
   
   // Input sequence for this move, using input values from GameDocument.inputs
   inputFrames?: TriggerInputFrame[];
 
   preconditions: {
-    requiredAllPlayerStateTags?: string[];
-    forbiddenPlayerStateTags?: string[];
-    requiredAllOpponentStateTags?: string[];
+    requiredPlayerState?: string[];
+    forbiddenPlayerState?: string[];
+    requiredOpponentState?: string[];
     followUpOnlyFromMoveKeys?: string[];
     cancelFromMoveKeys?: string[];
   };
@@ -61,7 +61,8 @@ export interface FrameStage {
  */
 export interface MovePhase {
   label?: string;
-  
+
+  hitStop?: DataValue;  // Brief visual pause when move connects (defaults to frames)
   startup?: FrameStage;
   active?: FrameStage;
   recovery?: FrameStage;
@@ -82,128 +83,70 @@ export interface MovePhase {
     onSecondaryTrigger?: PhaseCancelRule[];
   };
 
-  notes?: string;
-}
+  /**
+   * Projectile spawned on the first active frame of this phase.
+   * References a ProjectileDocument by its semanticKey.
+   * undefined = no projectile spawned.
+   */
+  projectileKey?: string;
 
-/**
- * Combo scaling effects for a move phase
- */
-export interface MoveComboScalingEffects {
-  hitstun?: {
-    modifierFrames?: number;
-    causesForcedProration?: boolean;
-    ignoresScaling?: boolean;
-    resetsTrigger?: boolean;
-  };
-  damage?: {
-    scalingPercentDelta?: number;
-    causesForcedProration?: boolean;
-    ignoresScaling?: boolean;
-    resetsTrigger?: boolean;
-  };
-  juggleCost?: number;
-  juggleGain?: number;
-  repeatPenaltyClass?: string;
   notes?: string;
 }
 
 /**
  * Outcome effects when a move connects, is blocked, etc.
+ * Targets:
+ * - source: the character/projectile that created this effect
+ * - target: the character/projectile that received this effect
  */
 export interface MoveOutcomeEffect {
-  hitStop?: DataValue;  // Brief visual pause when move connects (defaults to frames)
 
-  player?: {
-    positional?: PositionalEffect;
+  source?: {
+    displacement?: DisplacementEffect;
     resources?: ResourceEffect[];
     appliesStateTags?: string[];
   };
 
-  opponent?: {
+  target?: {
     stun?: DataValue;  // Hitstun on hit, blockstun on block, etc. (type implicit in parent outcome)
-    positional?: PositionalEffect;
+    displacement?: DisplacementEffect;
     resources?: ResourceEffect[];
     appliesStateTags?: string[];
   };
 
-  stageInteraction?: {
-    targetZoneKeys?: string[];
-    targetZoneTypes?: Array<'wall' | 'floor' | 'ceiling'>;
-    causesSplat?: {
-      enabled: boolean;
-      appliesOpponentStateTag?: string;
-    };
-    causesBreak?: {
-      enabled: boolean;
-      appliesOpponentStateTag?: string;
-    };
-    causesScreenTransition?: {
-      transitions: boolean;
-      repositionCharacters?: {
-        playerX?: number;
-        playerY?: number;
-        opponentX?: number;
-        opponentY?: number;
-      };
-      stillComboable?: boolean;
-    };
-    durabilityEffect?: {
-      applies: boolean;
-      points?: number;
-    };
-  };
-
-  frameAdvantage?: FrameOutcomeWindow;
-}
-
-/**
- * Frame advantage window
- */
-export interface FrameOutcomeWindow {
-  base?: number;
-  min?: number;
-  max?: number;
-  meatyAdvantageGain?: number;
-  notes?: string;
+  /**
+   * If true, the projectile that caused this effect is destroyed.
+   * Only applies if the source is a projectile.
+   */
+  projectileDestroyed?: boolean;
 }
 
 /**
  * Cancel rule for a move phase
  */
 export interface PhaseCancelRule {
-  windowStartFrame?: number;
-  windowEndFrame?: number;
+  startFrame?: number;
+  endFrame?: number;
   allowedMoveKeys?: string[];
-  requiredPlayerStateTags?: string[];
-  requiredOpponentStateTags?: string[];
   notes?: string;
 }
 
 /**
- * Positional effects on the attacker
+ * Displacement effects on characters/projectiles
  */
-export interface PositionalEffect {
-  displacesCharacter: boolean;
-  displacement?: {
-    x?: DataValue;
+export interface DisplacementEffect {
+  x?: DataValue;
+  y?: DataValue;
+  z?: DataValue;        // Only used if game.is3d
+  
+  velocity?: {
+    x?: DataValue;      // For continuous motion during displacement
     y?: DataValue;
+    z?: DataValue;      // Only used if game.is3d
   };
-  displacementStartFrame?: number;
-  displacementDuration?: number;
-  crossupCapable?: boolean;
-  notes?: string;
-}
-
-/**
- * Positional effects on the opponent
- */
-export interface OpponentPositionalEffect {
-  displacement?: {
-    x?: DataValue;
-    y?: DataValue;
-  };
-  displacementStartFrame?: number;
-  displacementDuration?: number;
+  
+  delay?: DataValue;    // Frames before displacement starts
+  duration?: DataValue; // How long displacement lasts
   notes?: string;
 }
 
@@ -212,30 +155,13 @@ export interface OpponentPositionalEffect {
  */
 export interface ResourceEffect {
   resourceKey: string;
-  
-  // One of the following must be present:
-  amount?: DataValue;        // Add/subtract from resource (legacy: gain meter, spend meter)
-  delta?: DataValue;         // Modify resource by delta amount (reduce scaling by 10%)
-  multiply?: DataValue;      // Multiply resource by factor (scale hitstun by 0.9)
-  exact?: DataValue;         // Set resource to exact value (reset scaling to 100%)
+  amount: DataValue;        // Add/subtract from resource (legacy: gain meter, spend meter)
 }
 
 /**
  * Projectile profile for projectile moves
  */
 export interface ProjectileProfile {
-  isProjectile: true;
-
-  behavior: {
-    motion: 'fixed-forward' | 'fixed-diagonal' | 'arc' | 'homing' | 'stationary' | 'custom';
-    customMotionNotes?: string;
-    destroyedOnHit: boolean;
-    canBeDestroyedByPhysical: boolean;
-    hitsBeforeDestroyed?: number;
-    activeFrames?: number;
-    travelSpeed?: number;
-  };
-
   durability: {
     priorityLevel?: number;
     durabilityPoints?: number;
