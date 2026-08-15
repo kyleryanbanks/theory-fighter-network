@@ -1,125 +1,405 @@
-# Implementation Roadmap
+# Implementation Plan — Priority-Ordered Roadmap
 
-Pre-implementation gates and 16-phase development plan.
+## Overview
 
-## Recent Model Updates ✅
+This roadmap restructures development around agreed priority order. The work is organized into **5 priority tiers**, each containing concrete phases with clear scope and dependencies.
 
-The following model and workflow updates have been documented and are ready for implementation:
+**Current State**: Models are mature and documented. Data structures for all entities (GameDocument, MoveDocument, CharacterDocument, etc.) are defined with semantic keying, resource scaling, and community metadata already in place.
 
-- ✅ **Scaling as Resources** — Scaling systems (damage scaling, hitstun scaling) are now game-configurable resources in `StateModel.resources` with bounds and initial values
-- ✅ **Resource Effects** — Move effects can now modify resources via four modes: `delta` (change by %), `multiply` (scale), `exact` (reset), or `amount` (legacy gain/spend)
-- ✅ **Hitstun Scaling in Combo Feasibility** — Query-time validation applies previous move's effects → resolves scaled hitstun → checks next move feasibility
-- ✅ **Hitstun as Combo Resource** — Hitstun grant → cost per startup → scaled by effects → minimum bounds force combo end
-- ✅ **Hit Counter System** — Alternative scaling: increment counter per hit, trigger forced knockdown at threshold
-- ✅ **Damage Scaling Discovery Workflow** — Users capture per-hit damage → TFN infers scaling factors → suggests bounds → validates future sequences
-- ✅ **Semantic Key Usage** — Move outcomes determined by `moveSemanticKey` + `gameStateContext` for deterministic simulation
-- ✅ **Scenario-Based Testing** — TFN Web Controller API drives opponent to validate user-created scenarios
-- ✅ **Mobile Data Collection** — Phone-optimized UI for quick entry; desktop sync for real-time data population
-
-**Documentation**: All updates documented in [plan/02-data-model.md](./02-data-model.md) and [plan/03-workflows.md](./03-workflows.md) with examples and rationale.
+**Approach**: Phases are grouped by priority tier. Within each tier, phases are ordered by dependency (foundations first). Each phase lists concrete deliverables and validation criteria.
 
 ---
 
-## CFN-Informed Mechanics (Gaps Solved) ✅
+## Priority 1: Local-First Core + Hierarchy
 
-The following model gaps identified from Capcom CFN mechanics documentation have been resolved:
+These phases establish the offline foundation. All features are local-only; no network/community features.
 
-- ✅ **Hitstun/Blockstun** — Modeled as `effects.onHit.opponent.stun` and `effects.onBlock.opponent.stun` (implicit type from parent outcome); can be modified by scaling resources
-- ✅ **Hit Stop Timing** — Modeled as `effects.onHit.hitStop` and `effects.onBlock.hitStop` at MoveOutcomeEffect root
-- ✅ **Cancel Windows and Restrictions** — Cancel timing via `PhaseCancelRule.windowStartFrame/windowEndFrame`; cancel restrictions via target move `preconditions` (no duplication; state always checked on target move)
-- ✅ **Pushback and Spacing** — Modeled via `effects.opponent.positional.displacement`; combo feasibility requires both timing (hitstun ≥ startup AND scaling applied) AND spacing (position + displacement ≤ range)
-- ✅ **Duration Units and Framerate** — `DataValue.unit` field defaults to frames; `GameDocument.frameRate` enables conversion; users measure durations however they can (watch duration in seconds = progressive documentation)
-- ✅ **Multi-hit Moves** — Two approaches supported: sequential phases (per-hit variation) or multiple hitboxes in single phase (simultaneous hits)
-- ✅ **Attack Height Classification** — Handled via state model: `states.attacks` contain attack type definitions (low/mid/high) as named states with optional descriptive properties
-- ✅ **Damage Scaling** — Modeled as `StateModel.resources` with bounds; move effects modify scaling via `ResourceEffect` with delta/multiply/exact modes
-- ✅ **Hitstun Scaling (Percentage-based)** — Each hit reduces hitstun by %: `opponent.resources.hitstun *= 0.9` per hit until minimum bound
-- ✅ **Hit Counter (Alternative Scaling)** — Some games use counter instead of duration: `opponent.resources.hitCount++` triggers forced knockdown at threshold
+### Phase 1.1: Local Guide Foundation
+**Scope**: Build the guide.json metadata layer and local file I/O pipeline.
 
-**Documentation**: All gaps documented in [plan/02-data-model.md](./02-data-model.md) with examples and rationale.
+**Deliverables**:
+- `guide.json` schema: gameKey, schemaVersion, lastModified, localChanges[], syncedChanges[], unsavedStatus per entity
+- Local file structure: `.tfn` save format with version header and integrity validation
+- File import/export CLI: Load guide.json + entity files → in-memory GameDocument + child entities
+- Unsaved/synced tracking: Mark entities as `unsaved` after edits, `synced` after save
+- Schema version registration and forward-compatibility checks
 
----
-
-## Ready-to-implement gate (local-first offline features)
-
-These are locked design decisions for Phases 1-10 (offline, local-first). Community 
-and cloud features (Phases 11-14) have separate planning documents.
-
-1. **Canonical identity via semantic keys** ✅ IMPLEMENTED
-   - Games/characters: Hash(canonicalName + versionFamily)
-   - Moves: Hash(gameSemanticKey + characterSemanticKey + inputFrames + preconditions)
-   - Aliases supported for display without changing canonical identity
-   - Enables deterministic move resolution: same key + context = same outcome
-
-2. **Scaling as state resources** ✅ IMPLEMENTED
-   - Damage scaling, hitstun scaling: Game-configurable resources in `StateModel.resources`
-   - Resource bounds: `{ min, max, initialValue }` defined per game
-   - Query-time combo feasibility: Apply move1 effects → resolve resource state → check move2
-   - Validation: Resources referenced in effects must exist in game.states.resources
-
-3. **Determinism via semantic identity** ✅ IMPLEMENTED
-   - Same `moveSemanticKey` + `gameStateContext` always produces same outcome
-   - Enables: Deterministic sequence simulation, scenario testing, peer-to-peer sync
-   - `gameVersion` stored in scenario contexts for cross-patch determinism
-   - Critical: Move effects on resources must be deterministic; same state → same modifications
-
-4. **Field-level verification tracking** ✅ IMPLEMENTED
-   - Verification tracked per field/section, not per guide only
-   - Users can see exactly which parts are stale after patches
-   - Scaling bounds documented via DataValue pattern
-    - `{ exact: 100 }` = verified from testing
-    - `{ relative: "25-50%" }` = inferred from empirical data
-
-5. **Team and character scope semantics** ✅ IMPLEMENTED
-   - Character guides define available assists/loadouts
-   - Team guides declare specific assist/loadout/order selections for team context
-   - Team values override character values (explicit scoping)
-
-6. **Determinism in multi-user scenarios** ✅ LOCKED IN
-   - Two users with same game + moves + sequence = same combo outcome
-   - Peer-to-peer sync enabled by semantic identity
-   - No convergence/consensus needed; each user can have local variants
-   - Publishing publishes variants, not forcing convergence
+**Validation**: Load/save round-trip preserves all data; schema version mismatch is caught with clear error message
 
 ---
 
-## Community & Cloud Gates (Phases 11-14)
+### Phase 1.2: Game Creation Root (Local CRUD + Validation)
+**Scope**: Build GameDocument local CRUD operations and validation rules.
 
-To be planned separately in phase-specific documents:
+**Deliverables**:
+- GameDocument creation: Initialize with name, version, frameRate, is3d, teamSize, inputs
+- GameDocument validation: Semantickey integrity, required fields, input vocabulary uniqueness
+- GameDocument local edits: Update metadata, frameRate, dimensions, inputs
+- Semantic key generation: Hash(normalizedGameName + versionFamily) for canonical identity
+- Version family detection: Extract from version string (e.g., "1.0" → "1.x" family)
 
-- **Phase 11 gates**: Compare/merge between local and community entities
-- **Phase 12 gates**: Firestore reads, auth, cloud sync decisions
-- **Phase 13 gates**: Convergence thresholds, variant alignment, contradictory labeling
-- **Phase 14 gates**: Progressive suggestion UI strategy
+**Validation**: Create game → verify semanticKey stability; update game metadata → semanticKey unchanged; invalid inputs rejected
+
+**Depends on**: Phase 1.1
 
 ---
 
-## Implementation phases
+### Phase 1.3: .tfn Save/Load Pipeline (Locked Structure + Migration)
+**Scope**: Build the locked file format and forward-only migration system.
 
-1. Finalize shared schema + local file format.
-2. Implement local file import/export persistence.
-3. Build private CRUD for games/stages/characters/moves/teams.
-4. **Build game input/trigger + player/opponent-state + resource modeling.**
-   - *Updated scope*: Includes defining `StateModel.resources` with bounds/initial values
-   - Query-time resource state resolution (apply effects → resolve bounds → check feasibility)
-5. **Build move connectivity editor (availability, cancels, follow-ups, opponent-state application, resource effects).**
-   - *New*: Resource effect UI (select resource → choose modification mode → set value)
-   - Validation: highlight resources defined in game config
-6. Build universal inheritance flows — seed character movelists from game-level moves, seed stage zones from game-level zone defaults, field-level lock/override UI, global update propagation, and promote-to-inherited workflows.
-7. Build comparative property ordering + inferred-bound engine.
-   - *Updated*: Include scaling bound inference from per-hit damage data
-8. Build move range profile editor and range-band-aware transition edges.
-9. **Build scoped combo editor (universal/character/team) with scaling validation.**
-   - *Updated*: Query-time validation applies previous move effects → checks timing with scaled hitstun
-   - Visualize scaling impact: "After move 1, hitstun = X frames; move 2 needs Y startup"
-10. **Implement computed combo difficulty engine with resource scaling.**
-   - *Updated*: Includes difficulty from hitstun scaling tightening windows
-   - Scaling complexity: "Scaling reduces hitstun by 10% per hit, making later moves tighter"
-11. Add compare/merge between local and community entities.
-12. Add auth and opt-in Firestore sync/community browsing.
-13. Add convergence indicators, exact-vs-exploratory labeling, version freshness warnings, and duplicate/near-duplicate linking UX.
-14. **Build automated exploration assistant (coverage analysis + phase-aware suggestion generation, damage scaling discovery).**
-   - *New*: Damage scaling helper: "You've entered per-hit damage for 3 sequences; scaling appears to be -10% per hit"
-   - Suggest bounds: "Set damage-scaling bounds to 25-100% based on data"
-   - Mobile data collection suggestions: "Next move to test: X (you have 5 test results for move Y)"
-15. Build matchup/counter-option graph model and editor.
-16. Implement curated community read paths + required indexes/security rules.
+**Deliverables**:
+- `.tfn` format specification: Binary or JSON with version header, checksums, entity order
+- Save pipeline: GameDocument → guide.json + entity files; write atomically to `.tfn`
+- Load pipeline: `.tfn` → validate header + schema version → deserialize entities
+- Forward-only migration: Accept v1 → v2 migrations; reject v2 files in v1 client
+- Unknown schema rejection: If schemaVersion > current client version, fail with instruction to upgrade
+- Integrity validation: Checksums verify file not corrupted between saves
+
+**Validation**: Save → Load → Compare == original; forward-migration works; downgrade attempt fails gracefully
+
+**Depends on**: Phase 1.1, 1.2
+
+---
+
+### Phase 1.4: Entity Hierarchy Foundation (Game-Level Children)
+**Scope**: Build hierarchy starting from game downward: universal stage zones, stages + inheritance, universal sequences.
+
+**Deliverables**:
+- Universal stage zones: StageZoneDocument with `stageKey: null` (game-level, inherited by all stages)
+- Stage creation/CRUD: StageDocument with gameKey, name, semanticKey
+- Inherited zones: StageZoneDocument with `stageKey: <stageId>` + optional `inheritedFromZoneKey`
+- Universal sequences: SequenceDocument with `characterKey: null, teamKey: null` (game-level, inherited by all)
+- Inheritance UI: Show inherited fields with lock/override UI; changes to parent propagate to unlocked children
+- Promote-to-inherited workflow: Move character-scoped sequence → game-scoped (if applicable)
+
+**Validation**: Game zones visible to all stages; stage zones override game zones where applicable; sequences inherit correctly
+
+**Depends on**: Phase 1.2
+
+---
+
+### Phase 1.5: Character Branch (Characters, Moves, Sequences)
+**Scope**: Build character entity hierarchy: character creation, move CRUD, character-scoped sequences.
+
+**Deliverables**:
+- CharacterDocument creation: Initialize with gameKey, name, archetypes, states (inherit from game)
+- Character-scoped moves: MoveDocument with gameKey + characterKey; inherit game-level moves
+- Move CRUD: Create, edit, delete moves; validate preconditions and phases
+- Move input parsing: Convert button/direction sequences to canonical input representation
+- Character-scoped sequences: SequenceDocument with gameKey + characterKey
+- Inheritance chains: Show parent game moves/sequences; highlight overrides
+
+**Validation**: Character inherits game moves; local overrides don't affect parent; semanticKeys stable across edits
+
+**Depends on**: Phase 1.2, 1.4
+
+---
+
+### Phase 1.6: Team Branch (Teams, Sequences)
+**Scope**: Build team entity hierarchy: team creation, team-scoped sequences.
+
+**Deliverables**:
+- TeamDocument creation: Select ordered list of CharacterDocuments; compute semanticKey from character order
+- Team-scoped sequences: SequenceDocument with gameKey + teamKey
+- Assist/loadout scoping: Team values override character values for assist/loadout selection
+- Team validation: All characters must exist in game; order preserved in semanticKey
+
+**Validation**: Create team → verify all characters exist; reorder team → semanticKey updates
+
+**Depends on**: Phase 1.5
+
+---
+
+### Phase 1.7: Matchup Branch (Matchups + Scenario/Response Trees)
+**Scope**: Build matchup entities and scenario/response decision trees.
+
+**Deliverables**:
+- MatchupDocument creation: Pair character1/character2 from same game
+- Scenario definition: GameStateContext (players' states, resources) + test conditions
+- Response tree: Branch decision tree where each node represents opponent state → user's available moves
+- Scenario/response CRUD: Create, edit delete scenarios and response paths
+- Navigation: Query matchup → select scenario → explore response tree
+- Scenario validation: GameStateContext is valid for associated characters
+
+**Validation**: Matchup requires both characters; scenarios have consistent game version; response tree is acyclic
+
+**Depends on**: Phase 1.6
+
+---
+
+## Priority 2: Highest-Priority Advanced Feature
+
+### Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine
+**Scope**: Build the data analysis engine for property ordering and bound inference.
+
+**Deliverables**:
+- Comparative property ordering: Rank moves by properties (damage, startup, range) using DataValue.relative
+- UI: Full-screen multi-move range comparison; set DataValue.relative for each move
+- Inferred-bound engine: Analyze per-hit damage sequences → infer scaling factors → suggest scaling bounds
+- Bound validation: Check suggested bounds against move effects; highlight conflicts
+- Damage scaling discovery: User enters per-hit damage → TFN extracts % reduction per hit → suggests bounds
+- Scaling curve visualization: Graph showing inferred damage reduction over sequence
+
+**Validation**: Comparative ordering produces consistent rankings; inferred bounds match empirical data within tolerance
+
+**Depends on**: Phase 1.5 (moves must exist)
+
+---
+
+## Priority 3: Included Local Authoring/Analysis Features
+
+### Phase 3.1: Move Connectivity Editor
+**Scope**: Build comprehensive move effects and connectivity UI.
+
+**Deliverables**:
+- Move phase editor: Create/edit/delete phases with duration, startup, active, recovery FrameStages
+- Collision box editor: Visual/numeric editor for hitBoxes, hurtBoxes, collisionBoxes, throwBoxes (Region objects)
+- Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, resources, positional)
+- Resource effect UI: Select resource → choose modification mode (delta/multiply/exact/amount) → set value
+- Cancel window UI: Define cancels from this move; set windowStartFrame/windowEndFrame on target moves
+- Precondition UI: Set required/forbidden player state, required opponent state, cancel/follow-up restrictions
+- Effect validation: Highlight resources defined in game config; warn on undefined resources
+
+**Validation**: All phases have duration; collision boxes are valid; effects reference defined resources
+
+**Depends on**: Phase 1.5, 2.1
+
+---
+
+### Phase 3.2: Full-Screen Multi-Move Range Comparison
+**Scope**: Build visual comparison tool for move ranges with relative positioning.
+
+**Deliverables**:
+- Range profile UI: Display multiple moves side-by-side; show hitBox/hurtBox/collisionBox visually
+- Relative positioning: Set DataValue.relative for each move's range properties
+- Visual range bands: Highlight range bands (close, mid, far) for quick comparison
+- Transition edges: Show which moves connect at different ranges
+- Scaling visualization: Show how range changes with game-level zone modifiers (if applicable)
+
+**Validation**: Visual and numeric representations match; relative values normalize to 0-100%
+
+**Depends on**: Phase 3.1
+
+---
+
+### Phase 3.3: Promote-to-Inherited Workflow (Moves/Zones)
+**Scope**: Build UI for promoting character-scoped entities to game-scoped.
+
+**Deliverables**:
+- Promote move: Character move → game move; update all character references to inherit
+- Promote zone: Stage zone → game zone; update all stage references to inherit
+- Conflict detection: Warn if multiple characters have identical moves (candidate for promotion)
+- Undo/rollback: Revert promotion; restore character-scoped versions
+- Impact analysis: Show which entities will be affected by promotion
+
+**Validation**: Promoted entity becomes game-level; character references update; no data loss
+
+**Depends on**: Phase 1.4, 1.5
+
+---
+
+### Phase 3.4: Scoped Combo Editor with Scaling Validation
+**Scope**: Build combo authoring UI with real-time scaling and feasibility checks.
+
+**Deliverables**:
+- Combo creation: Select moves in sequence (universal, character, or team scope)
+- Real-time validation: Apply move1 effects → resolve resources → check move2 timing and spacing
+- Scaling visualization: "After move 1, hitstun = X frames; move 2 needs Y startup"
+- Hitstun tracking: Show scaled hitstun after each move; highlight when hitstun ≤ next move startup
+- Spacing validation: Show positions after each move; warn if spacing exceeds next move's range
+- Difficulty inference: Suggest difficulty based on scaling tightness and window sizes
+- Scope selector: Edit at universal (game), character, or team level; visualize inheritance
+
+**Validation**: Combos pass feasibility checks at current game state; infeasible combos flagged with reasons
+
+**Depends on**: Phase 1.7, 3.1, 2.1
+
+---
+
+### Phase 3.5: Automated Exploration Assistant
+**Scope**: Build intelligent suggestions for missing/incomplete data.
+
+**Deliverables**:
+- Coverage analysis: Scan game → identify missing moves, moves with incomplete data, untested sequences
+- Phase-aware suggestions: "You have 3 hit combos; try X-hit combos" based on observed patterns
+- Damage scaling discovery: "You've entered per-hit damage for 3 sequences; scaling appears to be -10%"
+- Bound suggestions: "Set damage-scaling bounds to 25-100% based on data"
+- Mobile data collection hints: "Next move to test: X (you have 5 test results for move Y)"
+- Priority ranking: Suggest highest-impact data (missing core moves before optional properties)
+- Learning curve: Remember user's previous inputs; suggest compatible properties next time
+
+**Validation**: Suggestions are actionable; coverage analysis accurately counts missing/incomplete data
+
+**Depends on**: Phase 2.1, 3.1
+
+---
+
+### Phase 3.6: Matchup/Counter-Option Graph Model + Editor
+**Scope**: Build matchup decision trees and counter-option visualization.
+
+**Deliverables**:
+- Graph model: Nodes = game states; edges = available moves → outcomes
+- Scenario trees: Navigate scenario → opponent state → available moves → outcomes
+- Counter graph: Highlight move chains that beat opponent options
+- Visual graph editor: Drag-drop nodes, connect edges, label transitions
+- Graph queries: "What beats this opponent string?" → highlight counter-moves
+- Convergence view: Compare user's graph against community graphs; show differences
+- Graph validation: Ensure no contradictory edges; warn on incomplete scenarios
+
+**Validation**: Graph is acyclic for turn-based; counter-queries return correct moves; queries complete in <100ms
+
+**Depends on**: Phase 1.7, 3.1
+
+---
+
+### Phase 3.7: Scenario Testing with Web Controller API
+**Scope**: Build UI for testing scenarios against simulated/real opponents.
+
+**Deliverables**:
+- Web Controller API integration: Send scenario + user's combo → simulate opponent reaction
+- Test scenario creation: Define opponent's starting state and respond patterns
+- Test result recording: Compare expected vs. actual outcome; record video/frames for analysis
+- Batch testing: Queue multiple scenarios; run tests in background
+- Result visualization: Show pass/fail breakdown; highlight failure patterns
+- Determinism verification: Run same scenario twice → verify identical outcomes
+
+**Validation**: Test results are repeatable; API calls succeed and return expected data format
+
+**Depends on**: Phase 3.4
+
+---
+
+### Phase 3.8: Local Recovery Snapshot + Crash-Restore UX
+**Scope**: Build auto-save and crash recovery features.
+
+**Deliverables**:
+- Auto-snapshot: Periodic snapshots of guide.json + all entities (e.g., every 5 minutes)
+- Snapshot versioning: Store 10 most recent snapshots with timestamps
+- Crash detection: On startup, check for incomplete save from previous session
+- Restore UI: "Last save crashed. Restore from backup?" with timestamp selection
+- Diff viewer: Show what would be restored; allow selective restoration
+- Atomic saves: Ensure writes to `.tfn` are atomic (all-or-nothing)
+
+**Validation**: Snapshots are valid; restored state matches snapshot; atomic saves don't partially corrupt files
+
+**Depends on**: Phase 1.3
+
+---
+
+## Priority 4: Included Sharing/Community Foundation
+
+### Phase 4.1: Peer-to-Peer Sharing Workflow
+**Scope**: Build local peer-to-peer export/import for sharing game data.
+
+**Deliverables**:
+- Export for sharing: Bundle game + selected entities into portable `.tfn` file with user metadata
+- Share metadata: Include author name, version notes, date shared
+- Import from peer: Load peer's `.tfn` → merge with local guide using semantic keys
+- Duplicate detection: Identify identical entities (same semanticKey) across peer copies
+- Merge conflict UI: When peer has different version of same entity, show diff and allow selection
+- Trust model: Mark peer-imported entities with source author and import date
+
+**Validation**: Exported guide is valid and complete; imported guide merges without corrupting local state
+
+**Depends on**: Phase 1.3, 1.7
+
+---
+
+### Phase 4.2: Local/Community Compare-Merge Workflow
+**Scope**: Build UI for comparing and merging local vs. community variants.
+
+**Deliverables**:
+- Compare view: Side-by-side local vs. community entity (same semanticKey)
+- Diff highlighting: Show which fields differ; highlight significant changes (move startup, damage) vs. minor (notes)
+- Merge options: Keep local, accept community, or manual field-by-field merge
+- Variant tracking: Store merge history; mark merged entities as "convergent" if no local changes remain
+- Batch merge: Apply merge strategy to multiple entities at once
+- Convergence detector: Highlight when local and community versions align
+
+**Validation**: Merges preserve both versions if needed; convergence detection is accurate; no data loss
+
+**Depends on**: Phase 4.1
+
+---
+
+## Priority 5: Included Firestore/Community Work
+
+### Phase 5.1: Auth + Opt-In Firestore Sync/Community Browsing
+**Scope**: Build authentication and cloud sync infrastructure.
+
+**Deliverables**:
+- Firebase auth: Email/password or OAuth login
+- Opt-in sync: User toggle to enable/disable Firestore sync
+- Sync strategy: Push local entities → Firestore; pull community entities on demand
+- Cloud guide index: Firestore collection of published guide.json references
+- Community browser UI: Search games, characters, moves; browse published guides
+- Sync status: Show which entities are synced vs. local-only
+- Offline mode: App works fully offline; sync happens when connection available
+
+**Validation**: Auth works across sessions; sync is optional; app functions offline; community browser displays correct data
+
+**Depends on**: Phase 4.1, 4.2
+
+---
+
+### Phase 5.2: Convergence/Variant UX
+**Scope**: Build UI for displaying convergence and variants in community context.
+
+**Deliverables**:
+- Convergence indicator: Show when local/community entities are aligned
+- Variant browsing: Display different community versions of same move/combo (e.g., multiple interpretations)
+- Version timeline: Show how community entity evolved over time
+- Variant merging: Merge multiple community variants into synthesis
+- Conflict labeling: Mark contradictory data in community (e.g., two different damage values)
+- Trust scoring: Sort variants by community consensus or author reputation
+
+**Validation**: Convergence detection aligns with manual inspection; variants display correctly; merges are sensible
+
+**Depends on**: Phase 5.1
+
+---
+
+### Phase 5.3: Curated Community Read Model + Indexes/Security Rules
+**Scope**: Build Firestore indexes and security rules for community browsing and curation.
+
+**Deliverables**:
+- Read model schema: Optimized Firestore collections for community browsing (games → moves, characters, combos)
+- Indexes: Composite indexes for common queries (game + character, game + move, damage range)
+- Security rules: Users can read published entities; write only to own entities; curators can promote variants
+- Curator role: Designated users can flag variants as "canonical" or "common alternative"
+- Unpublish rules: Users can unpublish own entities; curators can remove harmful content
+- Audit log: Track publish/unpublish/curation actions for transparency
+
+**Validation**: Indexes enable queries to complete in <1s; security rules prevent unauthorized writes; audit log records all actions
+
+**Depends on**: Phase 5.1
+
+---
+
+### Phase 5.4: Granular Publish Workflow
+**Scope**: Build fine-grained entity publishing and community discovery.
+
+**Deliverables**:
+- Publish options: Publish individual entities or entire guides at specific scope
+- Publish scoping: Entity can be published as universal (game-level), character-scoped, or team-scoped
+- Versioning: Published entities retain gameVersion and schema version
+- Unpublish: Remove entity from community (mark as deprecated with reason)
+- Publish history: Track publish/unpublish timeline for version recovery
+- Discovery: Featured guides, trending moves, recent publications
+- Notification: Users notified when their entities receive community feedback/variants
+
+**Validation**: Published entities appear in community browser within 5s; unpublish removes them; history is auditable
+
+**Depends on**: Phase 5.2, 5.3
+
+
+
+---
+
+## Implementation Strategy
+
+1. **Local-first approach** (Priorities 1-3): Build complete offline functionality first. No network dependencies; all features work without internet.
+2. **Dependency ordering within tiers**: Earlier phases provide foundations for later phases. Phases can be parallelized within a tier if dependencies are met.
+3. **Validation-first design**: Each phase includes clear validation criteria to ensure completeness before moving forward.
+4. **Iterative community features** (Priorities 4-5): Once local features are solid, add community/cloud incrementally with opt-in toggles.
+5. **Backward compatibility**: Forward-only migration ensures users can load old files; clients never downgrade schema versions.
