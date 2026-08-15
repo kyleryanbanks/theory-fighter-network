@@ -7,6 +7,12 @@
       "skillPath": "angular-developer/SKILL.md",
       "computedHash": "ded1e95fb8d75d60901201665c6ab7e348eec3b79a6c53824c4a30a487d99f58"
     },
+    "nx-monorepo": {
+      "source": "giuseppe-trisciuoglio/developer-kit",
+      "sourceType": "github",
+      "skillPath": "plugins/developer-kit-typescript/skills/nx-monorepo/SKILL.md",
+      "computedHash": "50c6887ae2f141f1a47c0a791ba69df474b517ef6d1b04e89b4bb7dbaf8f9b42"
+    },
     "test-driven-development": {
       "source": "obra/superpowers",
       "sourceType": "github",
