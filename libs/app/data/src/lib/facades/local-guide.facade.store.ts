@@ -21,7 +21,7 @@ import { from, of } from 'rxjs';
 import {
   createGuideJson,
   type LocalGuideWorkspace,
-} from '../models/local-guide';
+} from '../guide';
 import type { StateModel } from '../models/state';
 import {
   buildArchiveFile,

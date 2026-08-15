@@ -8,7 +8,7 @@ import {
 import {
   createGuideJson,
   type LocalGuideWorkspace,
-} from '../models/local-guide';
+} from '../guide';
 
 // Shared fixture builder used to keep tests focused on facade behavior.
 function buildWorkspace(gameKey = 'game-demo-1x'): LocalGuideWorkspace {

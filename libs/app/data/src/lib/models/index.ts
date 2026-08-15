@@ -17,4 +17,3 @@ export * from './projectile';
 export * from './team';
 export * from './sequence';
 export * from './matchup';
-export * from './local-guide';
