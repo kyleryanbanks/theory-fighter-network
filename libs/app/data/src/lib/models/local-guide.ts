@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import type { CharacterDocument } from './character';
 import type { GameDocument } from './game';
 import type { MatchupDocument } from './matchup';
@@ -10,9 +9,9 @@ import type { TeamDocument } from './team';
 
 export const CURRENT_GUIDE_SCHEMA_VERSION = 1;
 export const CURRENT_TFN_FORMAT_VERSION = 1;
-export const REGISTERED_GUIDE_SCHEMA_VERSIONS = [
+export const REGISTERED_GUIDE_SCHEMA_VERSIONS: number[] = [
   CURRENT_GUIDE_SCHEMA_VERSION,
-] as const;
+];
 
 export type EntityType =
   | 'game'
@@ -263,9 +262,21 @@ function buildEntityStateKey(ref: EntityRef): string {
 }
 
 function computeChecksum(payload: unknown): string {
-  const digest = createHash('sha256');
-  digest.update(stableStringify(payload), 'utf8');
-  return digest.digest('hex');
+  // Deterministic non-cryptographic hash for integrity checks in browser and node.
+  const input = stableStringify(payload);
+  let hash = 2166136261;
+
+  for (let i = 0; i < input.length; i++) {
+    hash ^= input.charCodeAt(i);
+    hash +=
+      (hash << 1) +
+      (hash << 4) +
+      (hash << 7) +
+      (hash << 8) +
+      (hash << 24);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
 function stableStringify(value: unknown): string {

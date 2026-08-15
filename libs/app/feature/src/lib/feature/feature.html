@@ -1,4 +1,35 @@
 <main>
 	<h1>Theory Fighter Network</h1>
+	<p data-testid="resource-status">
+		Load status: {{ facade.status() }}
+	</p>
+	<p data-testid="workspace-key">
+		Workspace: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
+	</p>
+	<p data-testid="busy-status">
+		Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
+	</p>
+
+	<div>
+		<button data-testid="create-workspace" (click)="createWorkspace()">
+			Create Workspace
+		</button>
+		<button data-testid="open-directory" (click)="openDirectory()">
+			Open Directory
+		</button>
+		<button data-testid="save-workspace" (click)="saveWorkspace()">
+			Save Workspace
+		</button>
+		<input
+			type="file"
+			accept=".tfn,application/json"
+			data-testid="import-archive"
+			(change)="onImportArchiveSelected($event)"
+		/>
+		<button data-testid="export-archive" (click)="exportArchive()">
+			Export Archive
+		</button>
+	</div>
+
 	<tfn-ui></tfn-ui>
 </main>

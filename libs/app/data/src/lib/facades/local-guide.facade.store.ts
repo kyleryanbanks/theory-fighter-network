@@ -22,6 +22,7 @@ import {
   createGuideJson,
   type LocalGuideWorkspace,
 } from '../models/local-guide';
+import type { StateModel } from '../models/state';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -250,7 +251,7 @@ function buildInitialWorkspace(
           directions: [],
           buttons: [],
         },
-        states: {},
+        states: createEmptyStateModel(),
         community: {
           ownerId: 'local-user',
         },
@@ -268,5 +269,20 @@ function buildInitialWorkspace(
       projectiles: [],
       matchups: [],
     },
+  };
+}
+
+function createEmptyStateModel(): StateModel {
+  return {
+    attacks: {},
+    blocks: {},
+    knockdowns: {},
+    juggles: {},
+    positions: {},
+    stageMechanics: {},
+    characters: {},
+    resources: {},
+    comboMechanics: {},
+    projectiles: {},
   };
 }
