@@ -1,5 +1,10 @@
 # TheoryFighterNetwork
 
+## TODO
+
+- Monitor Angular 22-compatible stable releases for `@ngrx/signals` and `@angular-architects/ngrx-toolkit`.
+- Once both are compatible with Angular 22, remove `--legacy-peer-deps` from install workflow and align dependency versions.
+
 <a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
 
 ✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.

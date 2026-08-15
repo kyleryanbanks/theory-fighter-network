@@ -5,6 +5,7 @@
   "scripts": {},
   "private": true,
   "dependencies": {
+    "@angular-architects/ngrx-toolkit": "^21.0.1",
     "@angular-devkit/build-angular": "~22.0.4",
     "@angular/common": "~22.0.4",
     "@angular/compiler": "~22.0.4",
@@ -14,6 +15,8 @@
     "@angular/platform-server": "~22.0.4",
     "@angular/router": "~22.0.4",
     "@angular/ssr": "~22.0.4",
+    "@ngrx/signals": "^21.1.1",
+    "@ngrx/store": "^21.1.1",
     "express": "^4.21.2",
     "rxjs": "~7.8.0"
   },
