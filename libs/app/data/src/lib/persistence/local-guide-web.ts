@@ -1,8 +1,10 @@
 import {
   buildTfnArchive,
   parseTfnArchive,
+} from '../guide/archive/index';
+import type {
   type LocalGuideWorkspace,
-} from '../models/local-guide';
+} from '../guide/guide.types';
 
 const GUIDE_FILE = 'guide.json';
 

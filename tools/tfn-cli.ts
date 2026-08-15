@@ -5,11 +5,9 @@ import { resolve } from 'node:path';
 import {
   buildTfnArchive,
   parseTfnArchive,
-} from '../libs/app/data/src/lib/models/local-guide';
-import {
   loadWorkspaceFromDirectory,
   saveWorkspaceToDirectory,
-} from '../libs/app/data/src/lib/utils/local-guide-node';
+} from '@theory-fighter-network/app/data';
 
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);
