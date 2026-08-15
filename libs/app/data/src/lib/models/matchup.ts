@@ -2,7 +2,12 @@
  * Matchup entity and scenario comparison types
  */
 
-import { CommunityMetadata, EntityMetadata } from './shared';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
+  EntityMetadata,
+} from './shared';
 import { RuntimeStateModel } from './state';
 
 /**
@@ -23,6 +28,20 @@ export interface MatchupDocument {
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createMatchupDocument = (
+  overrides: Partial<MatchupDocument> = {}
+): MatchupDocument => ({
+  gameKey: '',
+  semanticKey: '',
+  name: '',
+  attackerKey: '',
+  defenderKey: '',
+  scenarios: [],
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
 
 /**
  * A specific scenario within a matchup
@@ -54,6 +73,16 @@ export interface MatchupScenario {
   responses: ScenarioResponse[];
 }
 
+export const createMatchupScenario = (
+  overrides: Partial<MatchupScenario> = {}
+): MatchupScenario => ({
+  id: '',
+  semanticKey: '',
+  opponentOptionKey: '',
+  responses: [],
+  ...overrides,
+});
+
 /**
  * A player response to the opponent option in a scenario
  * Captures what the player tried and the outcome
@@ -64,3 +93,12 @@ export interface ScenarioResponse {
   notes?: string;
   outcome: -1 | 0 | 1; // -1 loss, 0 draw, +1 win
 }
+
+export const createScenarioResponse = (
+  overrides: Partial<ScenarioResponse> = {}
+): ScenarioResponse => ({
+  semanticKey: '',
+  playerOptionKey: '',
+  outcome: 0,
+  ...overrides,
+});

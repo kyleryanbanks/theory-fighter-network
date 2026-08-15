@@ -2,7 +2,12 @@
  * Team entity for team-based games
  */
 
-import { CommunityMetadata, EntityMetadata } from './shared';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
+  EntityMetadata,
+} from './shared';
 
 export interface TeamDocument {
   gameKey: string;
@@ -13,3 +18,14 @@ export interface TeamDocument {
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createTeamDocument = (
+  overrides: Partial<TeamDocument> = {}
+): TeamDocument => ({
+  gameKey: '',
+  orderedCharacterKeys: [],
+  semanticKey: '',
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});

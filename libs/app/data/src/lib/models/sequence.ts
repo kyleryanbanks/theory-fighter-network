@@ -3,7 +3,12 @@
  */
 
 import { Step } from './move';
-import { CommunityMetadata, EntityMetadata } from './shared';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
+  EntityMetadata,
+} from './shared';
 
 export interface SequenceDocument {
   gameKey: string;
@@ -15,3 +20,14 @@ export interface SequenceDocument {
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createSequenceDocument = (
+  overrides: Partial<SequenceDocument> = {}
+): SequenceDocument => ({
+  gameKey: '',
+  sequence: [],
+  semanticKey: '',
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});

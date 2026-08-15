@@ -17,6 +17,15 @@ export interface Region2DCircle {
   radius: DataValue;
 }
 
+export const createRegion2DCircle = (
+  overrides: Partial<Region2DCircle> = {}
+): Region2DCircle => ({
+  x: { exact: 0 },
+  y: { exact: 0 },
+  radius: { exact: 0 },
+  ...overrides,
+});
+
 /**
  * 2D Rectangular region
  */
@@ -27,6 +36,16 @@ export interface Region2DRectangle {
   height: DataValue;
 }
 
+export const createRegion2DRectangle = (
+  overrides: Partial<Region2DRectangle> = {}
+): Region2DRectangle => ({
+  x: { exact: 0 },
+  y: { exact: 0 },
+  width: { exact: 0 },
+  height: { exact: 0 },
+  ...overrides,
+});
+
 /**
  * 3D Spherical region
  */
@@ -36,6 +55,16 @@ export interface Region3DSphere {
   z: DataValue;
   radius: DataValue;
 }
+
+export const createRegion3DSphere = (
+  overrides: Partial<Region3DSphere> = {}
+): Region3DSphere => ({
+  x: { exact: 0 },
+  y: { exact: 0 },
+  z: { exact: 0 },
+  radius: { exact: 0 },
+  ...overrides,
+});
 
 /**
  * 3D Cubic region
@@ -48,6 +77,18 @@ export interface Region3DCube {
   height: DataValue;
   depth: DataValue;
 }
+
+export const createRegion3DCube = (
+  overrides: Partial<Region3DCube> = {}
+): Region3DCube => ({
+  x: { exact: 0 },
+  y: { exact: 0 },
+  z: { exact: 0 },
+  width: { exact: 0 },
+  height: { exact: 0 },
+  depth: { exact: 0 },
+  ...overrides,
+});
 
 /**
  * Union type for all region shapes

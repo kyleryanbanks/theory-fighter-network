@@ -2,7 +2,12 @@
  * Stage entity and zone types
  */
 
-import { CommunityMetadata, EntityMetadata } from './shared';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
+  EntityMetadata,
+} from './shared';
 
 export interface StageDocument {
   gameKey: string;
@@ -12,6 +17,17 @@ export interface StageDocument {
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createStageDocument = (
+  overrides: Partial<StageDocument> = {}
+): StageDocument => ({
+  gameKey: '',
+  name: '',
+  semanticKey: '',
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
 
 /**
  * Stage zone for environmental interactions
@@ -31,3 +47,15 @@ export interface StageZoneDocument {
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createStageZoneDocument = (
+  overrides: Partial<StageZoneDocument> = {}
+): StageZoneDocument => ({
+  gameKey: '',
+  name: '',
+  semanticKey: '',
+  mechanicStateKeys: [],
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});

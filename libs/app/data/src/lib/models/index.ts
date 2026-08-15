@@ -5,6 +5,8 @@
 
 // Shared types
 export * from './shared';
+export * from './state';
+export * from './region';
 
 // Entity models
 export * from './game';

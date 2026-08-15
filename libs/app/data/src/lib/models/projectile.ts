@@ -10,6 +10,9 @@ import { MoveOutcomeEffect } from './move';
 import { Region } from './region';
 import {
   CommunityMetadata,
+  createCommunityMetadata,
+  createDataValue,
+  createEntityMetadata,
   EntityMetadata,
   DataValue,
 } from './shared';
@@ -58,6 +61,18 @@ export interface ProjectileDocument<
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
+
+export const createProjectileDocument = (
+  overrides: Partial<ProjectileDocument> = {}
+): ProjectileDocument => ({
+  gameKey: '',
+  semanticKey: '',
+  phases: [],
+  state: {},
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
 
 /**
  * Single phase of a projectile's lifetime
@@ -139,6 +154,13 @@ export interface ProjectilePhase<
   destroyedAfter?: boolean;
 }
 
+export const createProjectilePhase = (
+  overrides: Partial<ProjectilePhase> = {}
+): ProjectilePhase => ({
+  duration: createDataValue(),
+  ...overrides,
+});
+
 /**
  * Runtime instance of an active projectile during simulation
  */
@@ -187,3 +209,15 @@ export interface ProjectileInstance<
    */
   destroyedAtGameFrame?: number;
 }
+
+export const createProjectileInstance = (
+  overrides: Partial<ProjectileInstance> = {}
+): ProjectileInstance => ({
+  id: '',
+  projectileSemanticKey: '',
+  spawnedAtGameFrame: 0,
+  currentPhaseIndex: 0,
+  runtimeState: {},
+  currentPosition: { x: 0, y: 0 },
+  ...overrides,
+});

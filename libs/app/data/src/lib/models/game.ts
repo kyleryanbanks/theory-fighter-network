@@ -2,11 +2,16 @@
  * Game entity and related configuration types
  */
 
-import { CommunityMetadata, EntityMetadata } from './shared';
-import { StateModel } from './state';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
+  EntityMetadata,
+} from './shared';
+import { createStateModel, StateModel } from './state';
 
 // Re-export StateModel for convenience
-export { StateModel } from './state';
+export type { StateModel } from './state';
 
 export interface GameDocument {
   name: string;
@@ -32,6 +37,21 @@ export interface GameDocument {
   meta: EntityMetadata;
 }
 
+export const createGameDocument = (
+  overrides: Partial<GameDocument> = {}
+): GameDocument => ({
+  name: '',
+  version: '',
+  semanticKey: '',
+  is3d: false,
+  teamSize: 1,
+  inputs: createInputs(),
+  states: createStateModel(),
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
+
 /**
  * Game input vocabulary and optional numeric ranges for analog/digital values.
  */
@@ -39,6 +59,12 @@ export interface Inputs {
   directions: Input[];
   buttons: Input[];
 }
+
+export const createInputs = (overrides: Partial<Inputs> = {}): Inputs => ({
+  directions: [],
+  buttons: [],
+  ...overrides,
+});
 
 /**
  * Input token definition used by direction/button lists.
@@ -49,3 +75,8 @@ export interface Input {
   min?: number;
   max?: number;
 }
+
+export const createInput = (overrides: Partial<Input> = {}): Input => ({
+  label: '',
+  ...overrides,
+});

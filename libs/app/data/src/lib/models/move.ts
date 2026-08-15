@@ -4,6 +4,8 @@
 
 import {
   CommunityMetadata,
+  createCommunityMetadata,
+  createEntityMetadata,
   EntityMetadata,
   DataValue,
 } from './shared';
@@ -37,6 +39,18 @@ export interface MoveDocument {
   meta: EntityMetadata;
 }
 
+export const createMoveDocument = (
+  overrides: Partial<MoveDocument> = {}
+): MoveDocument => ({
+  gameKey: '',
+  semanticKey: '',
+  name: '',
+  preconditions: {},
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
+
 /**
  * Frame-by-frame input representation
  */
@@ -46,6 +60,13 @@ export interface Step {
   moveKey?: string;  // Optional reference to a MoveDocument semanticKey for this frame
   frames?: number; // number of frames until next input frame (defaults to 1 if omitted)
 }
+
+export const createStep = (overrides: Partial<Step> = {}): Step => ({
+  directions: [],
+  buttons: [],
+  frames: 1,
+  ...overrides,
+});
 
 /**
  * Single frame stage (startup, active, or recovery) with region and duration information
@@ -57,6 +78,10 @@ export interface FrameStage {
   hitBoxes?: Region[];
   throwBoxes?: Region[];
 }
+
+export const createFrameStage = (
+  overrides: Partial<FrameStage> = {}
+): FrameStage => ({ ...overrides });
 
 /**
  * Phase within a move (startup, active, recovery)
@@ -92,6 +117,10 @@ export interface MovePhase {
   notes?: string;
 }
 
+export const createMovePhase = (
+  overrides: Partial<MovePhase> = {}
+): MovePhase => ({ ...overrides });
+
 /**
  * Outcome effects when a move connects, is blocked, etc.
  */
@@ -106,6 +135,10 @@ export interface MoveOutcomeEffect<
   game?: RuntimeStatePatch<TStateModel>;
 }
 
+export const createMoveOutcomeEffect = (
+  overrides: Partial<MoveOutcomeEffect> = {}
+): MoveOutcomeEffect => ({ ...overrides });
+
 /**
  * Cancel rule for a move phase
  */
@@ -116,3 +149,7 @@ export interface PhaseCancelRule {
 
   notes?: string;
 }
+
+export const createPhaseCancelRule = (
+  overrides: Partial<PhaseCancelRule> = {}
+): PhaseCancelRule => ({ ...overrides });

@@ -43,6 +43,12 @@ export interface State {
   onFrameAdvance?: (context: GameStateContext) => GameStateContext;
 }
 
+export const createState = (overrides: Partial<State> = {}): State => ({
+  semanticKey: '',
+  name: '',
+  ...overrides,
+});
+
 /**
  * Collection of states by semanticKey
  */
@@ -109,6 +115,22 @@ export interface StateModel<
   comboMechanics: CM;
   projectiles: PR;  // User-defined projectile properties (durability, priority, etc.)
 }
+
+export const createStateModel = (
+  overrides: Partial<StateModel> = {}
+): StateModel => ({
+  attacks: {},
+  blocks: {},
+  knockdowns: {},
+  juggles: {},
+  positions: {},
+  stageMechanics: {},
+  characters: {},
+  resources: {},
+  comboMechanics: {},
+  projectiles: {},
+  ...overrides,
+});
 
 /**
  * Current game state context with type-safe runtime values
