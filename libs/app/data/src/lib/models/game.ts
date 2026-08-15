@@ -52,6 +52,128 @@ export const createGameDocument = (
   ...overrides,
 });
 
+export interface CreateGameInput {
+  name: string;
+  version: string;
+  frameRate?: number;
+  is3d: boolean;
+  teamSize: number;
+  inputs: Inputs;
+}
+
+export type GameMetadataUpdate = Partial<Pick<
+  GameDocument,
+  'frameRate' | 'is3d' | 'teamSize' | 'inputs' | 'stateExecutionOrder'
+>>;
+
+export function createGame(input: CreateGameInput): GameDocument {
+  const game = createGameDocument({
+    ...input,
+    semanticKey: createGameSemanticKey(input.name, input.version),
+  });
+  assertValidGameDocument(game);
+  return game;
+}
+
+export function updateGameMetadata(
+  game: GameDocument,
+  updates: GameMetadataUpdate
+): GameDocument {
+  const updated = {
+    ...game,
+    ...updates,
+    meta: {
+      ...game.meta,
+      lastUpdatedAt: new Date(),
+    },
+  };
+  assertValidGameDocument(updated);
+  return updated;
+}
+
+export function createGameSemanticKey(name: string, version: string): string {
+  const normalizedName = normalizeGameName(name);
+  const versionFamily = getVersionFamily(version);
+
+  return `game-${fnv1a(`${normalizedName}:${versionFamily}`)}`;
+}
+
+export function validateGameDocument(game: GameDocument): string[] {
+  const errors: string[] = [];
+
+  if (!game.name.trim()) {
+    errors.push('name is required.');
+  }
+  if (!game.version.trim()) {
+    errors.push('version is required.');
+  }
+  if (!Number.isInteger(game.teamSize) || game.teamSize < 1) {
+    errors.push('teamSize must be a positive integer.');
+  }
+  if (game.frameRate !== undefined && game.frameRate <= 0) {
+    errors.push('frameRate must be positive.');
+  }
+  if (game.name.trim() && game.version.trim()) {
+    const expectedKey = createGameSemanticKey(game.name, game.version);
+    if (game.semanticKey !== expectedKey) {
+      errors.push('semanticKey does not match the game name and version family.');
+    }
+  }
+  if (!hasUniqueInputValues(game.inputs)) {
+    errors.push('Input values must be unique.');
+  }
+
+  return errors;
+}
+
+function assertValidGameDocument(game: GameDocument): void {
+  const errors = validateGameDocument(game);
+  if (errors.length > 0) {
+    throw new Error(`Invalid game document: ${errors.join(' ')}`);
+  }
+}
+
+function normalizeGameName(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function getVersionFamily(version: string): string {
+  const majorVersion = version.trim().match(/^\d+/)?.[0];
+  if (!majorVersion) {
+    throw new Error('version must begin with a major version number.');
+  }
+
+  return `${majorVersion}.x`;
+}
+
+function hasUniqueInputValues(inputs: Inputs): boolean {
+  const values = [...inputs.directions, ...inputs.buttons].map((input) =>
+    (input.value ?? input.label).trim().toLowerCase()
+  );
+
+  return values.every((value, index) => value && values.indexOf(value) === index);
+}
+
+function fnv1a(input: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index++) {
+    hash ^= input.charCodeAt(index);
+    hash +=
+      (hash << 1) +
+      (hash << 4) +
+      (hash << 7) +
+      (hash << 8) +
+      (hash << 24);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 /**
  * Game input vocabulary and optional numeric ranges for analog/digital values.
  */

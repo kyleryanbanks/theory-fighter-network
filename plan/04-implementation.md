@@ -47,6 +47,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.2: Game Creation Root (Local CRUD + Validation)
+**Status: Partially complete (2026-08-15).** Game creation derives a deterministic semantic key from normalized name and major-version family, validates required fields and duplicate input values, and supports local metadata updates that preserve identity and mark the guide unsaved. The feature shell supports creation and metadata editing. Input-vocabulary editing and an explicit identity-change workflow for game name/version remain.
 **Scope**: Build GameDocument local CRUD operations and validation rules.
 
 **Deliverables**:

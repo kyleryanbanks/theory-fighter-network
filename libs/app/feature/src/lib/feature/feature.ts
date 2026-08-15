@@ -2,10 +2,11 @@ import { Component } from '@angular/core';
 import { inject } from '@angular/core';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { Ui } from '@theory-fighter-network/ui';
+import { GameRoot } from '../game-root/game-root';
 
 @Component({
   selector: 'tfn-feature',
-  imports: [Ui],
+  imports: [GameRoot, Ui],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })
@@ -13,15 +14,6 @@ export class Feature {
   readonly facade = inject(LocalGuideFacadeStore);
 
   activeDirectoryHandle: FileSystemDirectoryHandle | null = null;
-
-  async createWorkspace(): Promise<void> {
-    await this.facade.createWorkspace({
-      gameKey: 'tfn-local-guide',
-      gameName: 'Theory Fighter Network',
-      version: '1.0.0',
-    });
-  }
-
   async openDirectory(): Promise<void> {
     const directoryHandle = await this.pickDirectoryHandle();
 

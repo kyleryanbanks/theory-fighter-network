@@ -12,7 +12,6 @@ describe('Feature', () => {
     workspace: signal(undefined),
     isBusy: signal(false),
     status: signal('idle'),
-    createWorkspace: vi.fn(async () => ({ status: 'success' })),
     setDirectoryHandle: vi.fn(),
     reloadDirectoryWorkspace: vi.fn(),
     saveWorkspaceToDirectory: vi.fn(async () => ({ status: 'success' })),
@@ -46,18 +45,6 @@ describe('Feature', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
-
-  it('creates a workspace when create button is clicked', async () => {
-    const button: HTMLButtonElement =
-      fixture.nativeElement.querySelector(
-        '[data-testid="create-workspace"]'
-      );
-
-    button.click();
-    await fixture.whenStable();
-
-    expect(mockStore.createWorkspace).toHaveBeenCalledTimes(1);
   });
 
   it('saves workspace when save button is clicked and a directory handle exists', async () => {

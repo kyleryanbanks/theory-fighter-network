@@ -80,6 +80,19 @@ export type RuntimeStateModel<TStateModel extends StateModel = StateModel> = {
   [K in keyof TStateModel]: RuntimeStateValues<TStateModel[K]>;
 };
 
+export const createRuntimeStateModel = (): RuntimeStateModel => ({
+  attacks: {},
+  blocks: {},
+  knockdowns: {},
+  juggles: {},
+  positions: {},
+  stageMechanics: {},
+  characters: {},
+  resources: {},
+  comboMechanics: {},
+  projectiles: {},
+});
+
 /**
  * Partial runtime state update payload organized by category.
  * Used when effects or simulation steps apply targeted state changes.

@@ -100,13 +100,18 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates a new workspace through a mutation and stores it as the active value', async () => {
     const result = await store.createWorkspace({
-      gameKey: 'created-game',
-      gameName: 'Created Fighter',
+      name: 'Created Fighter',
       version: '1.2.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     expect(result.status).toBe('success');
-    expect(store.value()?.guide.gameKey).toBe('created-game');
+    expect(store.value()?.guide.gameKey).toBe(
+      store.value()?.entities.game.semanticKey
+    );
     expect(store.value()?.entities.game.name).toBe('Created Fighter');
   });
 
@@ -115,9 +120,8 @@ describe('LocalGuideFacadeStore', () => {
       {} as unknown as FileSystemDirectoryHandle;
 
     await store.createWorkspace({
-      gameKey: 'save-game',
-      gameName: 'Save Fighter',
-      version: '2.0.0',
+      name: 'Save Fighter', version: '2.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
     });
 
     const result = await store.saveWorkspaceToDirectory({
@@ -126,6 +130,21 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(result.status).toBe('success');
     expect(persistence.saveToDirectoryHandle).toHaveBeenCalledTimes(1);
+  });
+
+  it('updates active game metadata while preserving identity and marking it unsaved', async () => {
+    await store.createWorkspace({
+      name: 'Editable Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    const semanticKey = store.value()?.entities.game.semanticKey;
+
+    const result = await store.updateActiveGame({ teamSize: 2 });
+
+    expect(result.status).toBe('success');
+    expect(store.value()?.entities.game.semanticKey).toBe(semanticKey);
+    expect(store.value()?.entities.game.teamSize).toBe(2);
+    expect(store.value()?.guide.localChanges).toContain(`game:${semanticKey}`);
   });
 
   it('imports a workspace through a mutation and replaces active value', async () => {
@@ -146,9 +165,8 @@ describe('LocalGuideFacadeStore', () => {
 
   it('exports the active workspace through a mutation', async () => {
     await store.createWorkspace({
-      gameKey: 'export-game',
-      gameName: 'Export Fighter',
-      version: '3.0.0',
+      name: 'Export Fighter', version: '3.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
     });
 
     const result = await store.exportArchive({

@@ -16,6 +16,7 @@ import {
   createStageZoneDocument,
   createState,
   createStateModel,
+  createRuntimeStateModel,
   createStep,
   createTeamDocument,
 } from './index';
@@ -27,6 +28,7 @@ describe('model factories', () => {
     expect(createInputs()).toEqual({ directions: [], buttons: [] });
     expect(createState().semanticKey).toBe('');
     expect(createStateModel().attacks).toEqual({});
+    expect(createRuntimeStateModel().projectiles).toEqual({});
     expect(createGameDocument().community.ownerId).toBe('local-user');
     expect(createStageDocument().name).toBe('');
     expect(createStageZoneDocument().mechanicStateKeys).toEqual([]);
@@ -35,7 +37,7 @@ describe('model factories', () => {
     expect(createMovePhase()).toEqual({});
     expect(createMoveDocument().preconditions).toEqual({});
     expect(createProjectilePhase().duration).toEqual({ exact: 0 });
-    expect(createProjectileDocument().phases).toEqual([]);
+    expect(createProjectileDocument().state.projectiles).toEqual({});
     expect(createTeamDocument().orderedCharacterKeys).toEqual([]);
     expect(createSequenceDocument().sequence).toEqual([]);
     expect(createScenarioResponse().outcome).toBe(0);

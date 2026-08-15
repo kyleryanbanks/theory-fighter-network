@@ -10,10 +10,9 @@
 		Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
 	</p>
 
+	<tfn-game-root />
+
 	<div>
-		<button data-testid="create-workspace" (click)="createWorkspace()">
-			Create Workspace
-		</button>
 		<button data-testid="open-directory" (click)="openDirectory()">
 			Open Directory
 		</button>

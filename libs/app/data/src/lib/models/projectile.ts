@@ -16,7 +16,11 @@ import {
   EntityMetadata,
   DataValue,
 } from './shared';
-import { StateModel, RuntimeStateModel, GameStateContext } from './state';
+import {
+  createRuntimeStateModel,
+  RuntimeStateModel,
+  StateModel,
+} from './state';
 
 /**
  * ProjectileDocument defines a reusable projectile template.
@@ -68,7 +72,7 @@ export const createProjectileDocument = (
   gameKey: '',
   semanticKey: '',
   phases: [],
-  state: {},
+  state: createRuntimeStateModel(),
   community: createCommunityMetadata(),
   meta: createEntityMetadata(),
   ...overrides,
@@ -217,7 +221,7 @@ export const createProjectileInstance = (
   projectileSemanticKey: '',
   spawnedAtGameFrame: 0,
   currentPhaseIndex: 0,
-  runtimeState: {},
+  runtimeState: createRuntimeStateModel(),
   currentPosition: { x: 0, y: 0 },
   ...overrides,
 });

@@ -20,9 +20,15 @@ import {
 import { from, of } from 'rxjs';
 import {
   createGuideJson,
+  markEntityUnsaved,
   type LocalGuideWorkspace,
 } from '../guide';
-import type { StateModel } from '../models/state';
+import {
+  createGame,
+  updateGameMetadata,
+  type CreateGameInput,
+  type GameMetadataUpdate,
+} from '../models/game';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -79,11 +85,7 @@ type LocalGuideFacadeState = {
   reloadToken: number;
 };
 
-type CreateWorkspaceInput = {
-  gameKey: string;
-  gameName: string;
-  version: string;
-};
+type CreateWorkspaceInput = CreateGameInput;
 
 /**
  * Primary data-layer facade for local guide workflows.
@@ -129,6 +131,39 @@ export const LocalGuideFacadeStore = signalStore(
     createWorkspace: rxMutation({
       operation: (input: CreateWorkspaceInput) =>
         of(buildInitialWorkspace(input)),
+      onSuccess: (workspace) => {
+        patchState(store, { value: workspace });
+      },
+    }),
+
+    updateActiveGame: rxMutation({
+      operation: (updates: GameMetadataUpdate) =>
+        from(
+          (async () => {
+            const workspace = store.value();
+            if (!workspace) {
+              throw new Error('No active workspace to update.');
+            }
+
+            const game = updateGameMetadata(workspace.entities.game, updates);
+            const guide = {
+              ...workspace.guide,
+              localChanges: [...workspace.guide.localChanges],
+              syncedChanges: [...workspace.guide.syncedChanges],
+              unsavedStatus: { ...workspace.guide.unsavedStatus },
+            };
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: game.semanticKey,
+            });
+
+            return {
+              ...workspace,
+              guide,
+              entities: { ...workspace.entities, game },
+            };
+          })()
+        ),
       onSuccess: (workspace) => {
         patchState(store, { value: workspace });
       },
@@ -222,6 +257,7 @@ export const LocalGuideFacadeStore = signalStore(
       () =>
         store.isLoading() ||
         store.createWorkspaceIsPending() ||
+        store.updateActiveGameIsPending() ||
         store.saveWorkspaceToDirectoryIsPending() ||
         store.importArchiveIsPending() ||
         store.exportArchiveIsPending()
@@ -235,31 +271,12 @@ export const LocalGuideFacadeStore = signalStore(
 function buildInitialWorkspace(
   input: CreateWorkspaceInput
 ): LocalGuideWorkspace {
-  const now = new Date();
+  const game = createGame(input);
 
   return {
-    guide: createGuideJson({ gameKey: input.gameKey }),
+    guide: createGuideJson({ gameKey: game.semanticKey }),
     entities: {
-      game: {
-        name: input.gameName,
-        version: input.version,
-        semanticKey: input.gameKey,
-        frameRate: 60,
-        is3d: false,
-        teamSize: 1,
-        inputs: {
-          directions: [],
-          buttons: [],
-        },
-        states: createEmptyStateModel(),
-        community: {
-          ownerId: 'local-user',
-        },
-        meta: {
-          createdAt: now,
-          lastUpdatedAt: now,
-        },
-      },
+      game,
       stages: [],
       stageZones: [],
       characters: [],
@@ -269,20 +286,5 @@ function buildInitialWorkspace(
       projectiles: [],
       matchups: [],
     },
-  };
-}
-
-function createEmptyStateModel(): StateModel {
-  return {
-    attacks: {},
-    blocks: {},
-    knockdowns: {},
-    juggles: {},
-    positions: {},
-    stageMechanics: {},
-    characters: {},
-    resources: {},
-    comboMechanics: {},
-    projectiles: {},
   };
 }
