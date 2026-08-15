@@ -1,13 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
+import { Feature } from '@theory-fighter-network/feature';
 
 @Component({
-  imports: [NxWelcome, RouterModule],
+  imports: [Feature],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
-  protected title = 'theory-fighter-network';
-}
+export class App {}
