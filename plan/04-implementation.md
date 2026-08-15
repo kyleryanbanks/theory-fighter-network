@@ -10,11 +10,29 @@ This roadmap restructures development around agreed priority order. The work is 
 
 ---
 
+## Current Implementation Status (2026-08-15)
+
+Commit history since this roadmap was last updated confirms the following:
+
+- **Phase 1.1 is complete.** The local guide metadata model, schema-version validation, unsaved/synced tracking, browser and Node directory persistence, `.tfn` archive creation/parsing with integrity checks, and the import/export CLI are implemented and covered by unit tests.
+- **Phase 1.3 is partially complete.** The v1 JSON `.tfn` archive format has a header, deterministic checksum, entity ordering, date hydration, and Node atomic folder writes. Forward migrations, a formal format specification, and atomic archive-file writes remain open.
+- **Phase 1.2 and Phases 1.4-1.7 are not complete.** The document schemas and model factories exist, but Game CRUD/validation/key generation and hierarchy authoring workflows have not been implemented.
+
+### Completed Supporting Work Not Previously Captured Here
+
+- Nx `data`, `feature`, and `ui` libraries were created, and the application now hosts the feature shell instead of the generated welcome screen.
+- `LocalGuideFacadeStore` provides workspace lifecycle orchestration, including creation, save, import, and export, and the feature shell exposes those operations.
+- Primary persisted models and direct nested model types now have colocated `createX` factories with tested defaults and override behavior.
+- Guide persistence was separated from model definitions into a `guide/` domain with a nested `guide/archive/` module. Guide factory/mutation, archive service, checksum, and serialization behavior each have focused unit coverage.
+
+---
+
 ## Priority 1: Local-First Core + Hierarchy
 
 These phases establish the offline foundation. All features are local-only; no network/community features.
 
 ### Phase 1.1: Local Guide Foundation
+**Status: Complete (2026-08-15).**
 **Scope**: Build the guide.json metadata layer and local file I/O pipeline.
 
 **Deliverables**:
@@ -45,6 +63,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.3: .tfn Save/Load Pipeline (Locked Structure + Migration)
+**Status: Partially complete (2026-08-15).** The v1 archive header, checksum validation, serialization, parsing, and folder persistence are implemented. Forward migrations and atomic `.tfn` archive-file writes remain.
 **Scope**: Build the locked file format and forward-only migration system.
 
 **Deliverables**:
