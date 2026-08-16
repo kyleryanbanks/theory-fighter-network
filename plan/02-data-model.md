@@ -179,7 +179,7 @@ During game guide creation, the UI should offer height template selection as par
 
 ### Custom State Updaters for Game-Specific Mechanics
 
-**Concept**: Each `State` can optionally define custom update functions that run during simulation. This is a **CRITICAL architecture component** allowing games to implement any mechanic without schema changes.
+**Concept**: `StateDocument` remains serializable and may contain trusted `onUpdate` and `onFrameAdvance` function bodies as strings. `StateBehaviorRegistry.registerState` compiles those blocks and associates them with the state's `semanticKey`. Source-controlled code may also register handlers directly.
 
 **Two updater types:**
 
@@ -200,7 +200,10 @@ During game guide creation, the UI should offer height template selection as par
 **CRITICAL: stateExecutionOrder for Determinism**
 
 `GameDocument.stateExecutionOrder` is **ESSENTIAL** for correct simulation:
-- Specifies which states' `onFrameAdvance` callbacks execute first
+- Lists state semantic keys that must execute before other registered behavior.
+- Passes the context returned by each registered `onFrameAdvance` callback to the next callback.
+- State keys without registered frame behavior are ignored.
+- Remaining behavior executes in first-registration order.
 - Prevents race conditions: if position updates before gravity runs, projectiles move wrong
 - Example: `["stageMechanics.gravity", "positions", "comboMechanics"]` ensures:
   1. Gravity updates velocity values
@@ -209,33 +212,46 @@ During game guide creation, the UI should offer height template selection as par
 - Without this, frame-to-frame behavior becomes non-deterministic
 
 **Storage and Scope**:
-- Functions defined in **local TypeScript files**, not serialized to Firestore
-- Can be stored in:
-  - Separate utility files per game guide
-  - Inline in game configuration (if environment supports it)
-  - Git-tracked alongside other game data
-- At simulation time, engine loads and executes these functions
+- `StateDocument` values are stored in guide JSON and may be published to Firestore.
+- Trusted behavior source may be serialized in `StateDocument.behavior`.
+- Code blocks receive `incomingValue` and `context` for `onUpdate`, or `context` for `onFrameAdvance`, and must return a context object.
+- `registerState` compiles serialized code; `register` accepts source-controlled handlers directly.
+- The simulation engine resolves behavior from the registry when applying an effect or advancing a frame.
+- Compilation uses the JavaScript `Function` constructor and is not a sandbox. Do not automatically execute imported code when untrusted sharing is introduced.
 
 **Examples:**
 
 Hitstun scaling by combo count (effect-driven onUpdate):
 ```typescript
 states.comboMechanics.hitstun = {
+  semanticKey: "sf6-combo-hitstun",
   name: "Hitstun",
-  min: 0, max: 100,
-  onUpdate: (incomingHitstun, context) => {
-    const comboCount = context.runtimeState.comboMechanics.comboCount || 0;
-    const scaleFactor = 0.95 ** comboCount;  // Each hit = 5% less stun
-    context.runtimeState.comboMechanics.hitstun = incomingHitstun * scaleFactor;
-    return context;
+  min: 0,
+  max: 100,
+  behavior: {
+    onUpdate: `
+      const comboCount = context.runtimeState.comboMechanics.comboCount || 0;
+      const scaleFactor = 0.95 ** comboCount;
+      return {
+        ...context,
+        runtimeState: {
+          ...context.runtimeState,
+          comboMechanics: {
+            ...context.runtimeState.comboMechanics,
+            hitstun: incomingValue * scaleFactor
+          }
+        }
+      };
+    `
   }
-}
+};
+
+stateBehaviorRegistry.registerState(states.comboMechanics.hitstun);
 ```
 
 Gravity affecting motion (frame-driven onFrameAdvance):
 ```typescript
-states.stageMechanics.gravity = {
-  name: "Gravity", min: 0, max: 10,
+stateBehaviorRegistry.register("sf6-stage-gravity", {
   onFrameAdvance: (context) => {
     const g = context.runtimeState.stageMechanics.gravity;
     // Apply gravity to all character/projectile velocities
@@ -246,13 +262,12 @@ states.stageMechanics.gravity = {
     });
     return context;
   }
-}
+});
 ```
 
 Health regeneration (frame-driven, conditional):
 ```typescript
-states.resources.health = {
-  name: "Health", min: 0, max: 100,
+stateBehaviorRegistry.register("sf6-resource-health", {
   onFrameAdvance: (context) => {
     // Only regen if not in hitstun and not blocking
     const isInHitstun = context.runtimeState.comboMechanics.hitstun > 0;
@@ -266,20 +281,20 @@ states.resources.health = {
     }
     return context;
   }
-}
+});
 ```
 
 **Deterministic Execution Order:**
-`GameDocument.stateExecutionOrder` specifies which states' `onFrameAdvance` callbacks run first. Unspecified states run in consistent arbitrary order. Enables power users to manage dependencies (e.g., gravity before position calculation):
+`GameDocument.stateExecutionOrder` seeds `StateBehaviorRegistry` with the user-preferred order. Behavior absent from that list is appended in first-registration order. This enables power users to manage dependencies (e.g., gravity before position calculation) without listing every state:
 
 ```typescript
 stateExecutionOrder: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
 ```
 
 **Storage:**
-- Functions defined in local guides (not published to Firestore)
-- Git-tracked with guide files or in separate TypeScript files
-- Called at simulation time by engine
+- State documents are persisted and publishable.
+- Trusted behavior code may be stored with guide data or registered from Git-tracked modules.
+- The engine calls behavior resolved by semantic key at simulation time.
 
 ### Collision, Hurt, Hit, and Throw Box Regions
 

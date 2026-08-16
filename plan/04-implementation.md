@@ -342,6 +342,34 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ---
 
+### Phase 4.3: Safe Serializable State Behaviors (FEEL Migration)
+**Scope**: Replace temporary raw JavaScript state behavior execution with serializable FEEL expressions before behavior data can enter Firestore or other untrusted sharing paths.
+
+**Current temporary implementation**:
+- `StateDocument.behavior` stores JavaScript function bodies as strings.
+- `StateBehaviorRegistry` executes those strings with the JavaScript `Function` constructor.
+- This path is intentionally trusted-user/local-only and is not a security boundary.
+- Imported or community-provided JavaScript behavior must not execute automatically.
+
+**Deliverables**:
+- FEEL integration: Add the maintained `feelin` parser/interpreter and remove `Function`-constructor execution.
+- Serializable expressions: Store `onUpdate` and `onFrameAdvance` FEEL expressions directly in state documents.
+- Restricted evaluation context: Expose only plain JSON state and incoming effect data; expose no DOM, network, storage, or application functions.
+- Patch result contract: Require expressions to return `RuntimeStatePatch`-compatible data rather than a complete mutable context.
+- Patch validation: Reject unknown categories, unknown state keys, invalid value types, prototype-related keys, and non-JSON values before applying results.
+- Deterministic application: Preserve preferred state execution order and pass each validated result into the next registered frame behavior.
+- Error reporting: Convert FEEL parser and evaluation warnings into field-level authoring feedback and actionable runtime errors.
+- Performance benchmark: Measure 10, 50, and 100 frame behaviors over representative simulation lengths in browser and SSR environments.
+- Performance mitigation: Cache behavior registration metadata and determine whether repeated FEEL parsing meets frame simulation targets; isolate or replace the evaluator if it does not.
+- Migration: Convert existing trusted JavaScript examples and local behavior documents to FEEL expressions, including the Tokon style-scaling behavior.
+- Trust handling: Preserve unknown or invalid behavior expressions without executing them, and require explicit user review after import.
+
+**Validation**: Tokon style scaling and representative frame/update behaviors produce validated patches; expressions cannot access browser/application globals; malformed or invalid patches are rejected; deterministic execution tests remain green; benchmark results meet the agreed simulation budget.
+
+**Depends on**: Phase 4.1, 4.2 and the local simulation behavior implemented in Phases 3.4 and 3.7
+
+---
+
 ## Priority 5: Included Firestore/Community Work
 
 ### Phase 5.1: Auth + Opt-In Firestore Sync/Community Browsing
@@ -358,7 +386,7 @@ These phases establish the offline foundation. All features are local-only; no n
 
 **Validation**: Auth works across sessions; sync is optional; app functions offline; community browser displays correct data
 
-**Depends on**: Phase 4.1, 4.2
+**Depends on**: Phase 4.1, 4.2, 4.3
 
 ---
 

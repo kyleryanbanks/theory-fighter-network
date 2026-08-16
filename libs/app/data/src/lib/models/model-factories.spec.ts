@@ -19,9 +19,24 @@ import {
   createRuntimeStateModel,
   createStep,
   createTeamDocument,
+  type StateDocument,
 } from './index';
 
+type Assert<T extends true> = T;
+
 describe('model factories', () => {
+  it('keeps executable behavior outside persisted state definitions', () => {
+    type StateBehaviorKeys = Extract<
+      keyof StateDocument,
+      'onUpdate' | 'onFrameAdvance'
+    >;
+    type StateExcludesBehavior = Assert<
+      StateBehaviorKeys extends never ? true : false
+    >;
+
+    expectTypeOf<StateExcludesBehavior>().toEqualTypeOf<true>();
+  });
+
   it('creates valid defaults for persisted models and named direct children', () => {
     expect(createDataValue().exact).toBe(0);
     expect(createInput().label).toBe('');

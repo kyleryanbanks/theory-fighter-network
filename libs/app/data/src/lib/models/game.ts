@@ -22,16 +22,17 @@ export interface GameDocument {
   is3d: boolean;       // Whether game uses 3D space (affects position/velocity dimensions)
   teamSize: number;
   inputs: Inputs;
-  
+
   states: StateModel;
+
   /**
-   * Deterministic execution order for state.onFrameAdvance callbacks during simulation.
-   * Specified states run in this order, then remaining states run in arbitrary (but consistent) order.
-   * Enables power users to manage dependencies between state updates (e.g., gravity before position).
+   * Semantic state keys that should run before other registered state behavior.
+   * Remaining behavior runs in first-registration order.
+   * Keys without registered frame behavior are ignored.
    * 
    * Example: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
    */
-  stateExecutionOrder?: string[];  // Array of state semanticKeys in order to execute
+  stateExecutionOrder?: string[];
 
   community: CommunityMetadata;
   meta: EntityMetadata;

@@ -4,46 +4,28 @@
  */
 
 /**
- * Individual state definition (reusable lookup entry)
+ * Serializable state definition stored in a guide.
+ * Behavior code is compiled and registered separately at runtime.
  */
-export interface State {
-  semanticKey: string;  // hash(gameSemanticKey + [characterSemanticKey] + category + name + duration + min + max + unit)
+export interface StateBehaviorCode {
+  onUpdate?: string;
+  onFrameAdvance?: string;
+}
+
+export interface StateDocument {
+  semanticKey: string;
   name: string;
   description?: string;
-  duration?: number;    // How long the state applies (frames); works for both numeric and boolean states
+  duration?: number;
   min?: number;
   max?: number;
   unit?: string;
-
-  /**
-   * Optional custom update function called when a value is applied to this state (from effects).
-   * Users read the incoming value, check context state, and return updated context.
-   * 
-   * Example (hitstun scaling by combo count):
-   * onUpdate: (incomingValue, context) => {
-   *   const comboCount = context.runtimeState.comboMechanics.comboCount;
-   *   const scaleFactor = 0.95 ** comboCount;
-   *   context.runtimeState.comboMechanics.hitstun = incomingValue * scaleFactor;
-   *   return context;
-   * }
-   */
-  onUpdate?: (incomingValue: any, context: GameStateContext) => GameStateContext;
-
-  /**
-   * Optional custom frame advance function called once per frame during simulation.
-   * Useful for system-level updates that don't depend on incoming effect values.
-   * 
-   * Example (gravity-affected motion, health regeneration):
-   * onFrameAdvance: (context) => {
-   *   const gravity = context.runtimeState.stageMechanics.gravity;
-   *   // Apply gravity to positions, velocities
-   *   return context;
-   * }
-   */
-  onFrameAdvance?: (context: GameStateContext) => GameStateContext;
+  behavior?: StateBehaviorCode;
 }
 
-export const createState = (overrides: Partial<State> = {}): State => ({
+export const createState = (
+  overrides: Partial<StateDocument> = {}
+): StateDocument => ({
   semanticKey: '',
   name: '',
   ...overrides,
@@ -52,14 +34,14 @@ export const createState = (overrides: Partial<State> = {}): State => ({
 /**
  * Collection of states by semanticKey
  */
-export type StateCollection = Record<string, State>;
+export type StateCollection = Record<string, StateDocument>;
 
 /**
- * Infer value type from State structure:
+ * Infer value type from StateDocument structure:
  * - If min/max defined → numeric value
  * - Otherwise → boolean flag
  */
-type InferStateValueType<T extends State> = 
+type InferStateValueType<T extends StateDocument> =
   T extends { min: number } | { max: number }
     ? number
     : boolean;
@@ -68,7 +50,9 @@ type InferStateValueType<T extends State> =
  * Map a StateCollection to runtime values with inferred types
  * Each state key gets a value of the appropriate type (number or boolean)
  */
-export type RuntimeStateValues<T extends Record<string, State>> = Partial<{
+export type RuntimeStateValues<
+  T extends Record<string, StateDocument>
+> = Partial<{
   [K in keyof T]: InferStateValueType<T[K]>;
 }>;
 
