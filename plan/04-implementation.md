@@ -17,7 +17,8 @@ Commit history since this roadmap was last updated confirms the following:
 - **Phase 1.1 is complete.** The local Guide metadata model, schema-version validation, unsaved/synced tracking, and Guide lifecycle UI are implemented. The app opens to a centered empty state where users create a Guide or load an existing `.tfn`; active Guides expose load, save, and close actions in the header toolbar.
 - **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File`. Supported browsers prompt for destination and filename; other browsers use a standard download.
 - **Phase 1.2 is complete.** Game creation, validation, semantic identity, metadata editing, and one-at-a-time input vocabulary authoring are implemented with Angular Material and Signal Forms.
-- **Phases 1.4-1.7 are not complete.** Their document schemas and model factories exist, but hierarchy authoring workflows have not been implemented.
+- **Phase 1.4 is partially complete.** Stage identity, validation, Guide-level create/delete mutations, duplicate protection, unsaved tracking, `.tfn` round-trip, and a Material/Signal Forms Stage editor are implemented. Universal Stage Zones, inheritance, and universal sequences remain.
+- **Phases 1.5-1.7 are not complete.** Their document schemas and model factories exist, but hierarchy authoring workflows have not been implemented.
 
 ### Completed Supporting Work Not Previously Captured Here
 
@@ -94,6 +95,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.4: Entity Hierarchy Foundation (Game-Level Children)
+**Status: Partially complete (2026-08-15).** Stage CRUD is implemented end-to-end. Stage semantic identity is derived from Game identity plus normalized Stage name; duplicate Stage identity is rejected; deletes are blocked when local zones exist; Guide changes are tracked; browser `.tfn` persistence is covered; and the active Guide includes a responsive Stage editor. Universal Stage Zones, zone inheritance/override UI, and universal sequences remain.
 **Scope**: Build hierarchy starting from game downward: universal stage zones, stages + inheritance, universal sequences.
 
 **Deliverables**:

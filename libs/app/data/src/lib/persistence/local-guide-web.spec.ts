@@ -3,7 +3,7 @@ import {
   createGuideJson,
   type LocalGuide,
 } from '../guide';
-import { createGameDocument } from '../models';
+import { createGameDocument, createStage } from '../models';
 import {
   buildArchiveBlob,
   buildArchiveFile,
@@ -47,6 +47,12 @@ describe('local Guide web persistence', () => {
 
   it('round-trips a Guide through browser File APIs', async () => {
     const guide = buildGuide();
+    guide.entities.stages.push(
+      createStage({
+        gameKey: guide.entities.game.semanticKey,
+        name: 'Training Room',
+      })
+    );
     const archiveFile = buildArchiveFile(guide, 'demo-guide.tfn');
 
     const loaded = await parseArchiveFile(archiveFile);
@@ -56,6 +62,12 @@ describe('local Guide web persistence', () => {
     expect(loaded.entities.game.meta.createdAt.toISOString()).toBe(
       guide.entities.game.meta.createdAt.toISOString()
     );
+    expect(loaded.entities.stages).toEqual([
+      expect.objectContaining({
+        gameKey: 'game-demo-1x',
+        name: 'Training Room',
+      }),
+    ]);
   });
 
   it('rejects corrupted browser archive data', async () => {

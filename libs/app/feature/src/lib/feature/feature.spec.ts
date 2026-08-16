@@ -343,6 +343,7 @@ describe('Feature', () => {
     expect(toolbar.querySelector('[data-testid="import-archive"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="export-archive"]')).toBeTruthy();
     expect(headerSlot.nextElementSibling?.tagName).toBe('TFN-GAME-ROOT');
+    expect(fixture.nativeElement.querySelector('tfn-stage-editor')).toBeTruthy();
   });
 
   it('loads a .tfn file when selected', async () => {
