@@ -370,6 +370,33 @@ describe('LocalGuideFacadeStore', () => {
     ).toEqual([]);
   });
 
+  it('updates startup, active, and recovery phase durations independently', async () => {
+    await store.createGuide({
+      name: 'Phase Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createMove({ name: 'Hadoken' });
+    const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
+
+    for (const [phase, duration] of [
+      ['startup', { relative: 20 }],
+      ['active', { exact: 3 }],
+      ['recovery', { exact: 18, relative: 72 }],
+    ] as const) {
+      const result = await store.updateMovePhaseDuration({
+        moveKey,
+        phase,
+        duration,
+      });
+      expect(result.status).toBe('success');
+    }
+
+    const phases = store.value()?.entities.moves[0]?.phases;
+    expect(phases?.[0]?.startup?.duration).toEqual({ relative: 20 });
+    expect(phases?.[0]?.active?.duration).toEqual({ exact: 3 });
+    expect(phases?.[0]?.recovery?.duration).toEqual({ exact: 18, relative: 72 });
+  });
+
   it('creates a universal Move scoped to the Game when no character is given', async () => {
     await store.createGuide({
       name: 'Move Fighter', version: '1.0.0', frameRate: 60,

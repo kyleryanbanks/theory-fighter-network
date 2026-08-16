@@ -7,6 +7,17 @@
     [metadata]="currentMove.meta"
   >
     <tfn-entity-notes detail-notes entityType="move" [entityKey]="currentMove.semanticKey" [notes]="currentMove.meta && currentMove.meta.notes || []" [notAddressable]="true" />
+    <tfn-expansion-panel header="Frame durations" subheader="Startup, active, and recovery">
+      @for (phase of phaseNames; track phase) {
+        <div class="phase-duration">
+          <strong>{{ phase | titlecase }}</strong>
+          <tfn-data-value-editor
+            [value]="phaseDuration(phase)"
+            (valueChange)="updatePhaseDuration(phase, $event)"
+          />
+        </div>
+      }
+    </tfn-expansion-panel>
     <tfn-expansion-panel header="Move data" subheader="Resolved effective values">
       <pre>{{ currentMove | json }}</pre>
     </tfn-expansion-panel>

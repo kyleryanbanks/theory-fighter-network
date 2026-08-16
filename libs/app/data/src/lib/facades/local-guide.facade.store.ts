@@ -28,7 +28,8 @@ import {
 } from '../models/game';
 import { createStage, createStageZone } from '../models/stage';
 import { createCharacter } from '../models/character';
-import { createMove } from '../models/move';
+import { createMove, resolveEffectiveMove } from '../models/move';
+import type { MovePhase } from '../models/move';
 import { createSequence } from '../models/sequence';
 import { createTeam } from '../models/team';
 import {
@@ -36,7 +37,7 @@ import {
   createMatchupScenarioEntry,
   createScenarioResponseEntry,
 } from '../models/matchup';
-import { createNoteEntry, type EntityMetadata } from '../models/shared';
+import { createNoteEntry, type DataValue, type EntityMetadata } from '../models/shared';
 import type { Step } from '../models/move';
 import {
   buildArchiveFile,
@@ -880,6 +881,67 @@ export const LocalGuideFacadeStore = signalStore(
                 ...localGuide.entities,
                 game,
                 moves: [...localGuide.entities.moves, move],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    updateMovePhaseDuration: rxMutation({
+      operation: (input: {
+        moveKey: string;
+        phase: 'startup' | 'active' | 'recovery';
+        duration: DataValue;
+        phaseIndex?: number;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === input.moveKey
+            );
+            if (!move) {
+              throw new Error(`Move "${input.moveKey}" does not exist.`);
+            }
+
+            const phaseIndex = input.phaseIndex ?? 0;
+            const effectiveMove = resolveEffectiveMove(move, localGuide.entities.moves);
+            const phases = [...(effectiveMove.phases ?? [])];
+            while (phases.length <= phaseIndex) {
+              phases.push({});
+            }
+            const currentPhase = phases[phaseIndex] as MovePhase;
+            phases[phaseIndex] = {
+              ...currentPhase,
+              [input.phase]: {
+                ...(currentPhase[input.phase] ?? {}),
+                duration: input.duration,
+              },
+            };
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'move',
+              entityKey: move.semanticKey,
+            });
+
+            const updatedMove = {
+              ...move,
+              phases,
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === move.semanticKey
+                    ? updatedMove
+                    : candidate
+                ),
               },
             };
           })()
