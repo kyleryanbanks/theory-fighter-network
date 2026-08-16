@@ -30,12 +30,20 @@ summary {
   padding-right: 100px;
   padding: 12px 14px;
   cursor: pointer;
-  list-style-position: inside;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::marker {
+  content: '';
 }
 
 .exp-panel__actions {
   position: absolute;
-  top: 8px;
+  top: 12px;
   right: 14px;
   display: flex;
   align-items: center;

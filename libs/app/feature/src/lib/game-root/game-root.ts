@@ -18,6 +18,7 @@ import {
   LocalGuideFacadeStore,
 } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
+import { TfnLink } from '@theory-fighter-network/ui';
 
 interface GameFormModel {
   name: string;
@@ -42,6 +43,7 @@ interface InputDraftModel {
     MatFormFieldModule,
     MatInputModule,
     RouterLink,
+    TfnLink,
     EntityNotes,
   ],
   templateUrl: './game-root.html',

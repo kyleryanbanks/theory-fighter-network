@@ -8,14 +8,14 @@ import {
   resolveEffectiveMove,
   type Step,
 } from '@theory-fighter-network/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })

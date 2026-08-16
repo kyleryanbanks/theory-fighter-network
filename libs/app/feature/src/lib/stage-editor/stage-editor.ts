@@ -9,7 +9,7 @@ import {
   createStageZoneSemanticKey,
   type NoteEntry,
 } from '@theory-fighter-network/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface StageDraft {
@@ -22,7 +22,7 @@ interface ZoneDraft {
 
 @Component({
   selector: 'tfn-stage-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
   templateUrl: './stage-editor.html',
   styleUrl: './stage-editor.css',
 })

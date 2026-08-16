@@ -10,7 +10,7 @@ import {
 } from '@theory-fighter-network/data';
 import type { NoteEntry } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -22,6 +22,7 @@ const UNSCOPED_STAGE = '';
     MatInputModule,
     MatSelectModule,
     RouterLink,
+    TfnLink,
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,

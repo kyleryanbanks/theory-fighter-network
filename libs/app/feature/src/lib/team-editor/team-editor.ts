@@ -3,12 +3,12 @@ import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
+  imports: [MatButtonModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })

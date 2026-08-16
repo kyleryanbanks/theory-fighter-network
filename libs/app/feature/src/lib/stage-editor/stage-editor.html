@@ -81,7 +81,7 @@
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
       <tfn-expansion-panel class="stage-entry" data-testid="stage-entry" [header]="stage.name" [subheader]="stage.semanticKey">
-        <a tfnExpansionPanelAction [routerLink]="['/stages', stage.semanticKey]">Open details</a>
+        <tfn-link tfnExpansionPanelAction [routerLink]="['/stages', stage.semanticKey]">Open details</tfn-link>
         <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="stage"

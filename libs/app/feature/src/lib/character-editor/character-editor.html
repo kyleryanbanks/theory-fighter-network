@@ -37,7 +37,7 @@
         [header]="character.name"
         [subheader]="character.semanticKey"
       >
-        <a tfnExpansionPanelAction [routerLink]="['/characters', character.semanticKey]">Open details</a>
+        <tfn-link tfnExpansionPanelAction [routerLink]="['/characters', character.semanticKey]">Open details</tfn-link>
         <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="character"

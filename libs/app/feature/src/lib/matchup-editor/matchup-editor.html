@@ -32,7 +32,7 @@
   <div class="matchup-list">
     @for (matchup of matchups(); track matchup.semanticKey) {
       <tfn-expansion-panel class="matchup-item" data-testid="matchup-item" [header]="characterName(matchup.attackerKey) + ' vs ' + characterName(matchup.defenderKey)" [subheader]="matchup.semanticKey">
-        <a tfnExpansionPanelAction [routerLink]="['/matchups', matchup.semanticKey]">Open details</a>
+        <tfn-link tfnExpansionPanelAction [routerLink]="['/matchups', matchup.semanticKey]">Open details</tfn-link>
         <div class="matchup-details">
           <tfn-expansion-panel subsection secondary header="Notes">
             <tfn-entity-notes entityType="matchup" [entityKey]="matchup.semanticKey" [notes]="matchup.meta && matchup.meta.notes || []" addressLabel="Create a new Scenario to address this note" (address)="addressNote(matchup.semanticKey, $event)" />

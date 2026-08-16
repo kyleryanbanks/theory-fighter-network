@@ -2,7 +2,7 @@
 	<div class="section-heading">
 		<h3 id="game-root-heading">Game</h3>
 		@if (facade.guide(); as guide) {
-			<a [routerLink]="['/game', guide.entities.game.semanticKey]">Open details</a>
+			<tfn-link [routerLink]="['/game', guide.entities.game.semanticKey]">Open details</tfn-link>
 		}
 	</div>
 	@if (facade.guide(); as guide) {

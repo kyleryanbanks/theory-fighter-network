@@ -9,7 +9,7 @@ import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
 } from '@theory-fighter-network/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface MoveDraft {
@@ -27,6 +27,7 @@ const UNIVERSAL_SCOPE = '';
     MatInputModule,
     MatSelectModule,
     RouterLink,
+    TfnLink,
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,
