@@ -226,6 +226,77 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.characters).toHaveLength(1);
   });
 
+  it('creates and deletes character-scoped Moves while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+
+    const created = await store.createMove({
+      name: 'Hadoken',
+      characterKey: character?.semanticKey ?? '',
+    });
+    const move = store.value()?.entities.moves[0];
+    const updatedCharacter = store.value()?.entities.characters[0];
+
+    expect(created.status).toBe('success');
+    expect(move?.name).toBe('Hadoken');
+    expect(move?.characterKey).toBe(character?.semanticKey);
+    expect(updatedCharacter?.hierarchy.moveKeys).toContain(move?.semanticKey);
+    expect(store.value()?.guide.localChanges).toContain(
+      `move:${move?.semanticKey}`
+    );
+
+    const deleted = await store.deleteMove({
+      moveKey: move?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.moves).toEqual([]);
+    expect(
+      store.value()?.entities.characters[0]?.hierarchy.moveKeys
+    ).toEqual([]);
+  });
+
+  it('creates a universal Move scoped to the Game when no character is given', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createMove({ name: 'Universal Parry' });
+    const move = store.value()?.entities.moves[0];
+
+    expect(created.status).toBe('success');
+    expect(move?.characterKey).toBeUndefined();
+    expect(store.value()?.entities.game.universal.moveKeys).toContain(
+      move?.semanticKey
+    );
+  });
+
+  it('rejects duplicate Move identity within the same scope', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    await store.createMove({
+      name: 'Hadoken',
+      characterKey: character?.semanticKey ?? '',
+    });
+
+    const duplicate = await store.createMove({
+      name: ' hadoken ',
+      characterKey: character?.semanticKey ?? '',
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.moves).toHaveLength(1);
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

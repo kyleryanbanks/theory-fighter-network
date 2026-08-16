@@ -133,7 +133,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.5: Character Branch (Characters, Moves)
-**Status: Character CRUD complete (2026-08-16).** Character creation/deletion mutations derive a semantic key from game + normalized name, reject duplicates, block deletion while moves/sequences/projectiles reference the character, and mark the guide unsaved. A Material/Signal Forms Character editor mirrors the Stage editor pattern. Character-scoped moves remain.
+**Status: Complete (2026-08-16).** Character creation/deletion mutations derive a semantic key from game + normalized name, reject duplicates, block deletion while moves/sequences/projectiles reference the character, and mark the guide unsaved. Move creation/deletion supports both universal (game-level, `characterKey` omitted) and character-scoped moves, deriving a semantic key from game + optional character + normalized name, rejecting duplicates within a scope, and maintaining bidirectional linkage (`Character.hierarchy.moveKeys` or `Game.universal.moveKeys`). Material/Signal Forms Character and Move editors are wired into the feature shell. Move phase/effect/precondition editing and input-sequence parsing remain for Phase 3.1.
 **Scope**: Build character entity hierarchy: character creation, character-scoped moves.
 
 **Deliverables**:

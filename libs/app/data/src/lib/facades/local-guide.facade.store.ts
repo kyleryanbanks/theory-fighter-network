@@ -26,6 +26,7 @@ import {
 } from '../models/game';
 import { createStage, createStageZone } from '../models/stage';
 import { createCharacter } from '../models/character';
+import { createMove } from '../models/move';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -532,6 +533,210 @@ export const LocalGuideFacadeStore = signalStore(
                 game,
                 characters: localGuide.entities.characters.filter(
                   (character) => character.semanticKey !== characterKey
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    createMove: rxMutation({
+      operation: (input: { name: string; characterKey?: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            let character;
+
+            if (input.characterKey) {
+              character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === input.characterKey
+              );
+              if (!character) {
+                throw new Error(
+                  `Character "${input.characterKey}" does not exist.`
+                );
+              }
+            }
+
+            const move = createMove({
+              gameKey: localGuide.entities.game.semanticKey,
+              characterKey: input.characterKey,
+              name: input.name,
+            });
+
+            if (
+              localGuide.entities.moves.some(
+                (existing) => existing.semanticKey === move.semanticKey
+              )
+            ) {
+              throw new Error(`Move "${move.name}" already exists in this scope.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'move',
+              entityKey: move.semanticKey,
+            });
+
+            if (character) {
+              markEntityUnsaved(guide, {
+                entityType: 'character',
+                entityKey: character.semanticKey,
+              });
+
+              const updatedCharacter = {
+                ...character,
+                hierarchy: {
+                  ...character.hierarchy,
+                  moveKeys: [...character.hierarchy.moveKeys, move.semanticKey],
+                },
+                meta: {
+                  ...character.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === character.semanticKey
+                      ? updatedCharacter
+                      : c
+                  ),
+                  moves: [...localGuide.entities.moves, move],
+                },
+              };
+            }
+
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                moveKeys: [
+                  ...localGuide.entities.game.universal.moveKeys,
+                  move.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                moves: [...localGuide.entities.moves, move],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteMove: rxMutation({
+      operation: ({ moveKey }: { moveKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (m) => m.semanticKey === moveKey
+            );
+            if (!move) {
+              throw new Error(`Move "${moveKey}" does not exist.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'move',
+              entityKey: moveKey,
+            });
+
+            if (move.characterKey) {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === move.characterKey
+              );
+              if (!character) {
+                throw new Error(
+                  `Character "${move.characterKey}" for move "${moveKey}" not found.`
+                );
+              }
+
+              markEntityUnsaved(guide, {
+                entityType: 'character',
+                entityKey: character.semanticKey,
+              });
+
+              const updatedCharacter = {
+                ...character,
+                hierarchy: {
+                  ...character.hierarchy,
+                  moveKeys: character.hierarchy.moveKeys.filter(
+                    (key) => key !== moveKey
+                  ),
+                },
+                meta: {
+                  ...character.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === character.semanticKey
+                      ? updatedCharacter
+                      : c
+                  ),
+                  moves: localGuide.entities.moves.filter(
+                    (m) => m.semanticKey !== moveKey
+                  ),
+                },
+              };
+            }
+
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                moveKeys: localGuide.entities.game.universal.moveKeys.filter(
+                  (key) => key !== moveKey
+                ),
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                moves: localGuide.entities.moves.filter(
+                  (m) => m.semanticKey !== moveKey
                 ),
               },
             };

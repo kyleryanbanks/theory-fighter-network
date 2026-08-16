@@ -1,0 +1,68 @@
+<section aria-labelledby="moves-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Character-level hierarchy</p>
+      <h2 id="moves-heading">Moves</h2>
+    </div>
+    <p>{{ moves().length }} total</p>
+  </div>
+
+  <mat-form-field appearance="outline" class="scope-select">
+    <mat-label>Scope</mat-label>
+    <mat-select
+      data-testid="move-scope"
+      [value]="scopeKey()"
+      (selectionChange)="setScope($event.value)"
+    >
+      <mat-option value="">Universal (Game-level)</mat-option>
+      @for (character of characters(); track character.semanticKey) {
+        <mat-option [value]="character.semanticKey">
+          {{ character.name }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <form class="move-form" (submit)="$event.preventDefault(); createMove()">
+    <mat-form-field appearance="outline">
+      <mat-label>Move name</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        data-testid="move-name"
+        [formField]="moveForm.name"
+      />
+      @if (moveForm.name().touched() && moveForm.name().invalid()) {
+        <mat-error>{{ moveForm.name().errors()[0].message }}</mat-error>
+      }
+    </mat-form-field>
+    <button matButton="filled" type="submit" data-testid="add-move">
+      Add Move
+    </button>
+  </form>
+
+  @if (moveError()) {
+    <p class="move-alert" role="alert">{{ moveError() }}</p>
+  }
+
+  <div class="move-list">
+    @for (move of moves(); track move.semanticKey) {
+      <div class="move-entry" data-testid="move-entry">
+        <span>
+          <strong>{{ move.name }}</strong>
+          <small>{{ move.semanticKey }}</small>
+        </span>
+        <button
+          matButton
+          type="button"
+          [attr.aria-label]="'Delete Move ' + move.name"
+          (click)="deleteMove(move.semanticKey)"
+        >
+          Delete
+        </button>
+      </div>
+    } @empty {
+      <p class="empty-state">No Moves added in this scope.</p>
+    }
+  </div>
+</section>

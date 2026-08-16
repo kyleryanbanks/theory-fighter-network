@@ -11,11 +11,12 @@ import {
 } from './shared';
 import { Region } from './region';
 import { RuntimeStatePatch, StateModel } from './state';
+import { normalizeGameName } from './game';
 
 export interface MoveDocument {
   gameKey: string;
   characterKey?: string;
-  semanticKey: string; // hash(gameSemanticKey + characterSemanticKey + normalizedInputFrames + normalizedPreconditions)
+  semanticKey: string; // hash(gameSemanticKey + [characterSemanticKey] + normalizedMoveName)
   name: string;
 
   // Inheritence from game-level or character-level move, if applicable
@@ -50,6 +51,82 @@ export const createMoveDocument = (
   meta: createEntityMetadata(),
   ...overrides,
 });
+
+export interface CreateMoveInput {
+  gameKey: string;
+  name: string;
+  characterKey?: string; // If provided, move is character-scoped; otherwise game-level/universal
+}
+
+export function createMove(input: CreateMoveInput): MoveDocument {
+  const move = createMoveDocument({
+    gameKey: input.gameKey.trim(),
+    characterKey: input.characterKey,
+    name: input.name.trim(),
+    semanticKey: createMoveSemanticKey(
+      input.gameKey,
+      input.characterKey,
+      input.name
+    ),
+  });
+  assertValidMoveDocument(move);
+  return move;
+}
+
+export function createMoveSemanticKey(
+  gameKey: string,
+  characterKey: string | undefined,
+  name: string
+): string {
+  const normalizedName = normalizeGameName(name);
+  const scope = characterKey
+    ? `${gameKey.trim()}:${characterKey.trim()}:${normalizedName}`
+    : `${gameKey.trim()}:${normalizedName}`;
+  return `move-${fnv1a(scope)}`;
+}
+
+export function validateMoveDocument(move: MoveDocument): string[] {
+  const errors: string[] = [];
+
+  if (!move.gameKey.trim()) {
+    errors.push('gameKey is required.');
+  }
+  if (!move.name.trim()) {
+    errors.push('name is required.');
+  }
+  if (move.gameKey.trim() && move.name.trim()) {
+    const expectedKey = createMoveSemanticKey(
+      move.gameKey,
+      move.characterKey,
+      move.name
+    );
+    if (move.semanticKey !== expectedKey) {
+      errors.push(
+        'semanticKey does not match the Game, Character, and Move name.'
+      );
+    }
+  }
+
+  return errors;
+}
+
+function assertValidMoveDocument(move: MoveDocument): void {
+  const errors = validateMoveDocument(move);
+  if (errors.length > 0) {
+    throw new Error(`Invalid Move document: ${errors.join(' ')}`);
+  }
+}
+
+function fnv1a(input: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
 
 /**
  * Frame-by-frame input representation
