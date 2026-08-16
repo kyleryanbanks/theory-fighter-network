@@ -16,7 +16,9 @@ import { from, of } from 'rxjs';
 import {
   createGuideJson,
   markEntityUnsaved,
+  type EntityType,
   type LocalGuide,
+  type LocalGuideEntities,
 } from '../guide';
 import {
   createGame,
@@ -29,7 +31,8 @@ import { createCharacter } from '../models/character';
 import { createMove } from '../models/move';
 import { createSequence } from '../models/sequence';
 import { createTeam } from '../models/team';
-import { createMatchup } from '../models/matchup';
+import { createMatchup, createMatchupScenarioEntry } from '../models/matchup';
+import { createNoteEntry, type EntityMetadata } from '../models/shared';
 import type { Step } from '../models/move';
 import {
   buildArchiveFile,
@@ -1643,12 +1646,7 @@ export const LocalGuideFacadeStore = signalStore(
     }),
 
     createMatchup: rxMutation({
-      operation: (input: {
-        attackerKey: string;
-        defenderKey: string;
-        name: string;
-        stageKey?: string;
-      }) =>
+      operation: (input: { attackerKey: string; defenderKey: string }) =>
         from(
           (async () => {
             const localGuide = requireGuide(store.value());
@@ -1663,21 +1661,10 @@ export const LocalGuideFacadeStore = signalStore(
               }
             }
 
-            if (
-              input.stageKey &&
-              !localGuide.entities.stages.some(
-                (stage) => stage.semanticKey === input.stageKey
-              )
-            ) {
-              throw new Error(`Stage "${input.stageKey}" does not exist.`);
-            }
-
             const matchup = createMatchup({
               gameKey: localGuide.entities.game.semanticKey,
               attackerKey: input.attackerKey,
               defenderKey: input.defenderKey,
-              name: input.name,
-              stageKey: input.stageKey,
             });
 
             if (
@@ -1686,7 +1673,7 @@ export const LocalGuideFacadeStore = signalStore(
               )
             ) {
               throw new Error(
-                'A Matchup with this attacker, defender, and name already exists.'
+                'A Matchup with this attacker and defender already exists.'
               );
             }
 
@@ -1783,6 +1770,285 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    addMatchupScenario: rxMutation({
+      operation: (input: {
+        matchupKey: string;
+        opponentOptionKey: string;
+        name?: string;
+        notes?: string;
+        stageKey?: string;
+        parentScenarioKey?: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const matchup = localGuide.entities.matchups.find(
+              (existing) => existing.semanticKey === input.matchupKey
+            );
+            if (!matchup) {
+              throw new Error(`Matchup "${input.matchupKey}" does not exist.`);
+            }
+
+            const optionExists =
+              localGuide.entities.moves.some(
+                (move) => move.semanticKey === input.opponentOptionKey
+              ) ||
+              localGuide.entities.sequences.some(
+                (sequence) => sequence.semanticKey === input.opponentOptionKey
+              );
+            if (!optionExists) {
+              throw new Error(
+                `Move or Sequence "${input.opponentOptionKey}" does not exist.`
+              );
+            }
+
+            if (
+              input.stageKey &&
+              !localGuide.entities.stages.some(
+                (stage) => stage.semanticKey === input.stageKey
+              )
+            ) {
+              throw new Error(`Stage "${input.stageKey}" does not exist.`);
+            }
+
+            if (
+              input.parentScenarioKey &&
+              !matchup.scenarios.some(
+                (scenario) => scenario.semanticKey === input.parentScenarioKey
+              )
+            ) {
+              throw new Error(
+                `Scenario "${input.parentScenarioKey}" does not exist.`
+              );
+            }
+
+            const scenario = createMatchupScenarioEntry({
+              matchupKey: input.matchupKey,
+              opponentOptionKey: input.opponentOptionKey,
+              name: input.name,
+              notes: input.notes,
+              stageKey: input.stageKey,
+              parentScenarioKey: input.parentScenarioKey,
+            });
+
+            if (
+              matchup.scenarios.some(
+                (existing) => existing.semanticKey === scenario.semanticKey
+              )
+            ) {
+              throw new Error('A Scenario with this identity already exists.');
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'matchup',
+              entityKey: matchup.semanticKey,
+            });
+
+            const updatedMatchup = {
+              ...matchup,
+              scenarios: [...matchup.scenarios, scenario],
+              meta: { ...matchup.meta, lastUpdatedAt: new Date() },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                matchups: localGuide.entities.matchups.map((existing) =>
+                  existing.semanticKey === matchup.semanticKey
+                    ? updatedMatchup
+                    : existing
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    removeMatchupScenario: rxMutation({
+      operation: ({
+        matchupKey,
+        scenarioKey,
+      }: {
+        matchupKey: string;
+        scenarioKey: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const matchup = localGuide.entities.matchups.find(
+              (existing) => existing.semanticKey === matchupKey
+            );
+            if (!matchup) {
+              throw new Error(`Matchup "${matchupKey}" does not exist.`);
+            }
+            if (
+              !matchup.scenarios.some(
+                (scenario) => scenario.semanticKey === scenarioKey
+              )
+            ) {
+              throw new Error(`Scenario "${scenarioKey}" does not exist.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'matchup',
+              entityKey: matchup.semanticKey,
+            });
+
+            const updatedMatchup = {
+              ...matchup,
+              scenarios: matchup.scenarios.filter(
+                (scenario) => scenario.semanticKey !== scenarioKey
+              ),
+              meta: { ...matchup.meta, lastUpdatedAt: new Date() },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                matchups: localGuide.entities.matchups.map((existing) =>
+                  existing.semanticKey === matchup.semanticKey
+                    ? updatedMatchup
+                    : existing
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    addEntityNote: rxMutation({
+      operation: ({
+        entityType,
+        entityKey,
+        text,
+      }: {
+        entityType: EntityType;
+        entityKey: string;
+        text: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const note = createNoteEntry({ text });
+
+            const entities = updateEntityMeta(
+              localGuide.entities,
+              entityType,
+              entityKey,
+              (meta) => ({
+                ...meta,
+                notes: [...(meta.notes ?? []), note],
+                lastUpdatedAt: new Date(),
+              })
+            );
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType, entityKey });
+
+            return { ...localGuide, guide, entities };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    removeEntityNote: rxMutation({
+      operation: ({
+        entityType,
+        entityKey,
+        noteId,
+      }: {
+        entityType: EntityType;
+        entityKey: string;
+        noteId: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const existingMeta = requireEntityMeta(
+              localGuide.entities,
+              entityType,
+              entityKey
+            );
+            if (!existingMeta.notes?.some((note) => note.id === noteId)) {
+              throw new Error(`Note "${noteId}" does not exist.`);
+            }
+
+            const entities = updateEntityMeta(
+              localGuide.entities,
+              entityType,
+              entityKey,
+              (meta) => ({
+                ...meta,
+                notes: (meta.notes ?? []).filter(
+                  (note) => note.id !== noteId
+                ),
+                lastUpdatedAt: new Date(),
+              })
+            );
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType, entityKey });
+
+            return { ...localGuide, guide, entities };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    promoteEntityNote: rxMutation({
+      operation: ({
+        entityType,
+        entityKey,
+        noteId,
+        promotedToKey,
+      }: {
+        entityType: EntityType;
+        entityKey: string;
+        noteId: string;
+        promotedToKey: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const existingMeta = requireEntityMeta(
+              localGuide.entities,
+              entityType,
+              entityKey
+            );
+            if (!existingMeta.notes?.some((note) => note.id === noteId)) {
+              throw new Error(`Note "${noteId}" does not exist.`);
+            }
+
+            const entities = updateEntityMeta(
+              localGuide.entities,
+              entityType,
+              entityKey,
+              (meta) => ({
+                ...meta,
+                notes: (meta.notes ?? []).map((note) =>
+                  note.id === noteId ? { ...note, promotedToKey } : note
+                ),
+                lastUpdatedAt: new Date(),
+              })
+            );
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType, entityKey });
+
+            return { ...localGuide, guide, entities };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     importArchive: rxMutation({
       operation: (archiveFile: File) =>
         from(store.persistence.parseArchiveFile(archiveFile)),
@@ -1869,4 +2135,90 @@ function cloneGuideMetadata(localGuide: LocalGuide) {
     syncedChanges: [...localGuide.guide.syncedChanges],
     unsavedStatus: { ...localGuide.guide.unsavedStatus },
   };
+}
+
+// Generic per-entity-type meta lookup/update so notes (and any future
+// meta-level feature) work identically across every entity type without
+// bespoke per-entity mutations.
+function requireEntityMeta(
+  entities: LocalGuideEntities,
+  entityType: EntityType,
+  entityKey: string
+): EntityMetadata {
+  const meta = findEntityMeta(entities, entityType, entityKey);
+  if (!meta) {
+    throw new Error(`${entityType} "${entityKey}" does not exist.`);
+  }
+  return meta;
+}
+
+function findEntityMeta(
+  entities: LocalGuideEntities,
+  entityType: EntityType,
+  entityKey: string
+): EntityMetadata | undefined {
+  if (entityType === 'game') {
+    return entities.game.semanticKey === entityKey
+      ? entities.game.meta
+      : undefined;
+  }
+  const collection = entityCollection(entities, entityType);
+  return collection.find((entity) => entity.semanticKey === entityKey)?.meta;
+}
+
+function updateEntityMeta(
+  entities: LocalGuideEntities,
+  entityType: EntityType,
+  entityKey: string,
+  updater: (meta: EntityMetadata) => EntityMetadata
+): LocalGuideEntities {
+  if (entityType === 'game') {
+    if (entities.game.semanticKey !== entityKey) {
+      throw new Error(`game "${entityKey}" does not exist.`);
+    }
+    return {
+      ...entities,
+      game: { ...entities.game, meta: updater(entities.game.meta) },
+    };
+  }
+
+  const key = collectionKey(entityType);
+  const collection = entities[key] as Array<{ semanticKey: string; meta: EntityMetadata }>;
+  if (!collection.some((entity) => entity.semanticKey === entityKey)) {
+    throw new Error(`${entityType} "${entityKey}" does not exist.`);
+  }
+
+  return {
+    ...entities,
+    [key]: collection.map((entity) =>
+      entity.semanticKey === entityKey
+        ? { ...entity, meta: updater(entity.meta) }
+        : entity
+    ),
+  };
+}
+
+function entityCollection(
+  entities: LocalGuideEntities,
+  entityType: EntityType
+): Array<{ semanticKey: string; meta: EntityMetadata }> {
+  return entities[
+    collectionKey(entityType)
+  ] as unknown as Array<{ semanticKey: string; meta: EntityMetadata }>;
+}
+
+function collectionKey(
+  entityType: EntityType
+): Exclude<keyof LocalGuideEntities, 'game'> {
+  const keys: Record<Exclude<EntityType, 'game'>, Exclude<keyof LocalGuideEntities, 'game'>> = {
+    stage: 'stages',
+    stageZone: 'stageZones',
+    character: 'characters',
+    team: 'teams',
+    move: 'moves',
+    sequence: 'sequences',
+    projectile: 'projectiles',
+    matchup: 'matchups',
+  };
+  return keys[entityType as Exclude<EntityType, 'game'>];
 }

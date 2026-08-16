@@ -44,6 +44,34 @@ export const createCommunityMetadata = (
 ): CommunityMetadata => ({ ownerId: 'local-user', ...overrides });
 
 /**
+ * A single freeform note captured against an entity. Kept deliberately
+ * generic (no per-entity-type fields) so any entity can reuse the same
+ * notes UI/mutations; `promotedToKey` records what this note helped create,
+ * if anything, without the note itself knowing what kind of thing that is.
+ */
+export interface NoteEntry {
+  id: string;
+  text: string;
+  createdAt: Date;
+  promotedToKey?: string;
+}
+
+export const createNoteEntry = (input: { text: string }): NoteEntry => {
+  const text = input.text.trim();
+  if (!text) {
+    throw new Error('text is required.');
+  }
+
+  return {
+    id: `note-${Date.now().toString(36)}-${Math.random()
+      .toString(36)
+      .slice(2, 8)}`,
+    text,
+    createdAt: new Date(),
+  };
+};
+
+/**
  * Record-level metadata shared by stored entities.
  * Contains organizational/descriptive fields that don't affect game behavior.
  */
@@ -52,7 +80,7 @@ export interface EntityMetadata {
   lastUpdatedAt: Date;
   validatedVersion?: string;
   label?: string;  // User-facing name or label (separate from semantic name/key)
-  notes?: string;  // General documentation/commentary
+  notes?: NoteEntry[];  // General documentation/commentary, one entry per jotted thought
 }
 
 export const createEntityMetadata = (

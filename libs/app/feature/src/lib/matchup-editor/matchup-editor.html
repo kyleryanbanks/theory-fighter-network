@@ -38,32 +38,6 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Stage (optional)</mat-label>
-      <mat-select
-        data-testid="stage-select"
-        [value]="draftStageKey()"
-        (selectionChange)="draftStageKey.set($event.value)"
-      >
-        <mat-option value="">Any stage</mat-option>
-        @for (stage of stages(); track stage.semanticKey) {
-          <mat-option [value]="stage.semanticKey">
-            {{ stage.name }}
-          </mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
-
-    <mat-form-field appearance="outline">
-      <mat-label>Name</mat-label>
-      <input
-        matInput
-        data-testid="matchup-name"
-        [value]="draftName()"
-        (input)="draftName.set($any($event.target).value)"
-      />
-    </mat-form-field>
-
     <button
       matButton="filled"
       type="button"
@@ -80,25 +54,154 @@
 
   <div class="matchup-list">
     @for (matchup of matchups(); track matchup.semanticKey) {
-      <div class="matchup-entry" data-testid="matchup-entry">
-        <span>
-          <strong>
-            {{ characterName(matchup.attackerKey) }} vs
-            {{ characterName(matchup.defenderKey) }}
-          </strong>
-          — {{ matchup.name }}
-          @if (matchup.stageKey; as stageKey) {
-            <small> ({{ stageName(stageKey) }})</small>
-          }
-        </span>
-        <button
-          matButton
-          type="button"
-          [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey"
-          (click)="deleteMatchup(matchup.semanticKey)"
-        >
-          Delete
-        </button>
+      <div class="matchup-item">
+        <div class="matchup-entry" data-testid="matchup-entry">
+          <span>
+            <strong>
+              {{ characterName(matchup.attackerKey) }} vs
+              {{ characterName(matchup.defenderKey) }}
+            </strong>
+          </span>
+          <span class="matchup-actions">
+            <button
+              matButton
+              type="button"
+              [attr.aria-label]="'Manage Notes for ' + matchup.semanticKey"
+              (click)="toggleNotes(matchup.semanticKey)"
+            >
+              {{
+                notesMatchupKey() === matchup.semanticKey
+                  ? 'Hide Notes'
+                  : 'Notes (' + (matchup.meta.notes?.length ?? 0) + ')'
+              }}
+            </button>
+            <button
+              matButton
+              type="button"
+              [attr.aria-label]="'Manage Scenarios for ' + matchup.semanticKey"
+              (click)="toggleScenarios(matchup.semanticKey)"
+            >
+              {{
+                selectedMatchupKey() === matchup.semanticKey
+                  ? 'Hide Scenarios'
+                  : 'Scenarios (' + matchup.scenarios.length + ')'
+              }}
+            </button>
+            <button
+              matButton
+              type="button"
+              [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey"
+              (click)="deleteMatchup(matchup.semanticKey)"
+            >
+              Delete
+            </button>
+          </span>
+        </div>
+
+        @if (notesMatchupKey() === matchup.semanticKey) {
+          <div class="notes-panel">
+            @if (notesError()) {
+              <p class="matchup-alert" role="alert">{{ notesError() }}</p>
+            }
+            <tfn-notes-list
+              [notes]="matchup.meta.notes ?? []"
+              (add)="addNote(matchup.semanticKey, $event)"
+              (remove)="removeNote(matchup.semanticKey, $event)"
+              (promote)="promoteNote(matchup.semanticKey, $event)"
+            />
+          </div>
+        }
+
+        @if (selectedMatchupKey() === matchup.semanticKey) {
+          <div class="scenario-panel">
+            <div class="scenario-draft">
+              <mat-form-field appearance="outline">
+                <mat-label>Opponent option (Move or Sequence)</mat-label>
+                <mat-select
+                  data-testid="opponent-option-select"
+                  [value]="draftOpponentOptionKey()"
+                  (selectionChange)="draftOpponentOptionKey.set($event.value)"
+                >
+                  @for (move of moves(); track move.semanticKey) {
+                    <mat-option [value]="move.semanticKey">
+                      {{ move.name }}
+                    </mat-option>
+                  }
+                  @for (sequence of sequences(); track sequence.semanticKey) {
+                    <mat-option [value]="sequence.semanticKey">
+                      {{ optionLabel(sequence.semanticKey) }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Scenario name (optional)</mat-label>
+                <input
+                  matInput
+                  data-testid="scenario-name"
+                  [value]="draftScenarioName()"
+                  (input)="draftScenarioName.set($any($event.target).value)"
+                />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Stage (optional)</mat-label>
+                <mat-select
+                  data-testid="scenario-stage-select"
+                  [value]="draftScenarioStageKey()"
+                  (selectionChange)="draftScenarioStageKey.set($event.value)"
+                >
+                  <mat-option value="">Any stage</mat-option>
+                  @for (stage of stages(); track stage.semanticKey) {
+                    <mat-option [value]="stage.semanticKey">
+                      {{ stage.name }}
+                    </mat-option>
+                  }
+                </mat-select>
+              </mat-form-field>
+
+              <button
+                matButton="filled"
+                type="button"
+                data-testid="add-scenario"
+                (click)="addScenario(matchup.semanticKey)"
+              >
+                Add Scenario
+              </button>
+            </div>
+
+            @if (scenarioError()) {
+              <p class="matchup-alert" role="alert">{{ scenarioError() }}</p>
+            }
+
+            <div class="scenario-list">
+              @for (scenario of matchup.scenarios; track scenario.semanticKey) {
+                <div class="scenario-entry" data-testid="scenario-entry">
+                  <span>
+                    <strong>{{ optionLabel(scenario.opponentOptionKey) }}</strong>
+                    @if (scenario.name) {
+                      — {{ scenario.name }}
+                    }
+                    @if (scenario.stageKey; as stageKey) {
+                      <small> ({{ stageName(stageKey) }})</small>
+                    }
+                  </span>
+                  <button
+                    matButton
+                    type="button"
+                    [attr.aria-label]="'Delete Scenario ' + scenario.semanticKey"
+                    (click)="removeScenario(matchup.semanticKey, scenario.semanticKey)"
+                  >
+                    Delete
+                  </button>
+                </div>
+              } @empty {
+                <p class="empty-state">No Scenarios added.</p>
+              }
+            </div>
+          </div>
+        }
       </div>
     } @empty {
       <p class="empty-state">No Matchups added.</p>

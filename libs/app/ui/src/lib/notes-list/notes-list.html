@@ -1,0 +1,56 @@
+<div class="notes-list">
+  <ul class="notes-items">
+    @for (note of notes(); track note.id) {
+      <li class="note-item" data-testid="note-item">
+        <span class="note-text">{{ note.text }}</span>
+        <span class="note-actions">
+          @if (note.promotedToKey) {
+            <span class="note-promoted" data-testid="promoted-indicator">
+              Promoted
+            </span>
+          } @else {
+            <button
+              matButton
+              type="button"
+              data-testid="promote-note"
+              (click)="promoteNote(note)"
+            >
+              Promote
+            </button>
+          }
+          <button
+            matButton
+            type="button"
+            data-testid="remove-note"
+            [attr.aria-label]="'Delete note ' + note.id"
+            (click)="removeNote(note.id)"
+          >
+            Delete
+          </button>
+        </span>
+      </li>
+    } @empty {
+      <p class="notes-empty">No notes yet.</p>
+    }
+  </ul>
+
+  <div class="notes-draft">
+    <mat-form-field appearance="outline">
+      <mat-label>Add a note</mat-label>
+      <input
+        matInput
+        data-testid="note-text"
+        [value]="draftText()"
+        (input)="draftText.set($any($event.target).value)"
+      />
+    </mat-form-field>
+    <button
+      matButton="filled"
+      type="button"
+      data-testid="add-note"
+      (click)="addNote()"
+    >
+      Add note
+    </button>
+  </div>
+</div>

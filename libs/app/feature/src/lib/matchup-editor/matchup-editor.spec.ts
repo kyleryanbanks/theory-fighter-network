@@ -11,11 +11,29 @@ function buildGuide(
     semanticKey: string;
     attackerKey: string;
     defenderKey: string;
-    name: string;
-  }> = []
+    notes?: Array<{ id: string; text: string; promotedToKey?: string }>;
+    scenarios?: Array<{
+      semanticKey: string;
+      opponentOptionKey: string;
+      name?: string;
+      stageKey?: string;
+    }>;
+  }> = [],
+  moves: Array<{ name: string; semanticKey: string }> = [],
+  sequences: Array<{ semanticKey: string }> = []
 ) {
   return {
-    entities: { characters, stages, matchups },
+    entities: {
+      characters,
+      stages,
+      matchups: matchups.map(({ notes, ...matchup }) => ({
+        ...matchup,
+        scenarios: matchup.scenarios ?? [],
+        meta: { notes: notes ?? [] },
+      })),
+      moves,
+      sequences,
+    },
   };
 }
 
@@ -26,6 +44,11 @@ describe('MatchupEditor', () => {
     guide,
     createMatchup: vi.fn(async () => ({ status: 'success' })),
     deleteMatchup: vi.fn(async () => ({ status: 'success' })),
+    addMatchupScenario: vi.fn(async () => ({ status: 'success' })),
+    removeMatchupScenario: vi.fn(async () => ({ status: 'success' })),
+    addEntityNote: vi.fn(async () => ({ status: 'success' })),
+    removeEntityNote: vi.fn(async () => ({ status: 'success' })),
+    promoteEntityNote: vi.fn(async () => ({ status: 'success' })),
   };
 
   beforeEach(async () => {
@@ -54,7 +77,6 @@ describe('MatchupEditor', () => {
             semanticKey: 'matchup-1',
             attackerKey: 'char-ryu',
             defenderKey: 'char-ken',
-            name: 'Corner pressure',
           },
         ]
       )
@@ -66,14 +88,13 @@ describe('MatchupEditor', () => {
     );
     expect(entry.textContent).toContain('Ryu');
     expect(entry.textContent).toContain('Ken');
-    expect(entry.textContent).toContain('Corner pressure');
   });
 
   it('shows an empty state when there are no Matchups', () => {
     expect(fixture.nativeElement.textContent).toContain('No Matchups added.');
   });
 
-  it('creates a Matchup from the selected attacker, defender, and name', async () => {
+  it('creates a Matchup from the selected attacker and defender', async () => {
     guide.set(
       buildGuide([
         { name: 'Ryu', semanticKey: 'char-ryu' },
@@ -84,42 +105,37 @@ describe('MatchupEditor', () => {
 
     fixture.componentInstance.attackerKey.set('char-ryu');
     fixture.componentInstance.defenderKey.set('char-ken');
-    fixture.componentInstance.draftName.set('Corner pressure');
 
     await fixture.componentInstance.createMatchup();
 
     expect(mockStore.createMatchup).toHaveBeenCalledWith({
       attackerKey: 'char-ryu',
       defenderKey: 'char-ken',
-      name: 'Corner pressure',
-      stageKey: undefined,
     });
   });
 
-  it('shows a validation error when creating without a name', async () => {
-    fixture.componentInstance.attackerKey.set('char-ryu');
-    fixture.componentInstance.defenderKey.set('char-ken');
-    fixture.componentInstance.draftName.set('   ');
+  it('shows a validation error when creating without an attacker or defender', async () => {
+    fixture.componentInstance.attackerKey.set('');
+    fixture.componentInstance.defenderKey.set('');
 
     await fixture.componentInstance.createMatchup();
 
     expect(mockStore.createMatchup).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.matchupError()).toContain('name');
+    expect(fixture.componentInstance.matchupError()).toContain('attacker');
   });
 
   it('surfaces a facade error when creating a Matchup fails', async () => {
     mockStore.createMatchup.mockResolvedValueOnce({
       status: 'error',
-      error: new Error('attackerKey and defenderKey must be different.'),
+      error: new Error('A Matchup with this attacker and defender already exists.'),
     });
     fixture.componentInstance.attackerKey.set('char-ryu');
-    fixture.componentInstance.defenderKey.set('char-ryu');
-    fixture.componentInstance.draftName.set('Mirror match');
+    fixture.componentInstance.defenderKey.set('char-ken');
 
     await fixture.componentInstance.createMatchup();
 
     expect(fixture.componentInstance.matchupError()).toBe(
-      'attackerKey and defenderKey must be different.'
+      'A Matchup with this attacker and defender already exists.'
     );
   });
 
@@ -130,4 +146,195 @@ describe('MatchupEditor', () => {
       matchupKey: 'matchup-1',
     });
   });
+
+  it('shows Scenarios for a Matchup once selected, resolving the opponent option name', () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Ryu', semanticKey: 'char-ryu' },
+          { name: 'Ken', semanticKey: 'char-ken' },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'matchup-1',
+            attackerKey: 'char-ryu',
+            defenderKey: 'char-ken',
+            scenarios: [
+              {
+                semanticKey: 'scenario-1',
+                opponentOptionKey: 'move-fireball',
+                name: 'Fireball punish',
+              },
+            ],
+          },
+        ],
+        [{ name: 'Fireball', semanticKey: 'move-fireball' }]
+      )
+    );
+    fixture.detectChanges();
+
+    fixture.componentInstance.toggleScenarios('matchup-1');
+    fixture.detectChanges();
+
+    const entry = fixture.nativeElement.querySelector(
+      '[data-testid="scenario-entry"]'
+    );
+    expect(entry.textContent).toContain('Fireball');
+    expect(entry.textContent).toContain('Fireball punish');
+  });
+
+  it('adds a Scenario to a Matchup from the selected opponent option', async () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Ryu', semanticKey: 'char-ryu' },
+          { name: 'Ken', semanticKey: 'char-ken' },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'matchup-1',
+            attackerKey: 'char-ryu',
+            defenderKey: 'char-ken',
+          },
+        ],
+        [{ name: 'Fireball', semanticKey: 'move-fireball' }]
+      )
+    );
+    fixture.detectChanges();
+
+    fixture.componentInstance.draftOpponentOptionKey.set('move-fireball');
+    fixture.componentInstance.draftScenarioName.set('Fireball punish');
+
+    await fixture.componentInstance.addScenario('matchup-1');
+
+    expect(mockStore.addMatchupScenario).toHaveBeenCalledWith({
+      matchupKey: 'matchup-1',
+      opponentOptionKey: 'move-fireball',
+      name: 'Fireball punish',
+      stageKey: undefined,
+    });
+  });
+
+  it('shows a validation error when adding a Scenario without an opponent option', async () => {
+    await fixture.componentInstance.addScenario('matchup-1');
+
+    expect(mockStore.addMatchupScenario).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.scenarioError()).toContain('option');
+  });
+
+  it('removes a Scenario from a Matchup', async () => {
+    await fixture.componentInstance.removeScenario('matchup-1', 'scenario-1');
+
+    expect(mockStore.removeMatchupScenario).toHaveBeenCalledWith({
+      matchupKey: 'matchup-1',
+      scenarioKey: 'scenario-1',
+    });
+  });
+
+  it('shows Notes for a Matchup once selected', () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Ryu', semanticKey: 'char-ryu' },
+          { name: 'Ken', semanticKey: 'char-ken' },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'matchup-1',
+            attackerKey: 'char-ryu',
+            defenderKey: 'char-ken',
+            notes: [
+              { id: 'note-1', text: 'Got hit by something weird' },
+            ],
+          },
+        ]
+      )
+    );
+    fixture.detectChanges();
+
+    fixture.componentInstance.toggleNotes('matchup-1');
+    fixture.detectChanges();
+
+    const noteItem = fixture.nativeElement.querySelector(
+      '[data-testid="note-item"]'
+    );
+    expect(noteItem.textContent).toContain('Got hit by something weird');
+  });
+
+  it('adds a note to a Matchup', async () => {
+    await fixture.componentInstance.addNote('matchup-1', 'New note text');
+
+    expect(mockStore.addEntityNote).toHaveBeenCalledWith({
+      entityType: 'matchup',
+      entityKey: 'matchup-1',
+      text: 'New note text',
+    });
+  });
+
+  it('removes a note from a Matchup', async () => {
+    await fixture.componentInstance.removeNote('matchup-1', 'note-1');
+
+    expect(mockStore.removeEntityNote).toHaveBeenCalledWith({
+      entityType: 'matchup',
+      entityKey: 'matchup-1',
+      noteId: 'note-1',
+    });
+  });
+
+  it('promoting a note opens the Scenario draft prefilled with the note text', () => {
+    const note = {
+      id: 'note-1',
+      text: 'Got hit by something weird',
+      createdAt: new Date(),
+    };
+
+    fixture.componentInstance.promoteNote('matchup-1', note);
+
+    expect(fixture.componentInstance.selectedMatchupKey()).toBe('matchup-1');
+    expect(fixture.componentInstance.draftScenarioName()).toBe(
+      'Got hit by something weird'
+    );
+  });
+
+  it('links a promoted note to the newly created Scenario once added', async () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Ryu', semanticKey: 'char-ryu' },
+          { name: 'Ken', semanticKey: 'char-ken' },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'matchup-1',
+            attackerKey: 'char-ryu',
+            defenderKey: 'char-ken',
+          },
+        ],
+        [{ name: 'Fireball', semanticKey: 'move-fireball' }]
+      )
+    );
+    fixture.detectChanges();
+
+    const note = {
+      id: 'note-1',
+      text: 'Got hit by something weird',
+      createdAt: new Date(),
+    };
+    fixture.componentInstance.promoteNote('matchup-1', note);
+    fixture.componentInstance.draftOpponentOptionKey.set('move-fireball');
+
+    await fixture.componentInstance.addScenario('matchup-1');
+
+    expect(mockStore.promoteEntityNote).toHaveBeenCalledWith({
+      entityType: 'matchup',
+      entityKey: 'matchup-1',
+      noteId: 'note-1',
+      promotedToKey: expect.any(String),
+    });
+  });
 });
+

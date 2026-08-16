@@ -52,18 +52,65 @@ h2 {
   gap: 10px;
 }
 
+.matchup-item {
+  border: 1px solid #d8e2dc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .matchup-entry {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   padding: 10px 14px;
-  border: 1px solid #d8e2dc;
-  border-radius: 8px;
+}
+
+.matchup-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .matchup-entry small {
   color: #617168;
+}
+
+.notes-panel {
+  border-top: 1px solid #d8e2dc;
+  padding: 14px;
+  background: #f9faf8;
+}
+
+.scenario-panel {
+  border-top: 1px solid #d8e2dc;
+  padding: 14px;
+  background: #f9faf8;
+}
+
+.scenario-draft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scenario-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8e4;
+  border-radius: 6px;
 }
 
 .empty-state {

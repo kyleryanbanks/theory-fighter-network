@@ -15,10 +15,8 @@ import { RuntimeStateModel } from './state';
  */
 export interface MatchupDocument {
   gameKey: string;
-  stageKey?: string;
 
-  semanticKey: string; // hash(gameSemanticKey + attackerKey + defenderKey + name)
-  name: string;
+  semanticKey: string; // hash(gameSemanticKey + attackerKey + defenderKey)
 
   attackerKey: string;
   defenderKey: string;
@@ -34,7 +32,6 @@ export const createMatchupDocument = (
 ): MatchupDocument => ({
   gameKey: '',
   semanticKey: '',
-  name: '',
   attackerKey: '',
   defenderKey: '',
   scenarios: [],
@@ -47,33 +44,20 @@ export interface CreateMatchupInput {
   gameKey: string;
   attackerKey: string;
   defenderKey: string;
-  name: string;
-  stageKey?: string;
 }
 
 export function createMatchup(input: CreateMatchupInput): MatchupDocument {
   const attackerKey = input.attackerKey.trim();
   const defenderKey = input.defenderKey.trim();
-  const name = input.name.trim();
-
-  if (attackerKey === defenderKey) {
-    throw new Error('attackerKey and defenderKey must be different.');
-  }
-  if (!name) {
-    throw new Error('name is required.');
-  }
 
   const matchup = createMatchupDocument({
     gameKey: input.gameKey.trim(),
     attackerKey,
     defenderKey,
-    name,
-    stageKey: input.stageKey?.trim() || undefined,
     semanticKey: createMatchupSemanticKey(
       input.gameKey,
       attackerKey,
-      defenderKey,
-      name
+      defenderKey
     ),
   });
   assertValidMatchupDocument(matchup);
@@ -83,13 +67,10 @@ export function createMatchup(input: CreateMatchupInput): MatchupDocument {
 export function createMatchupSemanticKey(
   gameKey: string,
   attackerKey: string,
-  defenderKey: string,
-  name: string
+  defenderKey: string
 ): string {
   return `matchup-${fnv1a(
-    `${gameKey.trim()}:${attackerKey.trim()}:${defenderKey.trim()}:${name
-      .trim()
-      .toLowerCase()}`
+    `${gameKey.trim()}:${attackerKey.trim()}:${defenderKey.trim()}`
   )}`;
 }
 
@@ -105,32 +86,18 @@ export function validateMatchupDocument(matchup: MatchupDocument): string[] {
   if (!matchup.defenderKey.trim()) {
     errors.push('defenderKey is required.');
   }
-  if (!matchup.name.trim()) {
-    errors.push('name is required.');
-  }
-  if (
-    matchup.attackerKey.trim() &&
-    matchup.defenderKey.trim() &&
-    matchup.attackerKey.trim() === matchup.defenderKey.trim()
-  ) {
-    errors.push('attackerKey and defenderKey must be different.');
-  }
   if (
     matchup.gameKey.trim() &&
     matchup.attackerKey.trim() &&
-    matchup.defenderKey.trim() &&
-    matchup.name.trim()
+    matchup.defenderKey.trim()
   ) {
     const expectedKey = createMatchupSemanticKey(
       matchup.gameKey,
       matchup.attackerKey,
-      matchup.defenderKey,
-      matchup.name
+      matchup.defenderKey
     );
     if (matchup.semanticKey !== expectedKey) {
-      errors.push(
-        'semanticKey does not match the Game, attacker, defender, and name.'
-      );
+      errors.push('semanticKey does not match the Game, attacker, and defender.');
     }
   }
 
@@ -164,9 +131,12 @@ function fnv1a(input: string): string {
  */
 export interface MatchupScenario {
   id: string;
-  semanticKey: string; // hash(matchupKey + opponentOptionKey + initialState + playerInitialPosition + opponentInitialPosition)
+  semanticKey: string; // hash(matchupKey + opponentOptionKey + stageKey + initialState + playerInitialPosition + opponentInitialPosition)
   name?: string;
   notes?: string;
+
+  // Optional Stage this scenario is scoped to; omitted means any Stage
+  stageKey?: string;
 
   // The move or sequence the opponent executes
   opponentOptionKey: string; // move or sequence semanticKey (uniqueness guaranteed)
@@ -194,6 +164,84 @@ export const createMatchupScenario = (
   responses: [],
   ...overrides,
 });
+
+export interface CreateMatchupScenarioInput {
+  matchupKey: string;
+  opponentOptionKey: string;
+  name?: string;
+  notes?: string;
+  stageKey?: string;
+  initialState?: Partial<RuntimeStateModel>;
+  playerInitialPosition?: number;
+  opponentInitialPosition?: number;
+  parentScenarioKey?: string;
+}
+
+export function createMatchupScenarioEntry(
+  input: CreateMatchupScenarioInput
+): MatchupScenario {
+  const opponentOptionKey = input.opponentOptionKey.trim();
+  if (!opponentOptionKey) {
+    throw new Error('opponentOptionKey is required.');
+  }
+
+  const stageKey = input.stageKey?.trim() || undefined;
+  const semanticKey = createMatchupScenarioSemanticKey(
+    input.matchupKey,
+    opponentOptionKey,
+    stageKey,
+    input.initialState,
+    input.playerInitialPosition,
+    input.opponentInitialPosition
+  );
+
+  return createMatchupScenario({
+    id: semanticKey,
+    semanticKey,
+    opponentOptionKey,
+    name: input.name?.trim() || undefined,
+    notes: input.notes?.trim() || undefined,
+    stageKey,
+    initialState: input.initialState,
+    playerInitialPosition: input.playerInitialPosition,
+    opponentInitialPosition: input.opponentInitialPosition,
+    parentScenarioKey: input.parentScenarioKey?.trim() || undefined,
+  });
+}
+
+export function createMatchupScenarioSemanticKey(
+  matchupKey: string,
+  opponentOptionKey: string,
+  stageKey?: string,
+  initialState?: Partial<RuntimeStateModel>,
+  playerInitialPosition?: number,
+  opponentInitialPosition?: number
+): string {
+  return `scenario-${fnv1a(
+    [
+      matchupKey.trim(),
+      opponentOptionKey.trim(),
+      stageKey?.trim() ?? '',
+      canonicalize(initialState),
+      playerInitialPosition ?? '',
+      opponentInitialPosition ?? '',
+    ].join(':')
+  )}`;
+}
+
+function canonicalize(value: unknown): string {
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value ?? null);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(canonicalize).join(',')}]`;
+  }
+  const keys = Object.keys(value as Record<string, unknown>).sort();
+  const entries = keys.map(
+    (key) => `${JSON.stringify(key)}:${canonicalize((value as Record<string, unknown>)[key])}`
+  );
+  return `{${entries.join(',')}}`;
+}
 
 /**
  * A player response to the opponent option in a scenario

@@ -3,7 +3,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import {
+  createMatchupScenarioSemanticKey,
+  LocalGuideFacadeStore,
+  type NoteEntry,
+} from '@theory-fighter-network/data';
+import { NotesList } from '@theory-fighter-network/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -14,6 +19,7 @@ const UNSCOPED_STAGE = '';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    NotesList,
   ],
   templateUrl: './matchup-editor.html',
   styleUrl: './matchup-editor.css',
@@ -32,9 +38,26 @@ export class MatchupEditor {
 
   readonly attackerKey = signal('');
   readonly defenderKey = signal('');
-  readonly draftName = signal('');
-  readonly draftStageKey = signal(UNSCOPED_STAGE);
   readonly matchupError = signal('');
+
+  readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
+  readonly sequences = computed(
+    () => this.facade.guide()?.entities.sequences ?? []
+  );
+  readonly selectedMatchupKey = signal<string | null>(null);
+  readonly draftOpponentOptionKey = signal('');
+  readonly draftScenarioName = signal('');
+  readonly draftScenarioStageKey = signal(UNSCOPED_STAGE);
+  readonly scenarioError = signal('');
+
+  readonly notesMatchupKey = signal<string | null>(null);
+  readonly notesError = signal('');
+  // Tracks a note mid-promotion so the Scenario it's prefilling can be
+  // linked back to it once the Scenario is actually created.
+  private readonly promotingNote = signal<{
+    matchupKey: string;
+    noteId: string;
+  } | null>(null);
 
   characterName(characterKey: string): string {
     return (
@@ -51,26 +74,42 @@ export class MatchupEditor {
     );
   }
 
+  optionLabel(optionKey: string): string {
+    const move = this.moves().find(
+      (candidate) => candidate.semanticKey === optionKey
+    );
+    if (move) {
+      return move.name;
+    }
+
+    const sequence = this.sequences().find(
+      (candidate) => candidate.semanticKey === optionKey
+    );
+    if (sequence) {
+      return sequence.sequence
+        .map(
+          (step) =>
+            this.moves().find((move) => move.semanticKey === step.moveKey)
+              ?.name ?? step.moveKey
+        )
+        .join(' → ');
+    }
+
+    return optionKey;
+  }
+
   async createMatchup(): Promise<void> {
     const attackerKey = this.attackerKey();
     const defenderKey = this.defenderKey();
-    const name = this.draftName().trim();
 
     if (!attackerKey || !defenderKey) {
       this.matchupError.set('Select an attacker and defender Character.');
       return;
     }
-    if (!name) {
-      this.matchupError.set('name is required.');
-      return;
-    }
 
-    const stageKey = this.draftStageKey() || undefined;
     const result = await this.facade.createMatchup({
       attackerKey,
       defenderKey,
-      name,
-      stageKey,
     });
 
     if (result.status === 'error') {
@@ -78,7 +117,6 @@ export class MatchupEditor {
       return;
     }
 
-    this.draftName.set('');
     this.matchupError.set('');
   }
 
@@ -91,6 +129,118 @@ export class MatchupEditor {
     }
 
     this.matchupError.set('');
+  }
+
+  toggleScenarios(matchupKey: string): void {
+    this.selectedMatchupKey.set(
+      this.selectedMatchupKey() === matchupKey ? null : matchupKey
+    );
+    this.draftOpponentOptionKey.set('');
+    this.draftScenarioName.set('');
+    this.draftScenarioStageKey.set(UNSCOPED_STAGE);
+    this.scenarioError.set('');
+  }
+
+  async addScenario(matchupKey: string): Promise<void> {
+    const opponentOptionKey = this.draftOpponentOptionKey();
+    if (!opponentOptionKey) {
+      this.scenarioError.set('Select an opponent option (Move or Sequence).');
+      return;
+    }
+
+    const name = this.draftScenarioName().trim() || undefined;
+    const stageKey = this.draftScenarioStageKey() || undefined;
+    const result = await this.facade.addMatchupScenario({
+      matchupKey,
+      opponentOptionKey,
+      name,
+      stageKey,
+    });
+
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    const promoting = this.promotingNote();
+    if (promoting && promoting.matchupKey === matchupKey) {
+      const scenarioKey = createMatchupScenarioSemanticKey(
+        matchupKey,
+        opponentOptionKey,
+        stageKey
+      );
+      await this.facade.promoteEntityNote({
+        entityType: 'matchup',
+        entityKey: matchupKey,
+        noteId: promoting.noteId,
+        promotedToKey: scenarioKey,
+      });
+      this.promotingNote.set(null);
+    }
+
+    this.draftScenarioName.set('');
+    this.scenarioError.set('');
+  }
+
+  async removeScenario(matchupKey: string, scenarioKey: string): Promise<void> {
+    const result = await this.facade.removeMatchupScenario({
+      matchupKey,
+      scenarioKey,
+    });
+
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.scenarioError.set('');
+  }
+
+  toggleNotes(matchupKey: string): void {
+    this.notesMatchupKey.set(
+      this.notesMatchupKey() === matchupKey ? null : matchupKey
+    );
+    this.notesError.set('');
+  }
+
+  async addNote(matchupKey: string, text: string): Promise<void> {
+    const result = await this.facade.addEntityNote({
+      entityType: 'matchup',
+      entityKey: matchupKey,
+      text,
+    });
+
+    if (result.status === 'error') {
+      this.notesError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.notesError.set('');
+  }
+
+  async removeNote(matchupKey: string, noteId: string): Promise<void> {
+    const result = await this.facade.removeEntityNote({
+      entityType: 'matchup',
+      entityKey: matchupKey,
+      noteId,
+    });
+
+    if (result.status === 'error') {
+      this.notesError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.notesError.set('');
+  }
+
+  // Opens the Scenario draft for this Matchup, prefilled with the note's
+  // text, and remembers the note so it can be linked once the Scenario
+  // is actually created (a note can't become a Scenario on its own since
+  // it has no opponentOptionKey to reference).
+  promoteNote(matchupKey: string, note: NoteEntry): void {
+    this.selectedMatchupKey.set(matchupKey);
+    this.draftScenarioName.set(note.text);
+    this.promotingNote.set({ matchupKey, noteId: note.id });
   }
 }
 
