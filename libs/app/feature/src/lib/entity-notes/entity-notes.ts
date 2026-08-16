@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import {
   LocalGuideFacadeStore,
   type EntityType,
@@ -18,16 +18,8 @@ export class EntityNotes {
   readonly entityType = input.required<EntityType>();
   readonly entityKey = input.required<string>();
   readonly notes = input<NoteEntry[]>([]);
-  readonly canPromote = input(false);
   readonly promote = output<NoteEntry>();
-  readonly open = signal(false);
   readonly error = signal('');
-  readonly count = computed(() => this.notes().length);
-
-  toggle(): void {
-    this.open.update((value) => !value);
-    this.error.set('');
-  }
 
   async addNote(text: string): Promise<void> {
     const result = await this.facade.addEntityNote({

@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Character-level hierarchy</p>
-      <h2 id="sequences-heading">Sequences</h2>
+      <h3 id="sequences-heading">Sequences</h3>
     </div>
     <p>{{ sequences().length }} total</p>
   </div>
@@ -84,26 +84,26 @@
 
   <div class="sequence-list">
     @for (sequence of sequences(); track sequence.semanticKey) {
-      <details class="sequence-entry" data-testid="sequence-entry">
-        <summary>
-          <strong>
-            @for (step of sequence.sequence; track $index) {
-              {{ moveName(step.moveKey) }}{{ $last ? '' : ' → ' }}
-            }
-          </strong>
-          <small>{{ sequence.semanticKey }}</small>
-        </summary>
-        <div class="entity-entry-details">
+      <tfn-expansion-panel
+        class="sequence-entry"
+        data-testid="sequence-entry"
+        [header]="sequenceLabel(sequence.sequence)"
+        [subheader]="sequence.semanticKey"
+      >
+        <tfn-expansion-panel secondary header="Notes">
           <tfn-entity-notes
             entityType="sequence"
             [entityKey]="sequence.semanticKey"
             [notes]="sequence.meta && sequence.meta.notes || []"
           />
+        </tfn-expansion-panel>
+        <tfn-expansion-panel secondary header="Metadata">
+          <tfn-entity-metadata [metadata]="sequence.meta" />
           <button matButton type="button" [attr.aria-label]="'Delete Sequence ' + sequence.semanticKey" (click)="deleteSequence(sequence.semanticKey)">
             Delete Sequence
           </button>
-        </div>
-      </details>
+        </tfn-expansion-panel>
+      </tfn-expansion-panel>
     } @empty {
       <p class="empty-state">No Sequences added in this scope.</p>
     }

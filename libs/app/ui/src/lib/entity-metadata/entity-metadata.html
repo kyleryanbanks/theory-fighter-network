@@ -1,0 +1,22 @@
+<dl class="entity-metadata">
+  @if (metadata()?.label) {
+    <div>
+      <dt>Label</dt>
+      <dd>{{ metadata()?.label }}</dd>
+    </div>
+  }
+  <div>
+    <dt>Created</dt>
+    <dd>{{ displayDate(metadata()?.createdAt) }}</dd>
+  </div>
+  <div>
+    <dt>Last updated</dt>
+    <dd>{{ displayDate(metadata()?.lastUpdatedAt) }}</dd>
+  </div>
+  @if (metadata()?.validatedVersion) {
+    <div>
+      <dt>Validated version</dt>
+      <dd>{{ metadata()?.validatedVersion }}</dd>
+    </div>
+  }
+</dl>

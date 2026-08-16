@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Game-level hierarchy</p>
-      <h2 id="matchups-heading">Matchups</h2>
+      <h3 id="matchups-heading">Matchups</h3>
     </div>
     <p>{{ matchups().length }} total</p>
   </div>
@@ -37,29 +37,26 @@
 
   <div class="matchup-list">
     @for (matchup of matchups(); track matchup.semanticKey) {
-      <details class="matchup-item" data-testid="matchup-item">
-        <summary class="matchup-summary" data-testid="matchup-entry">
-          <strong>{{ characterName(matchup.attackerKey) }} vs {{ characterName(matchup.defenderKey) }}</strong>
-          <small>{{ matchup.semanticKey }}</small>
-        </summary>
+      <tfn-expansion-panel class="matchup-item" data-testid="matchup-item" [header]="characterName(matchup.attackerKey) + ' vs ' + characterName(matchup.defenderKey)" [subheader]="matchup.semanticKey">
 
         <div class="matchup-details">
-          <tfn-entity-notes
+          <tfn-expansion-panel secondary header="Notes">
+            <tfn-entity-notes
             entityType="matchup"
             [entityKey]="matchup.semanticKey"
             [notes]="matchup.meta && matchup.meta.notes || []"
-            [canPromote]="true"
             (promote)="promoteNote(matchup.semanticKey, $event)"
-          />
+            />
+          </tfn-expansion-panel>
 
-          <div class="matchup-actions">
+          <tfn-expansion-panel secondary header="Metadata">
+            <tfn-entity-metadata [metadata]="matchup.meta" />
             <button matButton type="button" [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey" (click)="deleteMatchup(matchup.semanticKey)">
               Delete Matchup
             </button>
-          </div>
+          </tfn-expansion-panel>
 
-          <div class="scenario-panel">
-            <h3>Scenarios</h3>
+          <tfn-expansion-panel secondary class="scenario-panel" header="Scenarios">
             <div class="scenario-draft">
               <mat-form-field appearance="outline">
                 <mat-label>Opponent option (Move or Sequence)</mat-label>
@@ -113,9 +110,9 @@
                 <p class="empty-state">No Scenarios added.</p>
               }
             </div>
-          </div>
+          </tfn-expansion-panel>
         </div>
-      </details>
+      </tfn-expansion-panel>
     } @empty {
       <p class="empty-state">No Matchups added.</p>
     }

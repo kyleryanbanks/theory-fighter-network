@@ -84,7 +84,7 @@ describe('MatchupEditor', () => {
     fixture.detectChanges();
 
     const entry = fixture.nativeElement.querySelector(
-      '[data-testid="matchup-entry"]'
+      '[data-testid="matchup-item"]'
     );
     expect(entry.textContent).toContain('Ryu');
     expect(entry.textContent).toContain('Ken');

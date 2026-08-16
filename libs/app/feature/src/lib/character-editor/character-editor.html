@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Game-level hierarchy</p>
-      <h2 id="characters-heading">Characters</h2>
+      <h3 id="characters-heading">Characters</h3>
     </div>
     <p>{{ characters().length }} total</p>
   </div>
@@ -31,17 +31,21 @@
 
   <div class="character-list">
     @for (character of characters(); track character.semanticKey) {
-      <details class="character-entry" data-testid="character-entry">
-        <summary>
-          <strong>{{ character.name }}</strong>
-          <small>{{ character.semanticKey }}</small>
-        </summary>
-        <div class="entity-entry-details">
+      <tfn-expansion-panel
+        class="character-entry"
+        data-testid="character-entry"
+        [header]="character.name"
+        [subheader]="character.semanticKey"
+      >
+        <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="character"
             [entityKey]="character.semanticKey"
             [notes]="character.meta && character.meta.notes || []"
           />
+        </tfn-expansion-panel>
+        <tfn-expansion-panel subsection secondary header="Metadata">
+          <tfn-entity-metadata [metadata]="character.meta" />
           <button
             matButton
             type="button"
@@ -50,8 +54,8 @@
           >
             Delete Character
           </button>
-        </div>
-      </details>
+        </tfn-expansion-panel>
+      </tfn-expansion-panel>
     } @empty {
       <p class="empty-state">No Characters added.</p>
     }

@@ -66,9 +66,8 @@ h2 {
 
 .character-list {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin-top: 10px;
-  background: #d9e0dc;
 }
 
 .character-entry {

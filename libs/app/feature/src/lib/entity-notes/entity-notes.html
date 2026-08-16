@@ -1,24 +1,9 @@
-<div class="entity-notes">
-  <button
-    type="button"
-    class="entity-notes-toggle"
-    data-testid="entity-notes-toggle"
-    [attr.aria-expanded]="open()"
-    (click)="toggle()"
-  >
-    Notes ({{ count() }})
-  </button>
-
-  @if (open()) {
-    @if (error()) {
-      <p class="entity-notes-error" role="alert">{{ error() }}</p>
-    }
-    <tfn-notes-list
-      [notes]="notes()"
-      [canPromote]="canPromote()"
-      (add)="addNote($event)"
-      (remove)="removeNote($event)"
-      (promote)="promoteNote($event)"
-    />
-  }
-</div>
+@if (error()) {
+  <p class="entity-notes-error" role="alert">{{ error() }}</p>
+}
+<tfn-notes-list
+  [notes]="notes()"
+  (add)="addNote($event)"
+  (remove)="removeNote($event)"
+  (promote)="promoteNote($event)"
+/>

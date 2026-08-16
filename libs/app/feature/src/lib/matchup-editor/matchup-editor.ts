@@ -9,6 +9,7 @@ import {
 } from '@theory-fighter-network/data';
 import type { NoteEntry } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -20,6 +21,8 @@ const UNSCOPED_STAGE = '';
     MatInputModule,
     MatSelectModule,
     EntityNotes,
+    ExpansionPanel,
+    EntityMetadataView,
   ],
   templateUrl: './matchup-editor.html',
   styleUrl: './matchup-editor.css',

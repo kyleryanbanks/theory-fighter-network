@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Game-level hierarchy</p>
-      <h2 id="teams-heading">Teams</h2>
+      <h3 id="teams-heading">Teams</h3>
     </div>
     <p>{{ teams().length }} total</p>
   </div>
@@ -59,26 +59,26 @@
 
   <div class="team-list">
     @for (team of teams(); track team.semanticKey) {
-      <details class="team-entry" data-testid="team-entry">
-        <summary>
-          <strong>
-            @for (characterKey of team.orderedCharacterKeys; track $index) {
-              {{ characterName(characterKey) }}{{ $last ? '' : ' + ' }}
-            }
-          </strong>
-          <small>{{ team.semanticKey }}</small>
-        </summary>
-        <div class="entity-entry-details">
+      <tfn-expansion-panel
+        class="team-entry"
+        data-testid="team-entry"
+        [header]="teamLabel(team.orderedCharacterKeys)"
+        [subheader]="team.semanticKey"
+      >
+        <tfn-expansion-panel secondary header="Notes">
           <tfn-entity-notes
             entityType="team"
             [entityKey]="team.semanticKey"
             [notes]="team.meta && team.meta.notes || []"
           />
+        </tfn-expansion-panel>
+        <tfn-expansion-panel secondary header="Metadata">
+          <tfn-entity-metadata [metadata]="team.meta" />
           <button matButton type="button" [attr.aria-label]="'Delete Team ' + team.semanticKey" (click)="deleteTeam(team.semanticKey)">
             Delete Team
           </button>
-        </div>
-      </details>
+        </tfn-expansion-panel>
+      </tfn-expansion-panel>
     } @empty {
       <p class="empty-state">No Teams added.</p>
     }

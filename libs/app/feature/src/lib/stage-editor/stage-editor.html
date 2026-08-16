@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Game-level hierarchy</p>
-      <h2 id="stages-heading">Stages</h2>
+      <h3 id="stages-heading">Stages</h3>
     </div>
     <p>{{ stages().length }} total</p>
   </div>
@@ -87,22 +87,21 @@
 
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
-      <details class="stage-entry" data-testid="stage-entry">
-        <summary>
-          <strong>{{ stage.name }}</strong>
-          <small>{{ stage.semanticKey }}</small>
-        </summary>
-        <div class="entity-entry-details">
+      <tfn-expansion-panel class="stage-entry" data-testid="stage-entry" [header]="stage.name" [subheader]="stage.semanticKey">
+        <tfn-expansion-panel secondary header="Notes">
           <tfn-entity-notes
             entityType="stage"
             [entityKey]="stage.semanticKey"
             [notes]="stage.meta && stage.meta.notes || []"
           />
+        </tfn-expansion-panel>
+        <tfn-expansion-panel secondary header="Metadata">
+          <tfn-entity-metadata [metadata]="stage.meta" />
           <button matButton type="button" [attr.aria-label]="'Delete Stage ' + stage.name" (click)="deleteStage(stage.semanticKey)">
             Delete Stage
           </button>
-        </div>
-        <div class="zone-list" data-testid="stage-zone-list">
+        </tfn-expansion-panel>
+        <tfn-expansion-panel secondary class="zone-list" data-testid="stage-zone-list" header="Zones">
         @for (universalZone of universalZones(); track universalZone.semanticKey) {
           @if (isOverridden(stage.semanticKey, universalZone.semanticKey)) {
             @for (
@@ -115,21 +114,26 @@
                     <strong>{{ override.name }}</strong>
                     <small>Overrides {{ universalZone.semanticKey }}</small>
                   </span>
-                  <tfn-entity-notes
-                    entityType="stageZone"
-                    [entityKey]="override.semanticKey"
-                    [notes]="override.meta && override.meta.notes || []"
-                  />
-                  <button
+                  <tfn-expansion-panel secondary header="Notes">
+                    <tfn-entity-notes
+                      entityType="stageZone"
+                      [entityKey]="override.semanticKey"
+                      [notes]="override.meta && override.meta.notes || []"
+                    />
+                  </tfn-expansion-panel>
+                  <tfn-expansion-panel secondary header="Metadata">
+                    <tfn-entity-metadata [metadata]="override.meta" />
+                    <button
                     matButton
                     type="button"
                     [attr.aria-label]="
                       'Revert ' + override.name + ' to Universal for ' + stage.name
                     "
                     (click)="deleteZone(override.semanticKey)"
-                  >
-                    Revert to Universal
-                  </button>
+                    >
+                      Revert to Universal
+                    </button>
+                  </tfn-expansion-panel>
                 </div>
               }
             }
@@ -160,32 +164,37 @@
                 <strong>{{ zone.name }}</strong>
                 <small>{{ zone.semanticKey }}</small>
               </span>
-              <tfn-entity-notes
-                entityType="stageZone"
-                [entityKey]="zone.semanticKey"
-                [notes]="zone.meta && zone.meta.notes || []"
-              />
-              <button
+              <tfn-expansion-panel secondary header="Notes">
+                <tfn-entity-notes
+                  entityType="stageZone"
+                  [entityKey]="zone.semanticKey"
+                  [notes]="zone.meta && zone.meta.notes || []"
+                />
+              </tfn-expansion-panel>
+              <tfn-expansion-panel secondary header="Metadata">
+                <tfn-entity-metadata [metadata]="zone.meta" />
+                <button
                 matButton
                 type="button"
                 [attr.aria-label]="'Promote ' + zone.name + ' to Universal'"
                 (click)="promoteZone(zone.semanticKey)"
-              >
-                Promote to Universal
-              </button>
-              <button
+                  >
+                    Promote to Universal
+                  </button>
+                  <button
                 matButton
                 type="button"
                 [attr.aria-label]="'Delete Zone ' + zone.name"
                 (click)="deleteZone(zone.semanticKey)"
-              >
-                Delete
-              </button>
+                  >
+                    Delete
+                  </button>
+              </tfn-expansion-panel>
             </div>
           }
         }
-        </div>
-      </details>
+        </tfn-expansion-panel>
+      </tfn-expansion-panel>
     } @empty {
       <p class="empty-state">No Stages added.</p>
     }

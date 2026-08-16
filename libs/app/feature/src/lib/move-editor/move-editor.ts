@@ -8,6 +8,7 @@ import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
 } from '@theory-fighter-network/data';
+import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface MoveDraft {
@@ -25,6 +26,8 @@ const UNIVERSAL_SCOPE = '';
     MatInputModule,
     MatSelectModule,
     EntityNotes,
+    ExpansionPanel,
+    EntityMetadataView,
   ],
   templateUrl: './move-editor.html',
   styleUrl: './move-editor.css',

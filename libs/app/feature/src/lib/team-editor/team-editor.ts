@@ -1,11 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule, EntityNotes],
+  imports: [MatButtonModule, EntityNotes, EntityMetadataView, ExpansionPanel],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })
@@ -41,6 +42,10 @@ export class TeamEditor {
         (character) => character.semanticKey === characterKey
       )?.name ?? characterKey
     );
+  }
+
+  teamLabel(characterKeys: string[]): string {
+    return characterKeys.map((key) => this.characterName(key)).join(' + ');
   }
 
   // Position badge (1-based) for a Character already on the roster, or

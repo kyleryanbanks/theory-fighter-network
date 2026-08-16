@@ -1,0 +1,23 @@
+<details
+  [class.exp-panel--secondary]="secondary()"
+  [class.exp-panel--subsection]="subsection()"
+>
+  <summary>
+    <span class="exp-panel__heading">
+      @switch (headingLevel()) {
+        @case (5) {
+          <h5>{{ header() }}</h5>
+        }
+        @default {
+          <h4>{{ header() }}</h4>
+        }
+      }
+      @if (subheader(); as description) {
+        <small>{{ description }}</small>
+      }
+    </span>
+  </summary>
+  <div class="exp-panel__body">
+    <ng-content />
+  </div>
+</details>

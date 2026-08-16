@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface StageDraft {
@@ -16,7 +17,7 @@ interface ZoneDraft {
 
 @Component({
   selector: 'tfn-stage-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel],
   templateUrl: './stage-editor.html',
   styleUrl: './stage-editor.css',
 })

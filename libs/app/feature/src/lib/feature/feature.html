@@ -4,6 +4,9 @@
 		@if (startupComplete() && facade.hasGuide()) {
 			<div class="guide-toolbar" data-testid="guide-toolbar">
 				<div class="guide-status">
+					@if (facade.guide(); as activeGuide) {
+						<h2>{{ activeGuide.entities.game.name }}</h2>
+					}
 					<p data-testid="guide-key">
 						Guide game: {{ facade.guide()?.guide?.gameKey ?? 'none' }}
 					</p>

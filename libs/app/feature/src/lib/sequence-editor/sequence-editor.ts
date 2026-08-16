@@ -7,13 +7,14 @@ import {
   resolveEffectiveMove,
   type Step,
 } from '@theory-fighter-network/data';
+import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes, EntityMetadataView, ExpansionPanel],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })
@@ -78,6 +79,10 @@ export class SequenceEditor {
   moveName(moveKey: string | undefined): string {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
     return allMoves.find((move) => move.semanticKey === moveKey)?.name ?? moveKey ?? '';
+  }
+
+  sequenceLabel(sequence: Step[]): string {
+    return sequence.map((step) => this.moveName(step.moveKey)).join(' → ');
   }
 
   // Badge label for a Move tile: "Universal" whenever the tile is shown at

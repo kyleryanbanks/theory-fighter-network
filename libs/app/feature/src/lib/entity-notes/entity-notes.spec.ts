@@ -31,16 +31,9 @@ describe('EntityNotes', () => {
     fixture.detectChanges();
   });
 
-  it('starts collapsed and shows the note count', () => {
-    expect(fixture.nativeElement.textContent).toContain('Notes (1)');
-    expect(fixture.nativeElement.querySelector('tfn-notes-list')).toBeNull();
-  });
-
-  it('opens the reusable notes list', () => {
-    fixture.nativeElement.querySelector('[data-testid="entity-notes-toggle"]').click();
-    fixture.detectChanges();
-
+  it('renders the reusable notes list directly', () => {
     expect(fixture.nativeElement.querySelector('tfn-notes-list')).not.toBeNull();
+    expect(fixture.nativeElement.textContent).toContain('A useful observation');
   });
 
   it('adds a note through the generic facade mutation', async () => {

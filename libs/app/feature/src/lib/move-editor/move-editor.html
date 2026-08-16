@@ -2,7 +2,7 @@
   <div class="section-heading">
     <div>
       <p class="eyebrow">Character-level hierarchy</p>
-      <h2 id="moves-heading">Moves</h2>
+      <h3 id="moves-heading">Moves</h3>
     </div>
     <p>{{ moves().length }} total</p>
   </div>
@@ -48,61 +48,56 @@
   <div class="move-list">
     @if (scopeKey() === '') {
       @for (move of moves(); track move.semanticKey) {
-        <details class="move-entry" data-testid="move-entry">
-          <summary class="move-identity">
-            <strong>{{ move.name }}</strong>
-            <small>{{ move.semanticKey }}</small>
-          </summary>
-          <div class="entity-entry-details">
+        <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+          <tfn-expansion-panel secondary header="Notes">
             <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+          </tfn-expansion-panel>
+          <tfn-expansion-panel secondary header="Metadata">
+            <tfn-entity-metadata [metadata]="move.meta" />
             <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
               Delete Move
             </button>
-          </div>
-        </details>
+          </tfn-expansion-panel>
+        </tfn-expansion-panel>
       } @empty {
         <p class="empty-state">No Moves added in this scope.</p>
       }
     } @else {
       @for (universalMove of universalMoves(); track universalMove.semanticKey) {
         @if (!isOverridden(universalMove.semanticKey)) {
-          <details class="move-entry move-entry--inherited" data-testid="move-entry">
-            <summary class="move-identity">
-              <span class="lock-icon" aria-hidden="true">&#128274;</span>
-              <strong>{{ universalMove.name }}</strong>
-              <small>Universal</small>
-            </summary>
-            <div class="entity-entry-details">
+          <tfn-expansion-panel class="move-entry move-entry--inherited" data-testid="move-entry" [header]="universalMove.name" subheader="Universal">
+            <tfn-expansion-panel secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="universalMove.meta" />
               <button matButton type="button" [attr.aria-label]="'Override ' + universalMove.name" (click)="overrideMove(universalMove.semanticKey)">
                 Override Move
               </button>
-            </div>
-          </details>
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
         }
       }
       @for (move of ownMoves(); track move.semanticKey) {
         @if (move.parentKey) {
-          <details class="move-entry move-entry--override" data-testid="move-entry">
-            <summary class="move-identity">
-              <strong>{{ move.name }}</strong>
-              <small>Overrides {{ move.parentKey }}</small>
-            </summary>
-            <div class="entity-entry-details">
+          <tfn-expansion-panel class="move-entry move-entry--override" data-testid="move-entry" [header]="move.name" [subheader]="'Overrides ' + move.parentKey">
+            <tfn-expansion-panel secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="move.meta" />
               <button matButton type="button" [attr.aria-label]="'Revert ' + move.name + ' to Universal'" (click)="deleteMove(move.semanticKey)">
                 Revert to Universal
               </button>
-            </div>
-          </details>
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
         } @else {
-          <details class="move-entry" data-testid="move-entry">
-            <summary class="move-identity">
-              <strong>{{ move.name }}</strong>
-              <small>{{ move.semanticKey }}</small>
-            </summary>
-            <div class="entity-entry-details">
+          <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+            <tfn-expansion-panel secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="move.meta" />
               <span>
                 <button matButton type="button" [attr.aria-label]="'Promote ' + move.name + ' to Universal'" (click)="promoteMove(move.semanticKey)">
                   Promote to Universal
@@ -111,8 +106,8 @@
                   Delete Move
                 </button>
               </span>
-            </div>
-          </details>
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
         }
       } @empty {
         @if (universalMoves().length === 0) {
