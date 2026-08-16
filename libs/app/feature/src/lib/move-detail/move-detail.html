@@ -1,5 +1,6 @@
 @if (move(); as currentMove) {
   <section aria-labelledby="move-detail-heading">
+    <a class="back-link" [routerLink]="['/moves']">Back to Move list</a>
     <h3 id="move-detail-heading">{{ currentMove.name }}</h3>
     <p class="entity-key">{{ currentMove.semanticKey }}</p>
 

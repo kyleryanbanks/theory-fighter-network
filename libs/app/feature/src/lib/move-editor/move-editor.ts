@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,6 +26,7 @@ const UNIVERSAL_SCOPE = '';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    RouterLink,
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,

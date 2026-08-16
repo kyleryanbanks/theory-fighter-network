@@ -30,6 +30,17 @@ class HostComponent {}
 })
 class InputHostComponent {}
 
+@Component({
+  imports: [ExpansionPanel],
+  template: `
+    <tfn-expansion-panel header="Entity header">
+      <a tfnExpansionPanelAction data-testid="exp-panel-action" href="/details">Open details</a>
+      <p data-testid="panel-body">Nested content</p>
+    </tfn-expansion-panel>
+  `,
+})
+class ActionHostComponent {}
+
 describe('ExpPanel', () => {
   let fixture: ComponentFixture<HostComponent>;
 
@@ -88,5 +99,19 @@ describe('ExpPanel', () => {
     expect(summary.querySelector('h5')).not.toBeNull();
     expect(summary.textContent).toContain('Entity header');
     expect(summary.textContent).toContain('Entity subheader');
+  });
+
+  it('renders projected actions outside the summary disclosure target', () => {
+    const actionFixture = TestBed.createComponent(ActionHostComponent);
+    actionFixture.detectChanges();
+
+    const summary = actionFixture.nativeElement.querySelector('summary');
+    const action = actionFixture.nativeElement.querySelector(
+      '[data-testid="exp-panel-action"]'
+    );
+
+    expect(summary.querySelector('a')).toBeNull();
+    expect(action.textContent).toContain('Open details');
+    expect(action.closest('summary')).toBeNull();
   });
 });

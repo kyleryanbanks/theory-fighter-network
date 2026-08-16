@@ -90,6 +90,7 @@
         [header]="sequenceLabel(sequence.sequence)"
         [subheader]="sequence.semanticKey"
       >
+        <a tfnExpansionPanelAction [routerLink]="['/sequences', sequence.semanticKey]">Open details</a>
         <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="sequence"

@@ -1,4 +1,5 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -20,6 +21,7 @@ const UNSCOPED_STAGE = '';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    RouterLink,
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,

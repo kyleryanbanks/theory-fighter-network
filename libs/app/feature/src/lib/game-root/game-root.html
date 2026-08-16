@@ -1,5 +1,10 @@
 <section aria-labelledby="game-root-heading">
-	<h3 id="game-root-heading">Game</h3>
+	<div class="section-heading">
+		<h3 id="game-root-heading">Game</h3>
+		@if (facade.guide(); as guide) {
+			<a [routerLink]="['/game', guide.entities.game.semanticKey]">Open details</a>
+		}
+	</div>
 	@if (facade.guide(); as guide) {
 		<tfn-entity-notes
 			entityType="game"

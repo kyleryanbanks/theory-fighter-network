@@ -1,5 +1,6 @@
 @if (sequence(); as currentSequence) {
   <section aria-labelledby="sequence-detail-heading">
+    <a class="back-link" [routerLink]="['/sequences']">Back to Sequence list</a>
     <h3 id="sequence-detail-heading">Sequence</h3>
     <p class="entity-key">{{ currentSequence.semanticKey }}</p>
 

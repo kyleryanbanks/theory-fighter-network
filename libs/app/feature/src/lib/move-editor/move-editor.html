@@ -49,6 +49,7 @@
     @if (scopeKey() === '') {
       @for (move of moves(); track move.semanticKey) {
         <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+          <a tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</a>
           <tfn-expansion-panel subsection secondary header="Notes">
             <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
           </tfn-expansion-panel>
@@ -64,6 +65,7 @@
       @for (universalMove of universalMoves(); track universalMove.semanticKey) {
         @if (!isOverridden(universalMove.semanticKey)) {
           <tfn-expansion-panel class="move-entry move-entry--inherited" data-testid="move-entry" [header]="universalMove.name" subheader="Universal">
+            <a tfnExpansionPanelAction [routerLink]="['/moves', universalMove.semanticKey]">Open details</a>
             <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>
@@ -79,6 +81,7 @@
       @for (move of ownMoves(); track move.semanticKey) {
         @if (move.parentKey) {
           <tfn-expansion-panel class="move-entry move-entry--override" data-testid="move-entry" [header]="move.name" [subheader]="'Overrides ' + move.parentKey">
+            <a tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</a>
             <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>
@@ -89,6 +92,7 @@
           </tfn-expansion-panel>
         } @else {
           <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+            <a tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</a>
             <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>

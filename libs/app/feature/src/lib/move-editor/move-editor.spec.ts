@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { vi } from 'vitest';
@@ -35,7 +36,7 @@ describe('MoveEditor', () => {
 
     await TestBed.configureTestingModule({
       imports: [MoveEditor],
-      providers: [{ provide: LocalGuideFacadeStore, useValue: mockStore }],
+      providers: [provideRouter([]), { provide: LocalGuideFacadeStore, useValue: mockStore }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MoveEditor);

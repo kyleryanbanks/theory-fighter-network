@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -14,7 +15,7 @@ const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })

@@ -81,6 +81,7 @@
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
       <tfn-expansion-panel class="stage-entry" data-testid="stage-entry" [header]="stage.name" [subheader]="stage.semanticKey">
+        <a tfnExpansionPanelAction [routerLink]="['/stages', stage.semanticKey]">Open details</a>
         <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="stage"
@@ -100,7 +101,7 @@
               @if (override.inheritedFromZoneKey === universalZone.semanticKey) {
                 <div class="zone-entry zone-entry--override" data-testid="zone-entry">
                   <span>
-                    <strong>{{ override.name }}</strong>
+                    <a [routerLink]="['/zones', override.semanticKey]"><strong>{{ override.name }}</strong></a>
                     <small>Overrides {{ universalZone.semanticKey }}</small>
                   </span>
                   <tfn-expansion-panel subsection secondary header="Notes">
@@ -122,7 +123,7 @@
             <div class="zone-entry zone-entry--inherited" data-testid="zone-entry">
               <span>
                 <span class="lock-icon" aria-hidden="true">&#128274;</span>
-                <strong>{{ universalZone.name }}</strong>
+                <a [routerLink]="['/zones', universalZone.semanticKey]"><strong>{{ universalZone.name }}</strong></a>
                 <small>Universal</small>
               </span>
                     <button class="danger-action"
@@ -142,7 +143,7 @@
           @if (!zone.inheritedFromZoneKey) {
             <div class="zone-entry" data-testid="zone-entry">
               <span>
-                <strong>{{ zone.name }}</strong>
+                    <a [routerLink]="['/zones', zone.semanticKey]"><strong>{{ zone.name }}</strong></a>
                 <small>{{ zone.semanticKey }}</small>
               </span>
               <tfn-expansion-panel subsection secondary header="Notes">

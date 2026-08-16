@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { vi } from 'vitest';
@@ -59,7 +60,7 @@ describe('GameRoot', () => {
 
     await TestBed.configureTestingModule({
       imports: [GameRoot],
-      providers: [{ provide: LocalGuideFacadeStore, useValue: mockStore }],
+      providers: [provideRouter([]), { provide: LocalGuideFacadeStore, useValue: mockStore }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GameRoot);

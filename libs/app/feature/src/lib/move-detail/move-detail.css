@@ -14,6 +14,11 @@ section {
   box-shadow: 0 12px 32px rgba(26, 48, 39, 0.07);
 }
 
+.back-link {
+  color: #245d43;
+  font-weight: 700;
+}
+
 .entity-key { margin: 0; color: #617168; font-size: 0.8125rem; }
 
 pre {

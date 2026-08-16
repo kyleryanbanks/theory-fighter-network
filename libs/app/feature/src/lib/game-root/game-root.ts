@@ -1,4 +1,5 @@
 import { Component, effect, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import {
   FormField,
   form,
@@ -40,6 +41,7 @@ interface InputDraftModel {
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
+    RouterLink,
     EntityNotes,
   ],
   templateUrl: './game-root.html',

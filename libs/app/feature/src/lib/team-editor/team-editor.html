@@ -65,6 +65,7 @@
         [header]="teamLabel(team.orderedCharacterKeys)"
         [subheader]="team.semanticKey"
       >
+        <a tfnExpansionPanelAction [routerLink]="['/teams', team.semanticKey]">Open details</a>
         <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="team"
