@@ -22,6 +22,7 @@ Commit history since this roadmap was last updated confirms the following:
 ### Completed Supporting Work Not Previously Captured Here
 
 - Nx `data`, `feature`, and `ui` libraries were created, and the application now hosts the feature shell instead of the generated welcome screen.
+- GitHub Pages deployment is configured through GitHub Actions with a static Angular build, repository base path, SPA fallback, and automatic production deployment from `main`.
 - `LocalGuideFacadeStore` provides in-memory Guide lifecycle orchestration, including creation, update, `.tfn` import/export, and close. The feature shell exposes an empty state, creation flow, active Guide toolbar, and return-to-empty-state flow.
 - Primary persisted models and direct nested model types now have colocated `createX` factories with tested defaults and override behavior.
 - Guide persistence was separated from model definitions into a `guide/` domain with a nested `guide/archive/` module. Guide factory/mutation, archive service, checksum, and serialization behavior each have focused unit coverage.

@@ -27,6 +27,36 @@ To create a production bundle:
 npx nx build theory-fighter-network
 ```
 
+To create the static GitHub Pages bundle:
+
+```sh
+npx nx build theory-fighter-network --configuration=github-pages
+```
+
+The deployable output is written to:
+
+```text
+dist/apps/theory-fighter-network/browser
+```
+
+## GitHub Pages
+
+Pushes to `main` deploy automatically through `.github/workflows/deploy-pages.yml`.
+
+One-time repository setup:
+
+1. Open **Settings → Pages**.
+2. Set **Source** to **GitHub Actions**.
+3. Push to `main` or run the workflow manually.
+
+Production URL:
+
+```text
+https://kyleryanbanks.github.io/theory-fighter-network/
+```
+
+The Pages build is static and uses `/theory-fighter-network/` as its base path. Local development remains available at `/` through the normal `serve` target.
+
 To see all available targets to run for a project, run:
 
 ```sh
