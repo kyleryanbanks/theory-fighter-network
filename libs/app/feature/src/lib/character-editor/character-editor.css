@@ -1,8 +1,13 @@
 :host {
   display: block;
+  height: 100%;
 }
 
 section {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   border-top: 3px solid #3f6654;
   padding: 24px 28px 28px;
   background: rgba(255, 255, 255, 0.92);

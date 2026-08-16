@@ -29,6 +29,15 @@ h1 {
 .guide-content {
 	flex: 1;
 	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+/* The routed editor's host element is router-outlet's next sibling; stretch
+   it (and let each editor's own :host/section rules fill it) to match the
+   side-nav's height when the nav is taller than the editor's content. */
+.guide-content > router-outlet + * {
+	flex: 1;
 }
 
 .guide-empty-state {
