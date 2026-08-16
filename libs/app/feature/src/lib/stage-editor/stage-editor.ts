@@ -8,7 +8,7 @@ import {
   createStageZoneSemanticKey,
   type NoteEntry,
 } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface StageDraft {
@@ -21,7 +21,7 @@ interface ZoneDraft {
 
 @Component({
   selector: 'tfn-stage-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './stage-editor.html',
   styleUrl: './stage-editor.css',
 })
@@ -166,6 +166,7 @@ export class StageEditor {
     this.zoneError.set('');
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'The Stage could not be updated.';

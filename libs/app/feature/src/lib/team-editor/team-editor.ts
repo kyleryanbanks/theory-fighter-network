@@ -2,12 +2,12 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule, EntityNotes, EntityMetadataView, ExpansionPanel],
+  imports: [MatButtonModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })
@@ -108,6 +108,7 @@ export class TeamEditor {
     });
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'The Team could not be updated.';

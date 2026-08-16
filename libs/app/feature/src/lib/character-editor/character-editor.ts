@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface CharacterDraft {
@@ -14,7 +14,7 @@ interface CharacterDraft {
 
 @Component({
   selector: 'tfn-character-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './character-editor.html',
   styleUrl: './character-editor.css',
 })
@@ -63,6 +63,7 @@ export class CharacterEditor {
     });
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

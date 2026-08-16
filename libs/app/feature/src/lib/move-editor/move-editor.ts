@@ -8,7 +8,7 @@ import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
 } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface MoveDraft {
@@ -28,6 +28,7 @@ const UNIVERSAL_SCOPE = '';
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,
+    DeleteButton,
   ],
   templateUrl: './move-editor.html',
   styleUrl: './move-editor.css',
@@ -136,6 +137,7 @@ export class MoveEditor {
     this.moveError.set('');
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'The Move could not be updated.';

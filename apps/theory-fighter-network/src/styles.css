@@ -26,3 +26,14 @@ button,
 input {
 	font: inherit;
 }
+
+.danger-action {
+	border-color: #b42318 !important;
+	background: #b42318 !important;
+	color: #ffffff !important;
+}
+
+.danger-action:hover {
+	border-color: #8c1d18 !important;
+	background: #8c1d18 !important;
+}

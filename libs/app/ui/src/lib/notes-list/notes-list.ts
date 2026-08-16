@@ -4,10 +4,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import type { NoteEntry } from '@theory-fighter-network/data';
+import { DeleteButton } from '../delete-button/delete-button';
 
 @Component({
   selector: 'tfn-notes-list',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, DeleteButton],
   templateUrl: './notes-list.html',
   styleUrl: './notes-list.css',
 })

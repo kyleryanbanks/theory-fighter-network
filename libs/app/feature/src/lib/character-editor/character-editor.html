@@ -48,14 +48,10 @@
         </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary header="Metadata">
           <tfn-entity-metadata [metadata]="character.meta" />
-          <button
-            matButton
-            type="button"
-            [attr.aria-label]="'Delete Character ' + character.name"
-            (click)="deleteCharacter(character.semanticKey)"
-          >
-            Delete Character
-          </button>
+          <tfn-delete-button
+            [ariaLabel]="'Delete Character ' + character.name"
+            (delete)="deleteCharacter(character.semanticKey)"
+          />
         </tfn-expansion-panel>
       </tfn-expansion-panel>
     } @empty {

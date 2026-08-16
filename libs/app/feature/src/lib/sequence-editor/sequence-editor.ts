@@ -7,14 +7,14 @@ import {
   resolveEffectiveMove,
   type Step,
 } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes, EntityMetadataView, ExpansionPanel],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })
@@ -170,6 +170,7 @@ export class SequenceEditor {
     this.sequenceError.set('');
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

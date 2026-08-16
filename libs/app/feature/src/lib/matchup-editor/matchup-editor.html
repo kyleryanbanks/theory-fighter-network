@@ -96,9 +96,7 @@
                     @if (scenario.name) { — {{ scenario.name }} }
                     @if (scenario.stageKey; as stageKey) { <small> ({{ stageName(stageKey) }})</small> }
                   </span>
-                  <button matButton type="button" [attr.aria-label]="'Delete Scenario ' + scenario.semanticKey" (click)="removeScenario(matchup.semanticKey, scenario.semanticKey)">
-                    Delete Scenario
-                  </button>
+                  <tfn-delete-button [ariaLabel]="'Delete Scenario ' + scenario.semanticKey" (delete)="removeScenario(matchup.semanticKey, scenario.semanticKey)" />
                 </div>
               } @empty {
                 <p class="empty-state">No Scenarios added.</p>
@@ -108,9 +106,7 @@
 
           <tfn-expansion-panel subsection secondary header="Metadata">
             <tfn-entity-metadata [metadata]="matchup.meta" />
-            <button matButton type="button" [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey" (click)="deleteMatchup(matchup.semanticKey)">
-              Delete Matchup
-            </button>
+            <tfn-delete-button [ariaLabel]="'Delete Matchup ' + matchup.semanticKey" (delete)="deleteMatchup(matchup.semanticKey)" />
           </tfn-expansion-panel>
         </div>
       </tfn-expansion-panel>

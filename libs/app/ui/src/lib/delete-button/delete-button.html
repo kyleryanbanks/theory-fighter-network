@@ -1,0 +1,11 @@
+<button
+  class="danger-action"
+  matButton
+  type="button"
+  [attr.data-testid]="testId()"
+  [attr.aria-label]="ariaLabel() ?? 'Delete'"
+  [attr.title]="ariaLabel() ?? 'Delete'"
+  (click)="requestDelete()"
+>
+  Delete
+</button>

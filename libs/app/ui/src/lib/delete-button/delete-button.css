@@ -1,0 +1,14 @@
+:host {
+  display: inline-block;
+}
+
+button {
+  border-color: #b42318 !important;
+  background: #b42318 !important;
+  color: #ffffff !important;
+}
+
+button:hover {
+  border-color: #8c1d18 !important;
+  background: #8c1d18 !important;
+}

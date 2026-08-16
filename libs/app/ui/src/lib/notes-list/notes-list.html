@@ -33,16 +33,11 @@
               </button>
             }
           }
-          <button
-            class="note-delete"
-            matButton
-            type="button"
-            data-testid="remove-note"
-            [attr.aria-label]="'Delete note ' + note.id"
-            (click)="removeNote(note.id)"
-          >
-            Delete
-          </button>
+          <tfn-delete-button
+            [ariaLabel]="'Delete note ' + note.id"
+            testId="remove-note"
+            (delete)="removeNote(note.id)"
+          />
         </div>
       </li>
     } @empty {

@@ -69,14 +69,7 @@
             [entityKey]="zone.semanticKey"
             [notes]="zone.meta && zone.meta.notes || []"
           />
-          <button
-            matButton
-            type="button"
-            [attr.aria-label]="'Delete Universal Zone ' + zone.name"
-            (click)="deleteZone(zone.semanticKey)"
-          >
-            Delete
-          </button>
+          <tfn-delete-button [ariaLabel]="'Delete Universal Zone ' + zone.name" (delete)="deleteZone(zone.semanticKey)" />
         </div>
       } @empty {
         <p class="empty-state">No universal Zones added.</p>
@@ -120,16 +113,7 @@
                   </tfn-expansion-panel>
                   <tfn-expansion-panel subsection secondary header="Metadata">
                     <tfn-entity-metadata [metadata]="override.meta" />
-                    <button
-                    matButton
-                    type="button"
-                    [attr.aria-label]="
-                      'Revert ' + override.name + ' to Universal for ' + stage.name
-                    "
-                    (click)="deleteZone(override.semanticKey)"
-                    >
-                      Revert to Universal
-                    </button>
+                    <tfn-delete-button [ariaLabel]="'Revert ' + override.name + ' to Universal for ' + stage.name" (delete)="deleteZone(override.semanticKey)" />
                   </tfn-expansion-panel>
                 </div>
               }
@@ -141,7 +125,7 @@
                 <strong>{{ universalZone.name }}</strong>
                 <small>Universal</small>
               </span>
-              <button
+                    <button class="danger-action"
                 matButton
                 type="button"
                 [attr.aria-label]="
@@ -171,7 +155,7 @@
               </tfn-expansion-panel>
               <tfn-expansion-panel subsection secondary header="Metadata">
                 <tfn-entity-metadata [metadata]="zone.meta" />
-                <button
+                <button class="danger-action"
                 matButton
                 type="button"
                 [attr.aria-label]="'Promote ' + zone.name + ' to Universal'"
@@ -179,14 +163,7 @@
                   >
                     Promote to Universal
                   </button>
-                  <button
-                matButton
-                type="button"
-                [attr.aria-label]="'Delete Zone ' + zone.name"
-                (click)="deleteZone(zone.semanticKey)"
-                  >
-                    Delete
-                  </button>
+                  <tfn-delete-button [ariaLabel]="'Delete Zone ' + zone.name" (delete)="deleteZone(zone.semanticKey)" />
               </tfn-expansion-panel>
             </div>
           }
@@ -194,9 +171,7 @@
         </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary header="Metadata">
           <tfn-entity-metadata [metadata]="stage.meta" />
-          <button matButton type="button" [attr.aria-label]="'Delete Stage ' + stage.name" (click)="deleteStage(stage.semanticKey)">
-            Delete Stage
-          </button>
+          <tfn-delete-button [ariaLabel]="'Delete Stage ' + stage.name" (delete)="deleteStage(stage.semanticKey)" />
         </tfn-expansion-panel>
       </tfn-expansion-panel>
     } @empty {

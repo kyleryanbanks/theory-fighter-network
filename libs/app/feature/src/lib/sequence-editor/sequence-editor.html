@@ -100,9 +100,7 @@
         </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary header="Metadata">
           <tfn-entity-metadata [metadata]="sequence.meta" />
-          <button matButton type="button" [attr.aria-label]="'Delete Sequence ' + sequence.semanticKey" (click)="deleteSequence(sequence.semanticKey)">
-            Delete Sequence
-          </button>
+            <tfn-delete-button [ariaLabel]="'Delete Sequence ' + sequence.semanticKey" (delete)="deleteSequence(sequence.semanticKey)" />
         </tfn-expansion-panel>
       </tfn-expansion-panel>
     } @empty {

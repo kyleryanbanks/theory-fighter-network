@@ -9,7 +9,7 @@ import {
 } from '@theory-fighter-network/data';
 import type { NoteEntry } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -23,6 +23,7 @@ const UNSCOPED_STAGE = '';
     EntityNotes,
     ExpansionPanel,
     EntityMetadataView,
+    DeleteButton,
   ],
   templateUrl: './matchup-editor.html',
   styleUrl: './matchup-editor.css',
@@ -216,6 +217,7 @@ export class MatchupEditor {
     this.promotingNote.set({ matchupKey, noteId: note.id });
   }
 }
+
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

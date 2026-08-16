@@ -54,9 +54,7 @@
           </tfn-expansion-panel>
           <tfn-expansion-panel subsection secondary header="Metadata">
             <tfn-entity-metadata [metadata]="move.meta" />
-            <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
-              Delete Move
-            </button>
+            <tfn-delete-button [ariaLabel]="'Delete Move ' + move.name" (delete)="deleteMove(move.semanticKey)" />
           </tfn-expansion-panel>
         </tfn-expansion-panel>
       } @empty {
@@ -86,9 +84,7 @@
             </tfn-expansion-panel>
             <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="move.meta" />
-              <button matButton type="button" [attr.aria-label]="'Revert ' + move.name + ' to Universal'" (click)="deleteMove(move.semanticKey)">
-                Revert to Universal
-              </button>
+                <tfn-delete-button [ariaLabel]="'Revert ' + move.name + ' to Universal'" (delete)="deleteMove(move.semanticKey)" />
             </tfn-expansion-panel>
           </tfn-expansion-panel>
         } @else {
@@ -102,9 +98,7 @@
                 <button matButton type="button" [attr.aria-label]="'Promote ' + move.name + ' to Universal'" (click)="promoteMove(move.semanticKey)">
                   Promote to Universal
                 </button>
-                <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
-                  Delete Move
-                </button>
+                <tfn-delete-button [ariaLabel]="'Delete Move ' + move.name" (delete)="deleteMove(move.semanticKey)" />
               </span>
             </tfn-expansion-panel>
           </tfn-expansion-panel>
