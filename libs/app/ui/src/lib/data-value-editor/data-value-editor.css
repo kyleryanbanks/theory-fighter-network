@@ -1,0 +1,46 @@
+:host {
+  display: block;
+}
+
+.data-value-editor {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d8e2dc;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #f9faf8;
+}
+
+.data-value-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #244b38;
+}
+
+.data-value-editor__header button {
+  flex: 0 0 auto;
+}
+
+.data-value-editor__relative {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.data-value-editor__relative mat-slider {
+  width: 100%;
+}
+
+.data-value-editor__relative output {
+  min-width: 3ch;
+  color: #244b38;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+mat-form-field {
+  width: 100%;
+}

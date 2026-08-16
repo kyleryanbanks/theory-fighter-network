@@ -6,3 +6,4 @@ export * from './lib/entity-metadata/entity-metadata';
 export * from './lib/delete-button/delete-button';
 export * from './lib/link/link';
 export * from './lib/entity-detail-shell/entity-detail-shell';
+export * from './lib/data-value-editor/data-value-editor';
