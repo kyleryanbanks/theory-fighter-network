@@ -1,0 +1,107 @@
+<section aria-labelledby="matchups-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Game-level hierarchy</p>
+      <h2 id="matchups-heading">Matchups</h2>
+    </div>
+    <p>{{ matchups().length }} total</p>
+  </div>
+
+  <div class="matchup-draft">
+    <mat-form-field appearance="outline">
+      <mat-label>Attacker</mat-label>
+      <mat-select
+        data-testid="attacker-select"
+        [value]="attackerKey()"
+        (selectionChange)="attackerKey.set($event.value)"
+      >
+        @for (character of characters(); track character.semanticKey) {
+          <mat-option [value]="character.semanticKey">
+            {{ character.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Defender</mat-label>
+      <mat-select
+        data-testid="defender-select"
+        [value]="defenderKey()"
+        (selectionChange)="defenderKey.set($event.value)"
+      >
+        @for (character of characters(); track character.semanticKey) {
+          <mat-option [value]="character.semanticKey">
+            {{ character.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Stage (optional)</mat-label>
+      <mat-select
+        data-testid="stage-select"
+        [value]="draftStageKey()"
+        (selectionChange)="draftStageKey.set($event.value)"
+      >
+        <mat-option value="">Any stage</mat-option>
+        @for (stage of stages(); track stage.semanticKey) {
+          <mat-option [value]="stage.semanticKey">
+            {{ stage.name }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        data-testid="matchup-name"
+        [value]="draftName()"
+        (input)="draftName.set($any($event.target).value)"
+      />
+    </mat-form-field>
+
+    <button
+      matButton="filled"
+      type="button"
+      data-testid="add-matchup"
+      (click)="createMatchup()"
+    >
+      Add Matchup
+    </button>
+  </div>
+
+  @if (matchupError()) {
+    <p class="matchup-alert" role="alert">{{ matchupError() }}</p>
+  }
+
+  <div class="matchup-list">
+    @for (matchup of matchups(); track matchup.semanticKey) {
+      <div class="matchup-entry" data-testid="matchup-entry">
+        <span>
+          <strong>
+            {{ characterName(matchup.attackerKey) }} vs
+            {{ characterName(matchup.defenderKey) }}
+          </strong>
+          — {{ matchup.name }}
+          @if (matchup.stageKey; as stageKey) {
+            <small> ({{ stageName(stageKey) }})</small>
+          }
+        </span>
+        <button
+          matButton
+          type="button"
+          [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey"
+          (click)="deleteMatchup(matchup.semanticKey)"
+        >
+          Delete
+        </button>
+      </div>
+    } @empty {
+      <p class="empty-state">No Matchups added.</p>
+    }
+  </div>
+</section>

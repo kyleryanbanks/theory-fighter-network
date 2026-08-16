@@ -6,6 +6,7 @@ import { CharacterEditor } from './character-editor/character-editor';
 import { MoveEditor } from './move-editor/move-editor';
 import { SequenceEditor } from './sequence-editor/sequence-editor';
 import { TeamEditor } from './team-editor/team-editor';
+import { MatchupEditor } from './matchup-editor/matchup-editor';
 
 export const featureRoutes: Route[] = [
   {
@@ -19,6 +20,7 @@ export const featureRoutes: Route[] = [
       { path: 'moves', component: MoveEditor },
       { path: 'sequences', component: SequenceEditor },
       { path: 'teams', component: TeamEditor },
+      { path: 'matchups', component: MatchupEditor },
     ],
   },
 ];

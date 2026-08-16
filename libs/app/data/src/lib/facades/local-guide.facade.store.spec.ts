@@ -755,6 +755,133 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.teams).toHaveLength(1);
   });
 
+  it('creates and deletes Matchups while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+
+    const created = await store.createMatchup({
+      attackerKey: ryu.semanticKey,
+      defenderKey: ken.semanticKey,
+      name: 'Corner pressure',
+    });
+    const matchup = store.value()?.entities.matchups[0];
+
+    expect(created.status).toBe('success');
+    expect(matchup?.attackerKey).toBe(ryu.semanticKey);
+    expect(matchup?.defenderKey).toBe(ken.semanticKey);
+    expect(matchup?.name).toBe('Corner pressure');
+    expect(store.value()?.entities.game.hierarchy.matchupKeys).toEqual([
+      matchup?.semanticKey,
+    ]);
+    expect(store.value()?.guide.localChanges).toContain(
+      `matchup:${matchup?.semanticKey}`
+    );
+
+    const deleted = await store.deleteMatchup({
+      matchupKey: matchup?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.matchups).toEqual([]);
+    expect(store.value()?.entities.game.hierarchy.matchupKeys).toEqual([]);
+  });
+
+  it('rejects creating a Matchup with a nonexistent Character', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const ryu = store.value()?.entities.characters[0];
+
+    const created = await store.createMatchup({
+      attackerKey: ryu?.semanticKey ?? '',
+      defenderKey: 'character-missing',
+      name: 'Corner pressure',
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.matchups).toEqual([]);
+  });
+
+  it('rejects creating a Matchup where attacker and defender are the same Character', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const ryu = store.value()?.entities.characters[0];
+
+    const created = await store.createMatchup({
+      attackerKey: ryu?.semanticKey ?? '',
+      defenderKey: ryu?.semanticKey ?? '',
+      name: 'Mirror match',
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.matchups).toEqual([]);
+  });
+
+  it('rejects duplicate Matchup identity based on attacker, defender, and name', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+    await store.createMatchup({
+      attackerKey: ryu.semanticKey,
+      defenderKey: ken.semanticKey,
+      name: 'Corner pressure',
+    });
+
+    const duplicate = await store.createMatchup({
+      attackerKey: ryu.semanticKey,
+      defenderKey: ken.semanticKey,
+      name: 'Corner pressure',
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.matchups).toHaveLength(1);
+  });
+
+  it('rejects creating a Matchup scoped to a nonexistent Stage', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+
+    const created = await store.createMatchup({
+      attackerKey: ryu.semanticKey,
+      defenderKey: ken.semanticKey,
+      name: 'Corner pressure',
+      stageKey: 'stage-missing',
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.matchups).toEqual([]);
+  });
+
+  it('rejects deleting a nonexistent Matchup', async () => {
+    await store.createGuide({
+      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const deleted = await store.deleteMatchup({ matchupKey: 'matchup-missing' });
+
+    expect(deleted.status).toBe('error');
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

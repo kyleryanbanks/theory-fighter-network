@@ -43,6 +43,118 @@ export const createMatchupDocument = (
   ...overrides,
 });
 
+export interface CreateMatchupInput {
+  gameKey: string;
+  attackerKey: string;
+  defenderKey: string;
+  name: string;
+  stageKey?: string;
+}
+
+export function createMatchup(input: CreateMatchupInput): MatchupDocument {
+  const attackerKey = input.attackerKey.trim();
+  const defenderKey = input.defenderKey.trim();
+  const name = input.name.trim();
+
+  if (attackerKey === defenderKey) {
+    throw new Error('attackerKey and defenderKey must be different.');
+  }
+  if (!name) {
+    throw new Error('name is required.');
+  }
+
+  const matchup = createMatchupDocument({
+    gameKey: input.gameKey.trim(),
+    attackerKey,
+    defenderKey,
+    name,
+    stageKey: input.stageKey?.trim() || undefined,
+    semanticKey: createMatchupSemanticKey(
+      input.gameKey,
+      attackerKey,
+      defenderKey,
+      name
+    ),
+  });
+  assertValidMatchupDocument(matchup);
+  return matchup;
+}
+
+export function createMatchupSemanticKey(
+  gameKey: string,
+  attackerKey: string,
+  defenderKey: string,
+  name: string
+): string {
+  return `matchup-${fnv1a(
+    `${gameKey.trim()}:${attackerKey.trim()}:${defenderKey.trim()}:${name
+      .trim()
+      .toLowerCase()}`
+  )}`;
+}
+
+export function validateMatchupDocument(matchup: MatchupDocument): string[] {
+  const errors: string[] = [];
+
+  if (!matchup.gameKey.trim()) {
+    errors.push('gameKey is required.');
+  }
+  if (!matchup.attackerKey.trim()) {
+    errors.push('attackerKey is required.');
+  }
+  if (!matchup.defenderKey.trim()) {
+    errors.push('defenderKey is required.');
+  }
+  if (!matchup.name.trim()) {
+    errors.push('name is required.');
+  }
+  if (
+    matchup.attackerKey.trim() &&
+    matchup.defenderKey.trim() &&
+    matchup.attackerKey.trim() === matchup.defenderKey.trim()
+  ) {
+    errors.push('attackerKey and defenderKey must be different.');
+  }
+  if (
+    matchup.gameKey.trim() &&
+    matchup.attackerKey.trim() &&
+    matchup.defenderKey.trim() &&
+    matchup.name.trim()
+  ) {
+    const expectedKey = createMatchupSemanticKey(
+      matchup.gameKey,
+      matchup.attackerKey,
+      matchup.defenderKey,
+      matchup.name
+    );
+    if (matchup.semanticKey !== expectedKey) {
+      errors.push(
+        'semanticKey does not match the Game, attacker, defender, and name.'
+      );
+    }
+  }
+
+  return errors;
+}
+
+function assertValidMatchupDocument(matchup: MatchupDocument): void {
+  const errors = validateMatchupDocument(matchup);
+  if (errors.length > 0) {
+    throw new Error(`Invalid Matchup document: ${errors.join(' ')}`);
+  }
+}
+
+function fnv1a(input: string): string {
+  let hash = 2166136261;
+
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
 /**
  * A specific scenario within a matchup
  * Represents a single game state where opponent will execute a sequence

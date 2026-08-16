@@ -19,13 +19,14 @@ describe('GuideNav', () => {
 
   it('renders a nav link for each entity section', () => {
     const links = fixture.nativeElement.querySelectorAll('.nav-list a');
-    expect(links).toHaveLength(6);
+    expect(links).toHaveLength(7);
     expect(fixture.nativeElement.textContent).toContain('Game');
     expect(fixture.nativeElement.textContent).toContain('Stages');
     expect(fixture.nativeElement.textContent).toContain('Characters');
     expect(fixture.nativeElement.textContent).toContain('Moves');
     expect(fixture.nativeElement.textContent).toContain('Sequences');
     expect(fixture.nativeElement.textContent).toContain('Teams');
+    expect(fixture.nativeElement.textContent).toContain('Matchups');
   });
 
   it('starts expanded showing icon and label', () => {
