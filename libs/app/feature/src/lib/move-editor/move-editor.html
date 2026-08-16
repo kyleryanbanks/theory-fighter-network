@@ -49,10 +49,10 @@
     @if (scopeKey() === '') {
       @for (move of moves(); track move.semanticKey) {
         <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
-          <tfn-expansion-panel secondary header="Notes">
+          <tfn-expansion-panel subsection secondary header="Notes">
             <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
           </tfn-expansion-panel>
-          <tfn-expansion-panel secondary header="Metadata">
+          <tfn-expansion-panel subsection secondary header="Metadata">
             <tfn-entity-metadata [metadata]="move.meta" />
             <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
               Delete Move
@@ -66,10 +66,10 @@
       @for (universalMove of universalMoves(); track universalMove.semanticKey) {
         @if (!isOverridden(universalMove.semanticKey)) {
           <tfn-expansion-panel class="move-entry move-entry--inherited" data-testid="move-entry" [header]="universalMove.name" subheader="Universal">
-            <tfn-expansion-panel secondary header="Notes">
+            <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" />
             </tfn-expansion-panel>
-            <tfn-expansion-panel secondary header="Metadata">
+            <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="universalMove.meta" />
               <button matButton type="button" [attr.aria-label]="'Override ' + universalMove.name" (click)="overrideMove(universalMove.semanticKey)">
                 Override Move
@@ -81,10 +81,10 @@
       @for (move of ownMoves(); track move.semanticKey) {
         @if (move.parentKey) {
           <tfn-expansion-panel class="move-entry move-entry--override" data-testid="move-entry" [header]="move.name" [subheader]="'Overrides ' + move.parentKey">
-            <tfn-expansion-panel secondary header="Notes">
+            <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
             </tfn-expansion-panel>
-            <tfn-expansion-panel secondary header="Metadata">
+            <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="move.meta" />
               <button matButton type="button" [attr.aria-label]="'Revert ' + move.name + ' to Universal'" (click)="deleteMove(move.semanticKey)">
                 Revert to Universal
@@ -93,10 +93,10 @@
           </tfn-expansion-panel>
         } @else {
           <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
-            <tfn-expansion-panel secondary header="Notes">
+            <tfn-expansion-panel subsection secondary header="Notes">
               <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
             </tfn-expansion-panel>
-            <tfn-expansion-panel secondary header="Metadata">
+            <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="move.meta" />
               <span>
                 <button matButton type="button" [attr.aria-label]="'Promote ' + move.name + ' to Universal'" (click)="promoteMove(move.semanticKey)">

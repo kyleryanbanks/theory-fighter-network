@@ -90,14 +90,14 @@
         [header]="sequenceLabel(sequence.sequence)"
         [subheader]="sequence.semanticKey"
       >
-        <tfn-expansion-panel secondary header="Notes">
+        <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="sequence"
             [entityKey]="sequence.semanticKey"
             [notes]="sequence.meta && sequence.meta.notes || []"
           />
         </tfn-expansion-panel>
-        <tfn-expansion-panel secondary header="Metadata">
+        <tfn-expansion-panel subsection secondary header="Metadata">
           <tfn-entity-metadata [metadata]="sequence.meta" />
           <button matButton type="button" [attr.aria-label]="'Delete Sequence ' + sequence.semanticKey" (click)="deleteSequence(sequence.semanticKey)">
             Delete Sequence

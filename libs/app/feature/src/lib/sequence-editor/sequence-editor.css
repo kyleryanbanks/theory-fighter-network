@@ -128,9 +128,8 @@ h2 {
 
 .sequence-list {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin-top: 14px;
-  background: #d9e0dc;
 }
 
 .sequence-entry,

@@ -88,20 +88,14 @@
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
       <tfn-expansion-panel class="stage-entry" data-testid="stage-entry" [header]="stage.name" [subheader]="stage.semanticKey">
-        <tfn-expansion-panel secondary header="Notes">
+        <tfn-expansion-panel subsection secondary header="Notes">
           <tfn-entity-notes
             entityType="stage"
             [entityKey]="stage.semanticKey"
             [notes]="stage.meta && stage.meta.notes || []"
           />
         </tfn-expansion-panel>
-        <tfn-expansion-panel secondary header="Metadata">
-          <tfn-entity-metadata [metadata]="stage.meta" />
-          <button matButton type="button" [attr.aria-label]="'Delete Stage ' + stage.name" (click)="deleteStage(stage.semanticKey)">
-            Delete Stage
-          </button>
-        </tfn-expansion-panel>
-        <tfn-expansion-panel secondary class="zone-list" data-testid="stage-zone-list" header="Zones">
+        <tfn-expansion-panel subsection secondary class="zone-list" data-testid="stage-zone-list" header="Zones">
         @for (universalZone of universalZones(); track universalZone.semanticKey) {
           @if (isOverridden(stage.semanticKey, universalZone.semanticKey)) {
             @for (
@@ -114,14 +108,14 @@
                     <strong>{{ override.name }}</strong>
                     <small>Overrides {{ universalZone.semanticKey }}</small>
                   </span>
-                  <tfn-expansion-panel secondary header="Notes">
+                  <tfn-expansion-panel subsection secondary header="Notes">
                     <tfn-entity-notes
                       entityType="stageZone"
                       [entityKey]="override.semanticKey"
                       [notes]="override.meta && override.meta.notes || []"
                     />
                   </tfn-expansion-panel>
-                  <tfn-expansion-panel secondary header="Metadata">
+                  <tfn-expansion-panel subsection secondary header="Metadata">
                     <tfn-entity-metadata [metadata]="override.meta" />
                     <button
                     matButton
@@ -164,14 +158,14 @@
                 <strong>{{ zone.name }}</strong>
                 <small>{{ zone.semanticKey }}</small>
               </span>
-              <tfn-expansion-panel secondary header="Notes">
+              <tfn-expansion-panel subsection secondary header="Notes">
                 <tfn-entity-notes
                   entityType="stageZone"
                   [entityKey]="zone.semanticKey"
                   [notes]="zone.meta && zone.meta.notes || []"
                 />
               </tfn-expansion-panel>
-              <tfn-expansion-panel secondary header="Metadata">
+              <tfn-expansion-panel subsection secondary header="Metadata">
                 <tfn-entity-metadata [metadata]="zone.meta" />
                 <button
                 matButton
@@ -193,6 +187,12 @@
             </div>
           }
         }
+        </tfn-expansion-panel>
+        <tfn-expansion-panel subsection secondary header="Metadata">
+          <tfn-entity-metadata [metadata]="stage.meta" />
+          <button matButton type="button" [attr.aria-label]="'Delete Stage ' + stage.name" (click)="deleteStage(stage.semanticKey)">
+            Delete Stage
+          </button>
         </tfn-expansion-panel>
       </tfn-expansion-panel>
     } @empty {

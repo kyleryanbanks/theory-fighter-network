@@ -72,9 +72,8 @@ h2 {
 
 .move-list {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin-top: 10px;
-  background: #d9e0dc;
 }
 
 .move-entry,

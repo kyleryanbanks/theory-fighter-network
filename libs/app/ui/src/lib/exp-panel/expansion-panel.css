@@ -64,8 +64,6 @@ summary:hover {
 }
 
 .exp-panel--secondary {
-  border: 0;
-  border-radius: 0;
   border-color: #6b8f7b;
   background: #e8efeb;
 }
@@ -86,7 +84,7 @@ summary:hover {
 
 .exp-panel--subsection > .exp-panel__body {
   gap: 8px;
-  padding: 8px;
+  padding: 18px;
 }
 
 .exp-panel--subsection {

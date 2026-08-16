@@ -40,7 +40,7 @@
       <tfn-expansion-panel class="matchup-item" data-testid="matchup-item" [header]="characterName(matchup.attackerKey) + ' vs ' + characterName(matchup.defenderKey)" [subheader]="matchup.semanticKey">
 
         <div class="matchup-details">
-          <tfn-expansion-panel secondary header="Notes">
+          <tfn-expansion-panel subsection secondary header="Notes">
             <tfn-entity-notes
             entityType="matchup"
             [entityKey]="matchup.semanticKey"
@@ -49,14 +49,7 @@
             />
           </tfn-expansion-panel>
 
-          <tfn-expansion-panel secondary header="Metadata">
-            <tfn-entity-metadata [metadata]="matchup.meta" />
-            <button matButton type="button" [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey" (click)="deleteMatchup(matchup.semanticKey)">
-              Delete Matchup
-            </button>
-          </tfn-expansion-panel>
-
-          <tfn-expansion-panel secondary class="scenario-panel" header="Scenarios">
+          <tfn-expansion-panel subsection secondary class="scenario-panel" header="Scenarios">
             <div class="scenario-draft">
               <mat-form-field appearance="outline">
                 <mat-label>Opponent option (Move or Sequence)</mat-label>
@@ -110,6 +103,13 @@
                 <p class="empty-state">No Scenarios added.</p>
               }
             </div>
+          </tfn-expansion-panel>
+
+          <tfn-expansion-panel subsection secondary header="Metadata">
+            <tfn-entity-metadata [metadata]="matchup.meta" />
+            <button matButton type="button" [attr.aria-label]="'Delete Matchup ' + matchup.semanticKey" (click)="deleteMatchup(matchup.semanticKey)">
+              Delete Matchup
+            </button>
           </tfn-expansion-panel>
         </div>
       </tfn-expansion-panel>

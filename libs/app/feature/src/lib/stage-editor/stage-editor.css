@@ -96,9 +96,8 @@ h2 {
 
 .stage-list {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin-top: 10px;
-  background: #d9e0dc;
 }
 
 .stage-entry,
@@ -155,9 +154,8 @@ h2 {
 
 .zone-list {
   display: grid;
-  gap: 1px;
+  gap: 12px;
   margin: 0 0 6px 20px;
-  background: #d9e0dc;
 }
 
 .zone-entry {
