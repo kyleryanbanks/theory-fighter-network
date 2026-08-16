@@ -36,27 +36,24 @@ export class SequenceEditor {
     }
 
     const team = this.team();
-    const ownMoves = team
-      ? allMoves.filter(
-          (move) =>
-            move.characterKey &&
-            team.orderedCharacterKeys.includes(move.characterKey)
-        )
-      : allMoves.filter((move) => move.characterKey === scope);
-
-    // A locally overridden universal Move should only appear as its
-    // override (with its parent's fields live-cascaded in), not also as
-    // the raw universal entry.
-    const overriddenParentKeys = new Set(
-      ownMoves
-        .filter((move) => move.parentKey)
-        .map((move) => move.parentKey)
+    const members = team ? team.orderedCharacterKeys : [scope];
+    const ownMoves = allMoves.filter(
+      (move) => move.characterKey && members.includes(move.characterKey)
     );
 
+    // Only hide a universal Move once every member of the scope (the single
+    // Character, or every Team member) has their own override of it; a
+    // partial override still needs the universal tile for members who
+    // haven't overridden it.
+    const visibleUniversalMoves = universalMoves.filter((move) => {
+      const overriderCount = ownMoves.filter(
+        (m) => m.parentKey === move.semanticKey
+      ).length;
+      return overriderCount < members.length;
+    });
+
     return [
-      ...universalMoves.filter(
-        (move) => !overriddenParentKeys.has(move.semanticKey)
-      ),
+      ...visibleUniversalMoves.map((move) => resolveEffectiveMove(move, allMoves)),
       ...ownMoves.map((move) => resolveEffectiveMove(move, allMoves)),
     ];
   });
@@ -82,9 +79,11 @@ export class SequenceEditor {
     return allMoves.find((move) => move.semanticKey === moveKey)?.name ?? moveKey ?? '';
   }
 
-  // Badge label for a Move tile: "Universal" when inherited, the owning
-  // Character's name when it's a Team-scoped view mixing multiple members,
-  // or undefined when the badge would be redundant (own-Character scope).
+  // Badge label for a Move tile: "Universal" whenever the tile is shown at
+  // all (functionally it's the same Move regardless of which Team member
+  // executes it, so listing non-overriding member names would be noise),
+  // the owning Character's name for an override shown in Team scope, or
+  // undefined when the badge would be redundant (own-scope).
   moveTileBadge(move: { characterKey?: string }): string | undefined {
     if (!move.characterKey) {
       return this.scopeKey() !== UNIVERSAL_SCOPE ? 'Universal' : undefined;

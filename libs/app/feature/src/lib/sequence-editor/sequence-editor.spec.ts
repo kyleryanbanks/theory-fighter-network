@@ -168,6 +168,93 @@ describe('SequenceEditor', () => {
     ]);
   });
 
+  it('shows both the universal tile and an override tile when only some Team members override it', () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Loki', semanticKey: 'character-loki' },
+          { name: 'Storm', semanticKey: 'character-storm' },
+        ],
+        [
+          { name: 'Trickery', semanticKey: 'move-trickery' },
+          {
+            name: 'Trickery',
+            semanticKey: 'move-trickery-storm',
+            characterKey: 'character-storm',
+            parentKey: 'move-trickery',
+          },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'team-loki-storm',
+            orderedCharacterKeys: ['character-loki', 'character-storm'],
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('team-loki-storm');
+    fixture.detectChanges();
+
+    const tiles: HTMLButtonElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('[data-testid="move-tile"]')
+    );
+
+    expect(tiles).toHaveLength(2);
+    expect(fixture.componentInstance.scopedMoves()).toEqual([
+      expect.objectContaining({ semanticKey: 'move-trickery' }),
+      expect.objectContaining({ semanticKey: 'move-trickery-storm' }),
+    ]);
+    expect(
+      fixture.componentInstance.moveTileBadge({ characterKey: undefined })
+    ).toBe('Universal');
+    expect(
+      fixture.componentInstance.moveTileBadge({
+        characterKey: 'character-storm',
+      })
+    ).toBe('Storm');
+  });
+
+  it('hides the universal tile entirely once every Team member overrides it', () => {
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Loki', semanticKey: 'character-loki' },
+          { name: 'Storm', semanticKey: 'character-storm' },
+        ],
+        [
+          { name: 'Trickery', semanticKey: 'move-trickery' },
+          {
+            name: 'Trickery',
+            semanticKey: 'move-trickery-loki',
+            characterKey: 'character-loki',
+            parentKey: 'move-trickery',
+          },
+          {
+            name: 'Trickery',
+            semanticKey: 'move-trickery-storm',
+            characterKey: 'character-storm',
+            parentKey: 'move-trickery',
+          },
+        ],
+        [],
+        [
+          {
+            semanticKey: 'team-loki-storm',
+            orderedCharacterKeys: ['character-loki', 'character-storm'],
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('team-loki-storm');
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.scopedMoves().map((m) => m.semanticKey)).toEqual([
+      'move-trickery-loki',
+      'move-trickery-storm',
+    ]);
+  });
+
   it('creates a character-scoped Sequence when a character scope is selected', async () => {
     guide.set(
       buildGuide(
