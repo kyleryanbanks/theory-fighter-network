@@ -26,7 +26,7 @@ export class Feature {
     this.facade.reloadDirectoryWorkspace();
   }
 
-  async saveWorkspace(): Promise<void> {
+  async saveGuide(): Promise<void> {
     const directoryHandle =
       this.activeDirectoryHandle ??
       (await this.pickDirectoryHandle());

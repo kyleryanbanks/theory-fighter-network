@@ -16,7 +16,8 @@ Commit history since this roadmap was last updated confirms the following:
 
 - **Phase 1.1 is complete.** The local guide metadata model, schema-version validation, unsaved/synced tracking, browser and Node directory persistence, `.tfn` archive creation/parsing with integrity checks, and the import/export CLI are implemented and covered by unit tests.
 - **Phase 1.3 is partially complete.** The v1 JSON `.tfn` archive format has a header, deterministic checksum, entity ordering, date hydration, and Node atomic folder writes. Forward migrations, a formal format specification, and atomic archive-file writes remain open.
-- **Phase 1.2 and Phases 1.4-1.7 are not complete.** The document schemas and model factories exist, but Game CRUD/validation/key generation and hierarchy authoring workflows have not been implemented.
+- **Phase 1.2 is complete.** Game creation, validation, semantic identity, metadata editing, and one-at-a-time input vocabulary authoring are implemented with Angular Material and Signal Forms.
+- **Phases 1.4-1.7 are not complete.** Their document schemas and model factories exist, but hierarchy authoring workflows have not been implemented.
 
 ### Completed Supporting Work Not Previously Captured Here
 
@@ -47,12 +48,12 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.2: Game Creation Root (Local CRUD + Validation)
-**Status: Partially complete (2026-08-15).** Game creation derives a deterministic semantic key from normalized name and major-version family, validates required fields and duplicate input values, and supports local metadata updates that preserve identity and mark the guide unsaved. The feature shell supports creation and metadata editing. Input-vocabulary editing and an explicit identity-change workflow for game name/version remain.
+**Status: Complete (2026-08-15).** Game creation derives a deterministic semantic key from normalized name and major-version family, validates required fields and duplicate input values, and supports local metadata updates that preserve identity and mark the guide unsaved. The Angular Material/Signal Forms editor adds directions and buttons one item at a time, displays each entry separately, supports removal, and persists the complete typed `Inputs` value. Game name and version are immutable after Guide creation so semantic identity cannot be changed without a future explicit migration workflow.
 **Scope**: Build GameDocument local CRUD operations and validation rules.
 
 **Deliverables**:
 - GameDocument creation: Initialize with name, version, frameRate, is3d, teamSize, inputs
-- GameDocument validation: Semantickey integrity, required fields, input vocabulary uniqueness
+- GameDocument validation: Semantic key integrity, required fields, input vocabulary uniqueness
 - GameDocument local edits: Update metadata, frameRate, dimensions, inputs
 - Semantic key generation: Hash(normalizedGameName + versionFamily) for canonical identity
 - Version family detection: Extract from version string (e.g., "1.0" → "1.x" family)

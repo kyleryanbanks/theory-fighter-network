@@ -4,7 +4,14 @@ import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { vi } from 'vitest';
 import { GameRoot } from './game-root';
 
-function createWorkspace(name: string, version: string) {
+function createWorkspace(
+  name: string,
+  version: string,
+  inputs = {
+    directions: [] as { label: string; value?: string }[],
+    buttons: [] as { label: string; value?: string }[],
+  }
+) {
   return {
     guide: { gameKey: 'loaded-game' },
     entities: {
@@ -15,7 +22,7 @@ function createWorkspace(name: string, version: string) {
         frameRate: 60,
         is3d: false,
         teamSize: 1,
-        inputs: { directions: [], buttons: [] },
+        inputs,
       },
     },
   };
@@ -102,6 +109,119 @@ describe('GameRoot', () => {
       frameRate: 60,
       is3d: false,
       teamSize: 2,
+      inputs: { directions: [], buttons: [] },
     });
   });
+
+  it('adds direction and button vocabulary entries one at a time', () => {
+    setInputValue('[data-testid="direction-label"]', 'Forward');
+    setInputValue('[data-testid="direction-value"]', '6');
+    click('[data-testid="add-direction"]');
+
+    expect(queryAll('[data-testid="direction-entry"]')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Forward');
+    expect(getInput('[data-testid="direction-label"]').value).toBe('');
+
+    setInputValue('[data-testid="button-label"]', 'Light Punch');
+    setInputValue('[data-testid="button-value"]', 'lp');
+    click('[data-testid="add-button"]');
+
+    expect(queryAll('[data-testid="button-entry"]')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Light Punch');
+    expect(getInput('[data-testid="button-label"]').value).toBe('');
+  });
+
+  it('loads vocabulary as individual entries and saves the complete lists', async () => {
+    workspace.set(
+      createWorkspace('Loaded Fighter', '2.3.0', {
+        directions: [{ label: 'Neutral', value: '5' }],
+        buttons: [{ label: 'Heavy Punch', value: 'hp' }],
+      })
+    );
+    fixture.detectChanges();
+
+    setInputValue('[data-testid="direction-label"]', 'Forward');
+    setInputValue('[data-testid="direction-value"]', '6');
+    click('[data-testid="add-direction"]');
+    click('[data-testid="update-game"]');
+    await fixture.whenStable();
+
+    expect(queryAll('[data-testid="direction-entry"]')).toHaveLength(2);
+    expect(mockStore.updateActiveGame).toHaveBeenCalledWith({
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: {
+        directions: [
+          { label: 'Neutral', value: '5' },
+          { label: 'Forward', value: '6' },
+        ],
+        buttons: [{ label: 'Heavy Punch', value: 'hp' }],
+      },
+    });
+  });
+
+  it('rejects duplicate values across direction and button vocabularies', () => {
+    setInputValue('[data-testid="direction-label"]', 'Forward');
+    setInputValue('[data-testid="direction-value"]', '6');
+    click('[data-testid="add-direction"]');
+
+    setInputValue('[data-testid="button-label"]', 'Shortcut');
+    setInputValue('[data-testid="button-value"]', '6');
+    click('[data-testid="add-button"]');
+
+    expect(queryAll('[data-testid="direction-entry"]')).toHaveLength(1);
+    expect(queryAll('[data-testid="button-entry"]')).toHaveLength(0);
+    expect(fixture.nativeElement.textContent).toContain(
+      'Input value "6" is already used.'
+    );
+  });
+
+  it('removes a vocabulary entry before saving the game', async () => {
+    workspace.set(
+      createWorkspace('Loaded Fighter', '2.3.0', {
+        directions: [
+          { label: 'Neutral', value: '5' },
+          { label: 'Forward', value: '6' },
+        ],
+        buttons: [],
+      })
+    );
+    fixture.detectChanges();
+
+    click('[aria-label="Remove direction Neutral"]');
+    click('[data-testid="update-game"]');
+    await fixture.whenStable();
+
+    expect(mockStore.updateActiveGame).toHaveBeenCalledWith({
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: {
+        directions: [{ label: 'Forward', value: '6' }],
+        buttons: [],
+      },
+    });
+  });
+
+  function getInput(selector: string): HTMLInputElement {
+    return fixture.nativeElement.querySelector(selector);
+  }
+
+  function setInputValue(selector: string, value: string): void {
+    const input = getInput(selector);
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  }
+
+  function click(selector: string): void {
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(selector);
+    button.click();
+    fixture.detectChanges();
+  }
+
+  function queryAll(selector: string): Element[] {
+    return Array.from(fixture.nativeElement.querySelectorAll(selector));
+  }
 });

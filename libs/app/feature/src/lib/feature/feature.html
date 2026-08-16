@@ -4,7 +4,7 @@
 		Load status: {{ facade.status() }}
 	</p>
 	<p data-testid="workspace-key">
-		Workspace: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
+		Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
 	</p>
 	<p data-testid="busy-status">
 		Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
@@ -14,10 +14,10 @@
 
 	<div>
 		<button data-testid="open-directory" (click)="openDirectory()">
-			Open Directory
+			Open guide folder
 		</button>
-		<button data-testid="save-workspace" (click)="saveWorkspace()">
-			Save Workspace
+		<button data-testid="save-workspace" (click)="saveGuide()">
+			Save guide
 		</button>
 		<input
 			type="file"
@@ -26,7 +26,7 @@
 			(change)="onImportArchiveSelected($event)"
 		/>
 		<button data-testid="export-archive" (click)="exportArchive()">
-			Export Archive
+			Export guide
 		</button>
 	</div>
 

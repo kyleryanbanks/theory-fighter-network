@@ -1,18 +1,78 @@
 import { Component, effect, inject, signal } from '@angular/core';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import {
+  FormField,
+  form,
+  min,
+  readonly,
+  required,
+  submit,
+} from '@angular/forms/signals';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import {
+  type Input,
+  type Inputs,
+  LocalGuideFacadeStore,
+} from '@theory-fighter-network/data';
+
+interface GameFormModel {
+  name: string;
+  version: string;
+  frameRate: number;
+  is3d: boolean;
+  teamSize: number;
+  inputs: Inputs;
+}
+
+interface InputDraftModel {
+  label: string;
+  value: string;
+}
 
 @Component({
   selector: 'tfn-game-root',
+  imports: [
+    FormField,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './game-root.html',
   styleUrl: './game-root.css',
 })
 export class GameRoot {
   readonly facade = inject(LocalGuideFacadeStore);
-  readonly gameName = signal('Theory Fighter Network');
-  readonly gameVersion = signal('1.0.0');
-  readonly frameRate = signal(60);
-  readonly is3d = signal(false);
-  readonly teamSize = signal(1);
+  readonly gameModel = signal<GameFormModel>({
+    name: 'Theory Fighter Network',
+    version: '1.0.0',
+    frameRate: 60,
+    is3d: false,
+    teamSize: 1,
+    inputs: { directions: [], buttons: [] },
+  });
+  readonly directionDraftModel = signal<InputDraftModel>({
+    label: '',
+    value: '',
+  });
+  readonly buttonDraftModel = signal<InputDraftModel>({
+    label: '',
+    value: '',
+  });
+  readonly vocabularyError = signal('');
+
+  readonly gameForm = form(this.gameModel, (path) => {
+    required(path.name, { message: 'Game name is required.' });
+    required(path.version, { message: 'Version is required.' });
+    min(path.frameRate, 1, { message: 'Frame rate must be positive.' });
+    min(path.teamSize, 1, { message: 'Team size must be at least one.' });
+    readonly(path.name, { when: () => !!this.facade.workspace() });
+    readonly(path.version, { when: () => !!this.facade.workspace() });
+  });
+  readonly directionDraftForm = form(this.directionDraftModel);
+  readonly buttonDraftForm = form(this.buttonDraftModel);
 
   constructor() {
     effect(() => {
@@ -21,54 +81,129 @@ export class GameRoot {
         return;
       }
 
-      this.gameName.set(game.name);
-      this.gameVersion.set(game.version);
-      this.frameRate.set(game.frameRate ?? 60);
-      this.is3d.set(game.is3d);
-      this.teamSize.set(game.teamSize);
+      this.gameModel.set({
+        name: game.name,
+        version: game.version,
+        frameRate: game.frameRate ?? 60,
+        is3d: game.is3d,
+        teamSize: game.teamSize,
+        inputs: {
+          directions: game.inputs.directions.map((input) => ({ ...input })),
+          buttons: game.inputs.buttons.map((input) => ({ ...input })),
+        },
+      });
     });
   }
 
-  async createWorkspace(): Promise<void> {
-    await this.facade.createWorkspace({
-      name: this.gameName(),
-      version: this.gameVersion(),
-      frameRate: this.frameRate(),
-      is3d: this.is3d(),
-      teamSize: this.teamSize(),
-      inputs: { directions: [], buttons: [] },
+  createWorkspace(): void {
+    submit(this.gameForm, async () => {
+      const model = this.gameModel();
+      await this.facade.createWorkspace({
+        name: model.name.trim(),
+        version: model.version.trim(),
+        frameRate: model.frameRate,
+        is3d: model.is3d,
+        teamSize: model.teamSize,
+        inputs: cloneInputs(model.inputs),
+      });
     });
   }
 
-  async updateActiveGame(): Promise<void> {
-    await this.facade.updateActiveGame({
-      frameRate: this.frameRate(),
-      is3d: this.is3d(),
-      teamSize: this.teamSize(),
+  updateActiveGame(): void {
+    submit(this.gameForm, async () => {
+      const model = this.gameModel();
+      await this.facade.updateActiveGame({
+        frameRate: model.frameRate,
+        is3d: model.is3d,
+        teamSize: model.teamSize,
+        inputs: cloneInputs(model.inputs),
+      });
     });
   }
 
-  updateGameName(event: Event): void {
-    this.gameName.set(getInputValue(event));
+  addDirection(): void {
+    this.addInput('directions', this.directionDraftModel);
   }
 
-  updateGameVersion(event: Event): void {
-    this.gameVersion.set(getInputValue(event));
+  addButton(): void {
+    this.addInput('buttons', this.buttonDraftModel);
   }
 
-  updateFrameRate(event: Event): void {
-    this.frameRate.set(Number(getInputValue(event)));
+  removeDirection(index: number): void {
+    this.removeInput('directions', index);
   }
 
-  updateTeamSize(event: Event): void {
-    this.teamSize.set(Number(getInputValue(event)));
+  removeButton(index: number): void {
+    this.removeInput('buttons', index);
   }
 
-  updateIs3d(event: Event): void {
-    this.is3d.set((event.target as HTMLInputElement).checked);
+  private addInput(
+    collection: 'directions' | 'buttons',
+    draftModel: typeof this.directionDraftModel
+  ): void {
+    const label = draftModel().label.trim();
+    const value = draftModel().value.trim();
+
+    if (!label) {
+      this.vocabularyError.set('Enter a label before adding an input.');
+      return;
+    }
+
+    const normalizedValue = (value || label).toLowerCase();
+    const allInputs = [
+      ...this.gameModel().inputs.directions,
+      ...this.gameModel().inputs.buttons,
+    ];
+    const isDuplicate = allInputs.some(
+      (input) => (input.value ?? input.label).trim().toLowerCase() === normalizedValue
+    );
+
+    if (isDuplicate) {
+      this.vocabularyError.set(`Input value "${value || label}" is already used.`);
+      return;
+    }
+
+    const input: Input = value ? { label, value } : { label };
+    this.gameModel.update((model) => ({
+      ...model,
+      inputs: {
+        ...model.inputs,
+        [collection]: [...model.inputs[collection], input],
+      },
+    }));
+    draftModel.set({ label: '', value: '' });
+    this.vocabularyError.set('');
+  }
+
+  private removeInput(
+    collection: 'directions' | 'buttons',
+    index: number
+  ): void {
+    this.gameModel.update((model) => ({
+      ...model,
+      inputs: {
+        ...model.inputs,
+        [collection]: model.inputs[collection].filter(
+          (_input, inputIndex) => inputIndex !== index
+        ),
+      },
+    }));
+    this.vocabularyError.set('');
   }
 }
 
-function getInputValue(event: Event): string {
-  return (event.target as HTMLInputElement).value;
+function cloneInputs(inputs: Inputs): Inputs {
+  return {
+    directions: inputs.directions.map(cloneInput),
+    buttons: inputs.buttons.map(cloneInput),
+  };
+}
+
+function cloneInput(input: Input): Input {
+  return {
+    label: input.label,
+    ...(input.value === undefined ? {} : { value: input.value }),
+    ...(input.min === undefined ? {} : { min: input.min }),
+    ...(input.max === undefined ? {} : { max: input.max }),
+  };
 }

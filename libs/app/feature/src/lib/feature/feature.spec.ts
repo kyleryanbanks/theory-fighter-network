@@ -47,7 +47,7 @@ describe('Feature', () => {
     expect(component).toBeTruthy();
   });
 
-  it('saves workspace when save button is clicked and a directory handle exists', async () => {
+  it('saves the guide when a save location exists', async () => {
     component.activeDirectoryHandle =
       {} as unknown as FileSystemDirectoryHandle;
     fixture.detectChanges();

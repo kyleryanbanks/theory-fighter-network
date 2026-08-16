@@ -1,3 +1,200 @@
 :host {
 	display: block;
 }
+
+:host > section {
+	border-top: 3px solid #276749;
+	background: rgba(255, 255, 255, 0.92);
+	box-shadow: 0 12px 32px rgba(26, 48, 39, 0.09);
+	padding: 28px;
+}
+
+h2,
+h3,
+h4,
+p {
+	margin-top: 0;
+}
+
+h2 {
+	margin-bottom: 24px;
+	font-family: 'Rockwell', 'Avenir Next', sans-serif;
+	font-size: 1.5rem;
+	letter-spacing: 0;
+}
+
+h3 {
+	margin-bottom: 4px;
+	font-size: 1rem;
+	letter-spacing: 0;
+}
+
+h4 {
+	margin-bottom: 14px;
+	font-size: 0.9375rem;
+	letter-spacing: 0;
+}
+
+.game-form {
+	display: grid;
+	gap: 28px;
+}
+
+.form-section {
+	padding-top: 4px;
+}
+
+.form-section + .form-section {
+	border-top: 1px solid #d9e0dc;
+	padding-top: 24px;
+}
+
+.section-heading {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+}
+
+.section-heading p {
+	margin-bottom: 0;
+	color: #617168;
+	font-size: 0.8125rem;
+	text-align: right;
+}
+
+.field-grid {
+	display: grid;
+	gap: 16px;
+}
+
+.identity-grid {
+	grid-template-columns: minmax(0, 2fr) minmax(160px, 1fr);
+}
+
+.rules-grid {
+	grid-template-columns: repeat(2, minmax(140px, 220px)) minmax(140px, 1fr);
+	align-items: center;
+}
+
+.vocabulary-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 32px;
+}
+
+.vocabulary-column + .vocabulary-column {
+	border-left: 1px solid #d9e0dc;
+	padding-left: 32px;
+}
+
+.entry-form {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(110px, 0.75fr);
+	gap: 10px;
+	align-items: start;
+}
+
+.entry-form button {
+	grid-column: 1 / -1;
+	justify-self: start;
+}
+
+.entry-list {
+	display: grid;
+	gap: 1px;
+	margin-top: 18px;
+	background: #d9e0dc;
+}
+
+.vocabulary-entry,
+.empty-state {
+	min-height: 54px;
+	margin: 0;
+	background: #f9faf8;
+}
+
+.vocabulary-entry {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 7px 8px 7px 14px;
+}
+
+.vocabulary-entry span {
+	display: grid;
+	min-width: 0;
+}
+
+.vocabulary-entry strong,
+.vocabulary-entry small {
+	overflow-wrap: anywhere;
+}
+
+.vocabulary-entry small {
+	color: #68776f;
+}
+
+.empty-state {
+	display: grid;
+	place-items: center start;
+	padding: 0 14px;
+	color: #79877f;
+	font-size: 0.8125rem;
+}
+
+.form-alert {
+	border-left: 3px solid #b42318;
+	padding: 8px 12px;
+	background: #fff1f0;
+	color: #8c1d18;
+	font-size: 0.875rem;
+}
+
+.form-actions {
+	display: flex;
+	justify-content: flex-end;
+	border-top: 1px solid #d9e0dc;
+	padding-top: 20px;
+}
+
+@media (max-width: 760px) {
+	:host > section {
+		padding: 20px;
+	}
+
+	.identity-grid,
+	.rules-grid,
+	.vocabulary-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.vocabulary-column + .vocabulary-column {
+		border-top: 1px solid #d9e0dc;
+		border-left: 0;
+		padding-top: 24px;
+		padding-left: 0;
+	}
+
+	.section-heading {
+		display: block;
+	}
+
+	.section-heading p {
+		margin-top: 6px;
+		text-align: left;
+	}
+}
+
+@media (max-width: 440px) {
+	.entry-form {
+		grid-template-columns: 1fr;
+	}
+
+	.entry-form button {
+		grid-column: auto;
+		width: 100%;
+	}
+}

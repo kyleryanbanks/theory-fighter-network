@@ -1,1 +1,28 @@
-/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+:root {
+	color-scheme: light;
+	font-family: 'Avenir Next', 'Trebuchet MS', sans-serif;
+	background-color: #f4f6f2;
+	color: #17221d;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 320px;
+	min-height: 100vh;
+	background-color: #f4f6f2;
+	background-image:
+		linear-gradient(rgba(34, 72, 57, 0.045) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(34, 72, 57, 0.045) 1px, transparent 1px);
+	background-size: 24px 24px;
+}
+
+button,
+input {
+	font: inherit;
+}
