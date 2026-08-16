@@ -46,4 +46,13 @@ describe('EntityDetail', () => {
     expect(fixture.nativeElement.textContent).toContain('Ryu');
     expect(fixture.nativeElement.textContent).toContain('character-ryu');
   });
+
+  it('places Metadata after Complete data', () => {
+    const panels = Array.from(
+      fixture.nativeElement.querySelectorAll('tfn-expansion-panel')
+    ).map((panel: Element) => panel.textContent);
+
+    expect(panels.at(-1)).toContain('Metadata');
+    expect(panels.at(-2)).toContain('Complete data');
+  });
 });

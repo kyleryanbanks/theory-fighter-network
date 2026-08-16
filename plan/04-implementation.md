@@ -192,7 +192,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.7: Matchup Branch (Matchups + Scenario/Response Trees)
-**Status: Matchup, Scenario, and Response CRUD complete (2026-08-16).** Matchup creation/deletion derives a semantic key from game + attacker + defender, permits mirror matches, validates both Characters, rejects duplicate attacker/defender identity, and maintains bidirectional `Game.hierarchy.matchupKeys` linkage. Scenario creation/deletion derives identity from Matchup + opponent Move/Sequence + optional Stage/state/positions, validates referenced options and stages, and supports parent-scenario links. Scenario Responses can now be added or removed with a Move/Sequence option, win/trade/loss outcome, and optional notes; response choices are limited to universal options plus the attacker's own universal overrides. Existing response cards are keyboard-accessible and open a compact Win/Trade/Loss menu; selecting an outcome persists it and updates the color-coded outcome pill/background, while an empty response list represents untested. The Material `MatchupEditor` is routed at `/matchups`; it includes generic Matchup notes and Address-to-Scenario workflow without deleting the original note. Move and Sequence detail views are available at `/moves/:moveKey` and `/sequences/:sequenceKey`. Response-tree validation/navigation and Scenario-note-to-Response addressing remain.
+**Status: Matchup, Scenario, and Response CRUD complete (2026-08-16).** Matchup creation/deletion derives a semantic key from game + attacker + defender, permits mirror matches, validates both Characters, rejects duplicate attacker/defender identity, and maintains bidirectional `Game.hierarchy.matchupKeys` linkage. Scenario creation/deletion derives identity from Matchup + opponent Move/Sequence + optional Stage/state/positions, validates referenced options and stages, and supports parent-scenario links. Scenario Responses can now be added or removed with a Move/Sequence option, win/trade/loss outcome, and optional notes; response choices are limited to universal options plus the attacker's own universal overrides. Existing response cards are keyboard-accessible and open a compact Win/Trade/Loss menu; selecting an outcome persists it and updates the color-coded outcome pill/background, while an empty response list represents untested. The Material `MatchupEditor` is routed at `/matchups`; it includes generic Matchup notes and Address-to-Scenario workflow without deleting the original note. Move and Sequence detail views are available at `/moves/:moveKey` and `/sequences/:sequenceKey`. Scenario → Response-tree navigation, counter-scenario parent-link validation/cycle prevention, and complete note-to-Scenario/note-to-Response workflows are intentionally deferred until immediately before Firestore/community-sync work; the current local CRUD is sufficient for users to gather and track information.
 **Scope**: Build matchup entities and scenario/response decision trees.
 
 **Deliverables**:
@@ -200,8 +200,10 @@ These phases establish the offline foundation. All features are local-only; no n
 - Scenario definition: GameStateContext (players' states, resources) + test conditions
 - Response tree: Branch decision tree where each node represents opponent state → user's available moves
 - Scenario/response CRUD: Create, edit delete scenarios and response paths
-- Navigation: Query matchup → select scenario → explore response tree
+- Navigation: Query matchup → select scenario → explore response tree *(deferred until immediately before Firestore/community-sync work)*
 - Scenario validation: GameStateContext is valid for associated characters
+- Counter-scenario parent-link validation and cycle prevention *(deferred until immediately before Firestore/community-sync work)*
+- Complete note-to-Scenario and note-to-Response workflows *(deferred until immediately before Firestore/community-sync work)*
 
 **Validation**: Matchup requires both characters; scenarios have consistent game version; response tree is acyclic
 
@@ -437,6 +439,8 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ### Phase 5.1: Auth + Opt-In Firestore Sync/Community Browsing
 **Scope**: Build authentication and cloud sync infrastructure.
+
+**Pre-work**: Before implementing Firestore/community sync, complete the deferred Phase 1.7 response-tree navigation, counter-scenario parent-link validation/cycle prevention, and note-to-Scenario/note-to-Response workflows so the local authoring graph is stable before it becomes shareable.
 
 **Deliverables**:
 - Firebase auth: Email/password or OAuth login
