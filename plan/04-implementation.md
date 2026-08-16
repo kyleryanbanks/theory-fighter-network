@@ -97,7 +97,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.4: Entity Hierarchy Foundation (Stages + Zone Inheritance)
-**Status: Stage CRUD + Zone CRUD complete (2026-08-16).** Stage creation, deletion, and unsaved tracking are implemented. Stage-scoped zone CRUD mutations update parent `Stage.hierarchy.zoneKeys` bidirectionally. Zone semantic keys derive from game + stage + name. Zone inheritance/override UI remains.
+**Status: Stage CRUD + Zone CRUD complete (2026-08-16).** Stage creation, deletion, and unsaved tracking are implemented. Stage-scoped zone CRUD mutations update parent `Stage.hierarchy.zoneKeys` bidirectionally. Zone semantic keys derive from game + stage + name. Zone inheritance/override UI is deferred to Phase 1.4.1 so hierarchy work can proceed to characters and moves.
 **Scope**: Build hierarchy starting from game downward: universal stage zones, stages, zone inheritance, and zone overrides.
 
 **Deliverables**:
@@ -105,7 +105,7 @@ These phases establish the offline foundation. All features are local-only; no n
 - Stage creation/CRUD: StageDocument with gameKey, name, semanticKey
 - Stage-scoped zones: StageZoneDocument with `stageKey: <stageId>` (stage-specific override)
 - Inherited zones: Optional `inheritedFromZoneKey` tracking when stage zone overrides game zone
-- Inheritance UI: Show inherited fields with lock/override UI; changes to parent propagate to unlocked children
+- Inheritance UI: Show inherited fields with lock/override UI; changes to parent propagate to unlocked children *(moved to Phase 1.4.1)*
 
 **Validation**: Game zones visible to all stages; stage zones override game zones where applicable
 
@@ -115,7 +115,25 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ---
 
+### Phase 1.4.1: Zone Inheritance/Override UI (Deferred)
+**Status: Not started.** Deferred from Phase 1.4 to keep hierarchy work moving into characters/moves. Data model and CRUD mutations already support this UI; only the editor UI itself is missing.
+**Scope**: Build the stage editor UI to display and manage zone inheritance.
+
+**Deliverables**:
+- Zone list in stage editor: Show universal (game-level) zones alongside stage-scoped zones
+- Inherited zone display: Show inherited fields read-only with a lock icon
+- Override action: Let a user create a stage-scoped zone that shadows a universal zone, setting `inheritedFromZoneKey`
+- Revert-to-inherited action: Remove a stage-scoped override and fall back to the universal zone
+- Field-level override indicators: Highlight which zone fields differ from the inherited parent
+
+**Validation**: Universal zones appear on every stage; creating an override does not delete the universal zone; reverting an override removes only the stage-scoped copy
+
+**Depends on**: Phase 1.4
+
+---
+
 ### Phase 1.5: Character Branch (Characters, Moves)
+**Status: Character CRUD complete (2026-08-16).** Character creation/deletion mutations derive a semantic key from game + normalized name, reject duplicates, block deletion while moves/sequences/projectiles reference the character, and mark the guide unsaved. A Material/Signal Forms Character editor mirrors the Stage editor pattern. Character-scoped moves remain.
 **Scope**: Build character entity hierarchy: character creation, character-scoped moves.
 
 **Deliverables**:

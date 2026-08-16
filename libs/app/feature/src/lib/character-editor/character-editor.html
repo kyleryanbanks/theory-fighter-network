@@ -1,0 +1,52 @@
+<section aria-labelledby="characters-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Game-level hierarchy</p>
+      <h2 id="characters-heading">Characters</h2>
+    </div>
+    <p>{{ characters().length }} total</p>
+  </div>
+
+  <form class="character-form" (submit)="$event.preventDefault(); createCharacter()">
+    <mat-form-field appearance="outline">
+      <mat-label>Character name</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        data-testid="character-name"
+        [formField]="characterForm.name"
+      />
+      @if (characterForm.name().touched() && characterForm.name().invalid()) {
+        <mat-error>{{ characterForm.name().errors()[0].message }}</mat-error>
+      }
+    </mat-form-field>
+    <button matButton="filled" type="submit" data-testid="add-character">
+      Add Character
+    </button>
+  </form>
+
+  @if (characterError()) {
+    <p class="character-alert" role="alert">{{ characterError() }}</p>
+  }
+
+  <div class="character-list">
+    @for (character of characters(); track character.semanticKey) {
+      <div class="character-entry" data-testid="character-entry">
+        <span>
+          <strong>{{ character.name }}</strong>
+          <small>{{ character.semanticKey }}</small>
+        </span>
+        <button
+          matButton
+          type="button"
+          [attr.aria-label]="'Delete Character ' + character.name"
+          (click)="deleteCharacter(character.semanticKey)"
+        >
+          Delete
+        </button>
+      </div>
+    } @empty {
+      <p class="empty-state">No Characters added.</p>
+    }
+  </div>
+</section>

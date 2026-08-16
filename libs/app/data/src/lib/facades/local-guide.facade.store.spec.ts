@@ -183,6 +183,49 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.stages[0]?.hierarchy.zoneKeys).toEqual([]);
   });
 
+  it('creates and deletes Characters while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Character Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+
+    expect(created.status).toBe('success');
+    expect(character?.name).toBe('Ryu');
+    expect(store.value()?.entities.game.hierarchy.characterKeys).toEqual([
+      character?.semanticKey,
+    ]);
+    expect(store.value()?.guide.localChanges).toContain(
+      `character:${character?.semanticKey}`
+    );
+
+    const deleted = await store.deleteCharacter({
+      characterKey: character?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.characters).toEqual([]);
+    expect(store.value()?.entities.game.hierarchy.characterKeys).toEqual([]);
+    expect(store.value()?.guide.localChanges).toContain(
+      `character:${character?.semanticKey}`
+    );
+  });
+
+  it('rejects duplicate Character identity within a Guide', async () => {
+    await store.createGuide({
+      name: 'Character Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+
+    const duplicate = await store.createCharacter({ name: ' ryu ' });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.characters).toHaveLength(1);
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

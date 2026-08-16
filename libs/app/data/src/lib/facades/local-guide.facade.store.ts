@@ -25,6 +25,7 @@ import {
   type GameMetadataUpdate,
 } from '../models/game';
 import { createStage, createStageZone } from '../models/stage';
+import { createCharacter } from '../models/character';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -410,6 +411,135 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    createCharacter: rxMutation({
+      operation: (input: { name: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+
+            const character = createCharacter({
+              gameKey: localGuide.entities.game.semanticKey,
+              name: input.name,
+            });
+
+            if (
+              localGuide.entities.characters.some(
+                (existing) => existing.semanticKey === character.semanticKey
+              )
+            ) {
+              throw new Error(
+                `Character "${character.name}" already exists.`
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'character',
+              entityKey: character.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                characterKeys: [
+                  ...localGuide.entities.game.hierarchy.characterKeys,
+                  character.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                characters: [...localGuide.entities.characters, character],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteCharacter: rxMutation({
+      operation: ({ characterKey }: { characterKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            if (
+              !localGuide.entities.characters.some(
+                (character) => character.semanticKey === characterKey
+              )
+            ) {
+              throw new Error(`Character "${characterKey}" does not exist.`);
+            }
+            if (
+              localGuide.entities.moves.some(
+                (move) => move.characterKey === characterKey
+              ) ||
+              localGuide.entities.sequences.some(
+                (sequence) => sequence.characterKey === characterKey
+              ) ||
+              localGuide.entities.projectiles.some(
+                (projectile) => projectile.characterKey === characterKey
+              )
+            ) {
+              throw new Error(
+                'A Character with local moves, sequences, or projectiles cannot be deleted.'
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'character',
+              entityKey: characterKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                characterKeys:
+                  localGuide.entities.game.hierarchy.characterKeys.filter(
+                    (key) => key !== characterKey
+                  ),
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                characters: localGuide.entities.characters.filter(
+                  (character) => character.semanticKey !== characterKey
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     importArchive: rxMutation({
       operation: (archiveFile: File) =>
         from(store.persistence.parseArchiveFile(archiveFile)),
@@ -417,7 +547,6 @@ export const LocalGuideFacadeStore = signalStore(
         patchState(store, { value: guide });
       },
     }),
-
     exportArchive: rxMutation({
       operation: ({ fileName }: { fileName?: string }) =>
         from(

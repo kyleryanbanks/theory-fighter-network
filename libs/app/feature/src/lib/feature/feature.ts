@@ -18,10 +18,11 @@ import {
 import { Ui } from '@theory-fighter-network/ui';
 import { GameRoot } from '../game-root/game-root';
 import { StageEditor } from '../stage-editor/stage-editor';
+import { CharacterEditor } from '../character-editor/character-editor';
 
 @Component({
   selector: 'tfn-feature',
-  imports: [GameRoot, StageEditor, Ui],
+  imports: [GameRoot, StageEditor, CharacterEditor, Ui],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })
