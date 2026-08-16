@@ -19,10 +19,10 @@ export interface MoveDocument {
   semanticKey: string; // hash(gameSemanticKey + [characterSemanticKey] + normalizedMoveName)
   name: string;
 
-  // Inheritence from game-level or character-level move, if applicable
+  // Inheritence from game-level or character-level move, if applicable.
+  // Overrides are full forks (copied once, then independent) rather than a
+  // live per-field merge, so there is no separate override-tracking array.
   parentKey?: string;
-  parentOverrides?: (keyof MoveDocument)[];
-  
   // Input sequence for this move, using input values from GameDocument.inputs
   sequence?: Step[];
 
@@ -56,6 +56,7 @@ export interface CreateMoveInput {
   gameKey: string;
   name: string;
   characterKey?: string; // If provided, move is character-scoped; otherwise game-level/universal
+  parentKey?: string; // Set when this Move overrides a universal Move
 }
 
 export function createMove(input: CreateMoveInput): MoveDocument {
@@ -68,6 +69,7 @@ export function createMove(input: CreateMoveInput): MoveDocument {
       input.characterKey,
       input.name
     ),
+    parentKey: input.parentKey,
   });
   assertValidMoveDocument(move);
   return move;
@@ -115,6 +117,35 @@ function assertValidMoveDocument(move: MoveDocument): void {
   if (errors.length > 0) {
     throw new Error(`Invalid Move document: ${errors.join(' ')}`);
   }
+}
+
+/**
+ * Merges an override Move with its parent universal Move: any data field the
+ * override hasn't set locally (still at its unset/factory-default value)
+ * live-inherits the parent's current value, so later parent edits keep
+ * propagating to overrides that never customized that specific field.
+ */
+export function resolveEffectiveMove(
+  move: MoveDocument,
+  allMoves: MoveDocument[]
+): MoveDocument {
+  if (!move.parentKey) {
+    return move;
+  }
+  const parent = allMoves.find((m) => m.semanticKey === move.parentKey);
+  if (!parent) {
+    return move;
+  }
+
+  return {
+    ...move,
+    sequence: move.sequence ?? parent.sequence,
+    phases: move.phases ?? parent.phases,
+    preconditions:
+      Object.keys(move.preconditions ?? {}).length > 0
+        ? move.preconditions
+        : parent.preconditions,
+  };
 }
 
 function fnv1a(input: string): string {

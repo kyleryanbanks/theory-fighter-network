@@ -4,7 +4,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import {
+  LocalGuideFacadeStore,
+  resolveEffectiveMove,
+} from '@theory-fighter-network/data';
 
 interface MoveDraft {
   name: string;
@@ -30,17 +33,34 @@ export class MoveEditor {
     () => this.facade.guide()?.entities.characters ?? []
   );
   readonly scopeKey = signal(UNIVERSAL_SCOPE);
+  readonly universalMoves = computed(() =>
+    (this.facade.guide()?.entities.moves ?? []).filter(
+      (move) => !move.characterKey
+    )
+  );
   readonly moves = computed(() => {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
     const scope = this.scopeKey();
-    const universalMoves = allMoves.filter((move) => !move.characterKey);
 
     return scope === UNIVERSAL_SCOPE
-      ? universalMoves
+      ? this.universalMoves()
       : [
-          ...universalMoves,
+          ...this.universalMoves(),
           ...allMoves.filter((move) => move.characterKey === scope),
         ];
+  });
+  // A Character's own Moves within the currently selected scope (empty in
+  // the Universal scope, since there is no owning Character), resolved
+  // against their universal parent so unset fields live-cascade.
+  readonly ownMoves = computed(() => {
+    const scope = this.scopeKey();
+    if (scope === UNIVERSAL_SCOPE) {
+      return [];
+    }
+    const allMoves = this.facade.guide()?.entities.moves ?? [];
+    return allMoves
+      .filter((move) => move.characterKey === scope)
+      .map((move) => resolveEffectiveMove(move, allMoves));
   });
   readonly moveModel = signal<MoveDraft>({ name: '' });
   readonly moveError = signal('');
@@ -69,6 +89,35 @@ export class MoveEditor {
       this.moveForm().reset({ name: '' });
       this.moveError.set('');
     });
+  }
+
+  isOverridden(universalMoveKey: string): boolean {
+    return this.ownMoves().some((move) => move.parentKey === universalMoveKey);
+  }
+
+  async overrideMove(universalMoveKey: string): Promise<void> {
+    const result = await this.facade.overrideMove({
+      characterKey: this.scopeKey(),
+      universalMoveKey,
+    });
+
+    if (result.status === 'error') {
+      this.moveError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.moveError.set('');
+  }
+
+  async promoteMove(moveKey: string): Promise<void> {
+    const result = await this.facade.promoteMove({ moveKey });
+
+    if (result.status === 'error') {
+      this.moveError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.moveError.set('');
   }
 
   async deleteMove(moveKey: string): Promise<void> {

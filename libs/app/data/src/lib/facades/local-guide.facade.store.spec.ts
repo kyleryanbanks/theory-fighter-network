@@ -183,6 +183,116 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.stages[0]?.hierarchy.zoneKeys).toEqual([]);
   });
 
+  it('overrides a universal Zone for a Stage and reverts by deleting the override', async () => {
+    await store.createGuide({
+      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+    await store.createStageZone({ name: 'Hazard Pit' });
+    const universalZone = store.value()?.entities.stageZones[0];
+
+    const overridden = await store.overrideStageZone({
+      stageKey: stage?.semanticKey ?? '',
+      universalZoneKey: universalZone?.semanticKey ?? '',
+    });
+    const override = store
+      .value()
+      ?.entities.stageZones.find((zone) => zone.stageKey);
+    const updatedStage = store.value()?.entities.stages[0];
+
+    expect(overridden.status).toBe('success');
+    expect(override?.name).toBe('Hazard Pit');
+    expect(override?.inheritedFromZoneKey).toBe(universalZone?.semanticKey);
+    expect(updatedStage?.hierarchy.zoneKeys).toContain(override?.semanticKey);
+    expect(store.value()?.entities.stageZones).toHaveLength(2);
+
+    const reverted = await store.deleteStageZone({
+      stageZoneKey: override?.semanticKey ?? '',
+    });
+
+    expect(reverted.status).toBe('success');
+    expect(store.value()?.entities.stageZones).toEqual([universalZone]);
+  });
+
+  it('rejects overriding the same universal Zone twice for one Stage', async () => {
+    await store.createGuide({
+      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+    await store.createStageZone({ name: 'Hazard Pit' });
+    const universalZone = store.value()?.entities.stageZones[0];
+    await store.overrideStageZone({
+      stageKey: stage?.semanticKey ?? '',
+      universalZoneKey: universalZone?.semanticKey ?? '',
+    });
+
+    const duplicate = await store.overrideStageZone({
+      stageKey: stage?.semanticKey ?? '',
+      universalZoneKey: universalZone?.semanticKey ?? '',
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.stageZones).toHaveLength(2);
+  });
+
+  it('promotes a Stage-only Zone to a universal Zone', async () => {
+    await store.createGuide({
+      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+    await store.createStageZone({
+      name: 'Pit Trap',
+      stageKey: stage?.semanticKey ?? '',
+    });
+    const stageZone = store.value()?.entities.stageZones[0];
+
+    const promoted = await store.promoteStageZone({
+      stageZoneKey: stageZone?.semanticKey ?? '',
+    });
+    const universalZone = store.value()?.entities.stageZones[0];
+    const updatedStage = store.value()?.entities.stages[0];
+
+    expect(promoted.status).toBe('success');
+    expect(store.value()?.entities.stageZones).toHaveLength(1);
+    expect(universalZone?.name).toBe('Pit Trap');
+    expect(universalZone?.stageKey).toBeUndefined();
+    expect(store.value()?.entities.game.universal.stageZoneKeys).toContain(
+      universalZone?.semanticKey
+    );
+    expect(updatedStage?.hierarchy.zoneKeys).toEqual([]);
+  });
+
+  it('rejects promoting a Zone that is already an override', async () => {
+    await store.createGuide({
+      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+    await store.createStageZone({ name: 'Hazard Pit' });
+    const universalZone = store.value()?.entities.stageZones[0];
+    await store.overrideStageZone({
+      stageKey: stage?.semanticKey ?? '',
+      universalZoneKey: universalZone?.semanticKey ?? '',
+    });
+    const override = store
+      .value()
+      ?.entities.stageZones.find((zone) => zone.stageKey);
+
+    const promoted = await store.promoteStageZone({
+      stageZoneKey: override?.semanticKey ?? '',
+    });
+
+    expect(promoted.status).toBe('error');
+    expect(store.value()?.entities.stageZones).toHaveLength(2);
+  });
+
   it('creates and deletes Characters while tracking Guide changes', async () => {
     await store.createGuide({
       name: 'Character Fighter', version: '1.0.0', frameRate: 60,
@@ -295,6 +405,124 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(duplicate.status).toBe('error');
     expect(store.value()?.entities.moves).toHaveLength(1);
+  });
+
+  it('promotes a Character Move to universal and rewrites Sequence references', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    await store.createMove({
+      name: 'Hadoken',
+      characterKey: character?.semanticKey ?? '',
+    });
+    const move = store.value()?.entities.moves[0];
+    await store.createSequence({
+      characterKey: character?.semanticKey ?? '',
+      sequence: [{ directions: [], buttons: [], moveKey: move?.semanticKey }],
+    });
+
+    const promoted = await store.promoteMove({
+      moveKey: move?.semanticKey ?? '',
+    });
+    const universalMove = store.value()?.entities.moves[0];
+    const updatedCharacter = store.value()?.entities.characters[0];
+    const sequence = store.value()?.entities.sequences[0];
+
+    expect(promoted.status).toBe('success');
+    expect(store.value()?.entities.moves).toHaveLength(1);
+    expect(universalMove?.name).toBe('Hadoken');
+    expect(universalMove?.characterKey).toBeUndefined();
+    expect(store.value()?.entities.game.universal.moveKeys).toContain(
+      universalMove?.semanticKey
+    );
+    expect(updatedCharacter?.hierarchy.moveKeys).toEqual([]);
+    expect(sequence?.sequence[0].moveKey).toBe(universalMove?.semanticKey);
+  });
+
+  it('rejects promoting a Move that is already an override', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    await store.createMove({ name: 'Universal Parry' });
+    const universalMove = store.value()?.entities.moves[0];
+    await store.overrideMove({
+      characterKey: character?.semanticKey ?? '',
+      universalMoveKey: universalMove?.semanticKey ?? '',
+    });
+    const override = store
+      .value()
+      ?.entities.moves.find((move) => move.characterKey);
+
+    const promoted = await store.promoteMove({
+      moveKey: override?.semanticKey ?? '',
+    });
+
+    expect(promoted.status).toBe('error');
+    expect(store.value()?.entities.moves).toHaveLength(2);
+  });
+
+  it('overrides a universal Move for a Character and reverts by deleting the override', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    await store.createMove({ name: 'Universal Parry' });
+    const universalMove = store.value()?.entities.moves[0];
+
+    const overridden = await store.overrideMove({
+      characterKey: character?.semanticKey ?? '',
+      universalMoveKey: universalMove?.semanticKey ?? '',
+    });
+    const override = store
+      .value()
+      ?.entities.moves.find((move) => move.characterKey);
+    const updatedCharacter = store.value()?.entities.characters[0];
+
+    expect(overridden.status).toBe('success');
+    expect(override?.name).toBe('Universal Parry');
+    expect(override?.parentKey).toBe(universalMove?.semanticKey);
+    expect(updatedCharacter?.hierarchy.moveKeys).toContain(
+      override?.semanticKey
+    );
+    expect(store.value()?.entities.moves).toHaveLength(2);
+
+    const reverted = await store.deleteMove({
+      moveKey: override?.semanticKey ?? '',
+    });
+
+    expect(reverted.status).toBe('success');
+    expect(store.value()?.entities.moves).toEqual([universalMove]);
+  });
+
+  it('rejects overriding the same universal Move twice for one Character', async () => {
+    await store.createGuide({
+      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    await store.createMove({ name: 'Universal Parry' });
+    const universalMove = store.value()?.entities.moves[0];
+    await store.overrideMove({
+      characterKey: character?.semanticKey ?? '',
+      universalMoveKey: universalMove?.semanticKey ?? '',
+    });
+
+    const duplicate = await store.overrideMove({
+      characterKey: character?.semanticKey ?? '',
+      universalMoveKey: universalMove?.semanticKey ?? '',
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.moves).toHaveLength(2);
   });
 
   it('creates and deletes character-scoped Sequences while tracking Guide changes', async () => {

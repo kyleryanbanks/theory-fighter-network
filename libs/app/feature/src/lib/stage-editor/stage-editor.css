@@ -60,6 +60,36 @@ h2 {
   color: #8c1d18;
 }
 
+.universal-zones {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #d9e0dc;
+}
+
+.universal-zones h3 {
+  margin: 0 0 4px;
+  font-family: 'Rockwell', 'Avenir Next', sans-serif;
+  font-size: 1.05rem;
+}
+
+.zone-hint {
+  margin: 0 0 12px;
+  color: #617168;
+  font-size: 0.8125rem;
+}
+
+.zone-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 420px) auto;
+  align-items: start;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.zone-form button {
+  min-height: 56px;
+}
+
 .stage-list {
   display: grid;
   gap: 1px;
@@ -104,16 +134,63 @@ h2 {
   font-size: 0.8125rem;
 }
 
+.zone-list {
+  display: grid;
+  gap: 1px;
+  margin: 0 0 6px 20px;
+  background: #d9e0dc;
+}
+
+.zone-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px 6px 14px;
+  min-height: 48px;
+  background: #f2f5f2;
+}
+
+.zone-entry span {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.zone-entry strong,
+.zone-entry small {
+  overflow-wrap: anywhere;
+}
+
+.zone-entry small {
+  color: #68776f;
+}
+
+.zone-entry--inherited {
+  background: #eaeeec;
+}
+
+.zone-entry--override strong {
+  color: #3f6654;
+}
+
+.lock-icon {
+  font-size: 0.8125rem;
+}
+
 @media (max-width: 640px) {
   section {
     padding: 20px;
   }
 
-  .stage-form {
+  .stage-form,
+  .zone-form {
     grid-template-columns: 1fr;
   }
 
-  .stage-form button {
+  .stage-form button,
+  .zone-form button {
     width: 100%;
   }
 }

@@ -1,6 +1,8 @@
 import {
   createStage,
   createStageSemanticKey,
+  createStageZone,
+  resolveEffectiveStageZone,
   validateStageDocument,
 } from './stage';
 
@@ -38,5 +40,40 @@ describe('Stage operations', () => {
     expect(
       validateStageDocument({ ...stage, semanticKey: 'stage-wrong' })
     ).toContain('semanticKey does not match the Game and Stage name.');
+  });
+
+  it("live-inherits an override Zone's unset fields from its universal parent", () => {
+    const universalZone = createStageZone({
+      gameKey: 'game-sf6',
+      name: 'Hazard Pit',
+      mechanicStateKeys: ['stageMechanics.hazard'],
+    });
+    const override = createStageZone({
+      gameKey: 'game-sf6',
+      stageKey: 'stage-training',
+      name: 'Hazard Pit',
+      inheritedFromZoneKey: universalZone.semanticKey,
+    });
+
+    const effective = resolveEffectiveStageZone(override, [
+      universalZone,
+      override,
+    ]);
+
+    expect(effective.mechanicStateKeys).toEqual(['stageMechanics.hazard']);
+
+    const updatedUniversalZone = {
+      ...universalZone,
+      mechanicStateKeys: ['stageMechanics.hazard', 'stageMechanics.fire'],
+    };
+    const effectiveAfterParentEdit = resolveEffectiveStageZone(override, [
+      updatedUniversalZone,
+      override,
+    ]);
+
+    expect(effectiveAfterParentEdit.mechanicStateKeys).toEqual([
+      'stageMechanics.hazard',
+      'stageMechanics.fire',
+    ]);
   });
 });

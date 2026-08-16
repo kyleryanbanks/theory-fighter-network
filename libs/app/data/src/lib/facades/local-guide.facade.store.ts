@@ -253,15 +253,19 @@ export const LocalGuideFacadeStore = signalStore(
     }),
 
     createStageZone: rxMutation({
-      operation: (input: { name: string; stageKey: string }) =>
+      operation: (input: { name: string; stageKey?: string }) =>
         from(
           (async () => {
             const localGuide = requireGuide(store.value());
-            const stage = localGuide.entities.stages.find(
-              (s) => s.semanticKey === input.stageKey
-            );
-            if (!stage) {
-              throw new Error(`Stage "${input.stageKey}" does not exist.`);
+            let stage;
+
+            if (input.stageKey) {
+              stage = localGuide.entities.stages.find(
+                (s) => s.semanticKey === input.stageKey
+              );
+              if (!stage) {
+                throw new Error(`Stage "${input.stageKey}" does not exist.`);
+              }
             }
 
             const zone = createStageZone({
@@ -275,13 +279,127 @@ export const LocalGuideFacadeStore = signalStore(
                 (existing) => existing.semanticKey === zone.semanticKey
               )
             ) {
-              throw new Error(`Zone "${zone.name}" already exists in this Stage.`);
+              throw new Error(`Zone "${zone.name}" already exists in this scope.`);
             }
 
             const guide = cloneGuideMetadata(localGuide);
             markEntityUnsaved(guide, {
               entityType: 'stageZone',
               entityKey: zone.semanticKey,
+            });
+
+            if (stage) {
+              markEntityUnsaved(guide, {
+                entityType: 'stage',
+                entityKey: stage.semanticKey,
+              });
+
+              const updatedStage = {
+                ...stage,
+                hierarchy: {
+                  ...stage.hierarchy,
+                  zoneKeys: [...stage.hierarchy.zoneKeys, zone.semanticKey],
+                },
+                meta: {
+                  ...stage.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  stages: localGuide.entities.stages.map((s) =>
+                    s.semanticKey === stage.semanticKey ? updatedStage : s
+                  ),
+                  stageZones: [...localGuide.entities.stageZones, zone],
+                },
+              };
+            }
+
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                stageZoneKeys: [
+                  ...localGuide.entities.game.universal.stageZoneKeys,
+                  zone.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                stageZones: [...localGuide.entities.stageZones, zone],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    overrideStageZone: rxMutation({
+      operation: (input: { stageKey: string; universalZoneKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const stage = localGuide.entities.stages.find(
+              (s) => s.semanticKey === input.stageKey
+            );
+            if (!stage) {
+              throw new Error(`Stage "${input.stageKey}" does not exist.`);
+            }
+
+            const universalZone = localGuide.entities.stageZones.find(
+              (zone) =>
+                zone.semanticKey === input.universalZoneKey && !zone.stageKey
+            );
+            if (!universalZone) {
+              throw new Error(
+                `Universal Zone "${input.universalZoneKey}" does not exist.`
+              );
+            }
+
+            if (
+              localGuide.entities.stageZones.some(
+                (zone) =>
+                  zone.stageKey === stage.semanticKey &&
+                  zone.inheritedFromZoneKey === universalZone.semanticKey
+              )
+            ) {
+              throw new Error(
+                `Zone "${universalZone.name}" is already overridden for this Stage.`
+              );
+            }
+
+            const override = createStageZone({
+              gameKey: localGuide.entities.game.semanticKey,
+              stageKey: stage.semanticKey,
+              name: universalZone.name,
+              inheritedFromZoneKey: universalZone.semanticKey,
+              // mechanicStateKeys stays unset so it live-inherits from the
+              // universal Zone until this override customizes it.
+            });
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stageZone',
+              entityKey: override.semanticKey,
             });
             markEntityUnsaved(guide, {
               entityType: 'stage',
@@ -292,7 +410,7 @@ export const LocalGuideFacadeStore = signalStore(
               ...stage,
               hierarchy: {
                 ...stage.hierarchy,
-                zoneKeys: [...stage.hierarchy.zoneKeys, zone.semanticKey],
+                zoneKeys: [...stage.hierarchy.zoneKeys, override.semanticKey],
               },
               meta: {
                 ...stage.meta,
@@ -308,7 +426,119 @@ export const LocalGuideFacadeStore = signalStore(
                 stages: localGuide.entities.stages.map((s) =>
                   s.semanticKey === stage.semanticKey ? updatedStage : s
                 ),
-                stageZones: [...localGuide.entities.stageZones, zone],
+                stageZones: [...localGuide.entities.stageZones, override],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    promoteStageZone: rxMutation({
+      operation: ({ stageZoneKey }: { stageZoneKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const zone = localGuide.entities.stageZones.find(
+              (z) => z.semanticKey === stageZoneKey
+            );
+            if (!zone) {
+              throw new Error(`Zone "${stageZoneKey}" does not exist.`);
+            }
+            if (!zone.stageKey) {
+              throw new Error(`Zone "${stageZoneKey}" is already universal.`);
+            }
+            if (zone.inheritedFromZoneKey) {
+              throw new Error(
+                'An override cannot be promoted; revert it to Universal first.'
+              );
+            }
+
+            const stage = localGuide.entities.stages.find(
+              (s) => s.semanticKey === zone.stageKey
+            );
+            if (!stage) {
+              throw new Error(`Stage "${zone.stageKey}" not found.`);
+            }
+
+            const promoted = createStageZone({
+              gameKey: localGuide.entities.game.semanticKey,
+              name: zone.name,
+              mechanicStateKeys: zone.mechanicStateKeys ?? [],
+            });
+
+            if (
+              localGuide.entities.stageZones.some(
+                (existing) => existing.semanticKey === promoted.semanticKey
+              )
+            ) {
+              throw new Error(
+                `A universal Zone named "${zone.name}" already exists.`
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stageZone',
+              entityKey: stageZoneKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'stageZone',
+              entityKey: promoted.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'stage',
+              entityKey: stage.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const updatedStage = {
+              ...stage,
+              hierarchy: {
+                ...stage.hierarchy,
+                zoneKeys: stage.hierarchy.zoneKeys.filter(
+                  (key) => key !== stageZoneKey
+                ),
+              },
+              meta: {
+                ...stage.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                stageZoneKeys: [
+                  ...localGuide.entities.game.universal.stageZoneKeys,
+                  promoted.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                stages: localGuide.entities.stages.map((s) =>
+                  s.semanticKey === stage.semanticKey ? updatedStage : s
+                ),
+                stageZones: [
+                  ...localGuide.entities.stageZones.filter(
+                    (z) => z.semanticKey !== stageZoneKey
+                  ),
+                  promoted,
+                ],
               },
             };
           })()
@@ -741,6 +971,230 @@ export const LocalGuideFacadeStore = signalStore(
                 moves: localGuide.entities.moves.filter(
                   (m) => m.semanticKey !== moveKey
                 ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    promoteMove: rxMutation({
+      operation: ({ moveKey }: { moveKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (m) => m.semanticKey === moveKey
+            );
+            if (!move) {
+              throw new Error(`Move "${moveKey}" does not exist.`);
+            }
+            if (!move.characterKey) {
+              throw new Error(`Move "${moveKey}" is already universal.`);
+            }
+            if (move.parentKey) {
+              throw new Error(
+                'An override cannot be promoted; revert it to Universal first.'
+              );
+            }
+
+            const character = localGuide.entities.characters.find(
+              (c) => c.semanticKey === move.characterKey
+            );
+            if (!character) {
+              throw new Error(`Character "${move.characterKey}" not found.`);
+            }
+
+            const promoted = {
+              ...createMove({
+                gameKey: localGuide.entities.game.semanticKey,
+                name: move.name,
+              }),
+              sequence: move.sequence,
+              preconditions: move.preconditions,
+              phases: move.phases,
+            };
+
+            if (
+              localGuide.entities.moves.some(
+                (existing) => existing.semanticKey === promoted.semanticKey
+              )
+            ) {
+              throw new Error(
+                `A universal Move named "${move.name}" already exists.`
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: moveKey });
+            markEntityUnsaved(guide, {
+              entityType: 'move',
+              entityKey: promoted.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'character',
+              entityKey: character.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const updatedCharacter = {
+              ...character,
+              hierarchy: {
+                ...character.hierarchy,
+                moveKeys: character.hierarchy.moveKeys.filter(
+                  (key) => key !== moveKey
+                ),
+              },
+              meta: {
+                ...character.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                moveKeys: [
+                  ...localGuide.entities.game.universal.moveKeys,
+                  promoted.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            // Sequences reference Moves by key directly in each Step, so
+            // promoting must rewrite every Step that pointed at the old key.
+            const sequences = localGuide.entities.sequences.map((sequence) => {
+              if (
+                !sequence.sequence.some((step) => step.moveKey === moveKey)
+              ) {
+                return sequence;
+              }
+              markEntityUnsaved(guide, {
+                entityType: 'sequence',
+                entityKey: sequence.semanticKey,
+              });
+              return {
+                ...sequence,
+                sequence: sequence.sequence.map((step) =>
+                  step.moveKey === moveKey
+                    ? { ...step, moveKey: promoted.semanticKey }
+                    : step
+                ),
+              };
+            });
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                characters: localGuide.entities.characters.map((c) =>
+                  c.semanticKey === character.semanticKey
+                    ? updatedCharacter
+                    : c
+                ),
+                moves: [
+                  ...localGuide.entities.moves.filter(
+                    (m) => m.semanticKey !== moveKey
+                  ),
+                  promoted,
+                ],
+                sequences,
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    overrideMove: rxMutation({
+      operation: (input: { characterKey: string; universalMoveKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const character = localGuide.entities.characters.find(
+              (c) => c.semanticKey === input.characterKey
+            );
+            if (!character) {
+              throw new Error(
+                `Character "${input.characterKey}" does not exist.`
+              );
+            }
+
+            const universalMove = localGuide.entities.moves.find(
+              (move) =>
+                move.semanticKey === input.universalMoveKey &&
+                !move.characterKey
+            );
+            if (!universalMove) {
+              throw new Error(
+                `Universal Move "${input.universalMoveKey}" does not exist.`
+              );
+            }
+
+            if (
+              localGuide.entities.moves.some(
+                (move) =>
+                  move.characterKey === character.semanticKey &&
+                  move.parentKey === universalMove.semanticKey
+              )
+            ) {
+              throw new Error(
+                `Move "${universalMove.name}" is already overridden for this Character.`
+              );
+            }
+
+            const override = createMove({
+              gameKey: localGuide.entities.game.semanticKey,
+              characterKey: character.semanticKey,
+              name: universalMove.name,
+              parentKey: universalMove.semanticKey,
+              // sequence/preconditions/phases stay unset so they live-inherit
+              // from the universal Move until this override customizes them.
+            });
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'move',
+              entityKey: override.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'character',
+              entityKey: character.semanticKey,
+            });
+
+            const updatedCharacter = {
+              ...character,
+              hierarchy: {
+                ...character.hierarchy,
+                moveKeys: [...character.hierarchy.moveKeys, override.semanticKey],
+              },
+              meta: {
+                ...character.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                characters: localGuide.entities.characters.map((c) =>
+                  c.semanticKey === character.semanticKey
+                    ? updatedCharacter
+                    : c
+                ),
+                moves: [...localGuide.entities.moves, override],
               },
             };
           })()

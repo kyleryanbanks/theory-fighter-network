@@ -9,6 +9,10 @@ interface StageDraft {
   name: string;
 }
 
+interface ZoneDraft {
+  name: string;
+}
+
 @Component({
   selector: 'tfn-stage-editor',
   imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule],
@@ -20,10 +24,21 @@ export class StageEditor {
   readonly stages = computed(
     () => this.facade.guide()?.entities.stages ?? []
   );
+  readonly stageZones = computed(
+    () => this.facade.guide()?.entities.stageZones ?? []
+  );
+  readonly universalZones = computed(() =>
+    this.stageZones().filter((zone) => !zone.stageKey)
+  );
   readonly stageModel = signal<StageDraft>({ name: '' });
   readonly stageError = signal('');
   readonly stageForm = form(this.stageModel, (path) => {
     required(path.name, { message: 'Stage name is required.' });
+  });
+  readonly zoneModel = signal<ZoneDraft>({ name: '' });
+  readonly zoneError = signal('');
+  readonly zoneForm = form(this.zoneModel, (path) => {
+    required(path.name, { message: 'Zone name is required.' });
   });
 
   createStage(): void {
@@ -51,6 +66,69 @@ export class StageEditor {
     }
 
     this.stageError.set('');
+  }
+
+  createUniversalZone(): void {
+    submit(this.zoneForm, async () => {
+      const result = await this.facade.createStageZone({
+        name: this.zoneModel().name.trim(),
+      });
+
+      if (result.status === 'error') {
+        this.zoneError.set(getErrorMessage(result.error));
+        return;
+      }
+
+      this.zoneForm().reset({ name: '' });
+      this.zoneError.set('');
+    });
+  }
+
+  // A Stage's own local Zones: stage-only Zones and overrides of universal Zones.
+  localZonesFor(stageKey: string) {
+    return this.stageZones().filter((zone) => zone.stageKey === stageKey);
+  }
+
+  isOverridden(stageKey: string, universalZoneKey: string): boolean {
+    return this.localZonesFor(stageKey).some(
+      (zone) => zone.inheritedFromZoneKey === universalZoneKey
+    );
+  }
+
+  async overrideZone(stageKey: string, universalZoneKey: string): Promise<void> {
+    const result = await this.facade.overrideStageZone({
+      stageKey,
+      universalZoneKey,
+    });
+
+    if (result.status === 'error') {
+      this.zoneError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.zoneError.set('');
+  }
+
+  async deleteZone(stageZoneKey: string): Promise<void> {
+    const result = await this.facade.deleteStageZone({ stageZoneKey });
+
+    if (result.status === 'error') {
+      this.zoneError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.zoneError.set('');
+  }
+
+  async promoteZone(stageZoneKey: string): Promise<void> {
+    const result = await this.facade.promoteStageZone({ stageZoneKey });
+
+    if (result.status === 'error') {
+      this.zoneError.set(getErrorMessage(result.error));
+      return;
+    }
+
+    this.zoneError.set('');
   }
 }
 

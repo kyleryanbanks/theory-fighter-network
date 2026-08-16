@@ -116,7 +116,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.4.1: Zone Inheritance/Override UI (Deferred)
-**Status: Not started.** Deferred from Phase 1.4 to keep hierarchy work moving into characters/moves. Data model and CRUD mutations already support this UI; only the editor UI itself is missing.
+**Status: Complete (2026-08-16).** The facade's `createStageZone` mutation now supports both universal (game-level) and stage-scoped creation directly (previously it required a `stageKey`, so universal Zone creation had no UI path); a new `overrideStageZone` mutation clones a universal Zone's name and `mechanicStateKeys` into a Stage-scoped Zone with `inheritedFromZoneKey` set, rejecting a duplicate override of the same universal Zone for the same Stage. The Stage editor now has a "Universal Stage Zones" management section (create/delete) plus, per Stage, a merged Zone list: universal Zones show a lock icon, a "Universal" tag, and an "Override" action; Stage-scoped overrides show what they override and a "Revert to Universal" action (implemented as deleting the override, since the universal Zone is a separate persisted entity); plain Stage-only Zones (no `inheritedFromZoneKey`) show a normal Delete action. Field-level override indicators beyond name/`mechanicStateKeys` are deferred until Zones gain more editable fields worth diffing.
 **Scope**: Build the stage editor UI to display and manage zone inheritance.
 
 **Deliverables**:
@@ -124,7 +124,7 @@ These phases establish the offline foundation. All features are local-only; no n
 - Inherited zone display: Show inherited fields read-only with a lock icon
 - Override action: Let a user create a stage-scoped zone that shadows a universal zone, setting `inheritedFromZoneKey`
 - Revert-to-inherited action: Remove a stage-scoped override and fall back to the universal zone
-- Field-level override indicators: Highlight which zone fields differ from the inherited parent
+- Field-level override indicators: Highlight which zone fields differ from the inherited parent *(deferred — no substantive editable Zone fields beyond name/mechanicStateKeys yet)*
 
 **Validation**: Universal zones appear on every stage; creating an override does not delete the universal zone; reverting an override removes only the stage-scoped copy
 
@@ -254,14 +254,15 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 3.3: Promote-to-Inherited Workflow (Moves/Zones)
+**Status: Core promote/override implemented ahead of schedule (2026-08-16).** `promoteMove`/`promoteStageZone` mutations convert a Character Move or Stage Zone into a universal one (rejecting promotion of an entity that is itself an override, and rejecting a name collision with an existing universal entity); promoting a Move rewrites every Sequence Step that referenced its old key to the new universal key, since Sequences store direct Move references. `overrideMove`/`overrideStageZone` create a scoped entity that live-inherits its parent's data fields (`sequence`/`preconditions`/`phases` for Moves, `mechanicStateKeys` for Zones) via `resolveEffectiveMove`/`resolveEffectiveStageZone`: any field the override hasn't explicitly set keeps following the parent's current value, so later edits to the universal entity continue propagating to overrides that never customized that field — this replaces the originally-planned `fieldOverrides`/`parentOverrides` tracking arrays (removed as dead code), since field-presence itself (`undefined` = inherit) is sufficient once overrides are lazily merged rather than snapshot-copied. The Stage editor and Move editor both expose Promote/Override/Revert-to-Universal actions inline. Conflict detection (duplicate moves across characters), a dedicated undo/rollback beyond delete-based revert, and impact-analysis UI remain open.
 **Scope**: Build UI for promoting character-scoped entities to game-scoped.
 
 **Deliverables**:
 - Promote move: Character move → game move; update all character references to inherit
 - Promote zone: Stage zone → game zone; update all stage references to inherit
-- Conflict detection: Warn if multiple characters have identical moves (candidate for promotion)
-- Undo/rollback: Revert promotion; restore character-scoped versions
-- Impact analysis: Show which entities will be affected by promotion
+- Conflict detection: Warn if multiple characters have identical moves (candidate for promotion) *(not yet implemented)*
+- Undo/rollback: Revert promotion; restore character-scoped versions *(revert-by-delete exists for overrides; promotion itself has no dedicated undo yet)*
+- Impact analysis: Show which entities will be affected by promotion *(not yet implemented)*
 
 **Validation**: Promoted entity becomes game-level; character references update; no data loss
 

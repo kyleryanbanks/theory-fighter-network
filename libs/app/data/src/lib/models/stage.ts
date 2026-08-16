@@ -110,11 +110,13 @@ export interface StageZoneDocument {
   name: string;
   semanticKey: string; // hash(gameSemanticKey + [stageSemanticKey] + name)
   
+  // Overrides are full forks (copied once, then independent) rather than a
+  // live per-field merge, so there is no separate override-tracking array.
   inheritedFromZoneKey?: string;
-  fieldOverrides?: (keyof StageZoneDocument)[];
 
-  // Reference to stageMechanic state(s) that define behavior and properties
-  mechanicStateKeys: string[];
+  // Reference to stageMechanic state(s) that define behavior and properties.
+  // Unset on an override Zone means "inherit live from the universal Zone".
+  mechanicStateKeys?: string[];
 
   community: CommunityMetadata;
   meta: EntityMetadata;
@@ -136,6 +138,8 @@ export interface CreateStageZoneInput {
   gameKey: string;
   name: string;
   stageKey?: string; // If provided, zone is stage-scoped; otherwise game-level
+  inheritedFromZoneKey?: string; // Set when this Stage Zone overrides a universal Zone
+  mechanicStateKeys?: string[]; // Starting values, e.g. copied from the inherited Zone
 }
 
 export function createStageZone(input: CreateStageZoneInput): StageZoneDocument {
@@ -148,6 +152,10 @@ export function createStageZone(input: CreateStageZoneInput): StageZoneDocument 
       input.stageKey,
       input.name
     ),
+    inheritedFromZoneKey: input.inheritedFromZoneKey,
+    mechanicStateKeys:
+      input.mechanicStateKeys ??
+      (input.inheritedFromZoneKey ? undefined : []),
   });
   assertValidStageZoneDocument(zone);
   return zone;
@@ -195,4 +203,30 @@ function assertValidStageZoneDocument(zone: StageZoneDocument): void {
   if (errors.length > 0) {
     throw new Error(`Invalid Stage Zone document: ${errors.join(' ')}`);
   }
+}
+
+/**
+ * Merges an override Zone with its parent universal Zone: fields the
+ * override hasn't set locally live-inherit the parent's current value, so
+ * later parent edits keep propagating to overrides that never customized
+ * that specific field.
+ */
+export function resolveEffectiveStageZone(
+  zone: StageZoneDocument,
+  allZones: StageZoneDocument[]
+): StageZoneDocument {
+  if (!zone.inheritedFromZoneKey) {
+    return zone;
+  }
+  const parent = allZones.find(
+    (z) => z.semanticKey === zone.inheritedFromZoneKey
+  );
+  if (!parent) {
+    return zone;
+  }
+
+  return {
+    ...zone,
+    mechanicStateKeys: zone.mechanicStateKeys ?? parent.mechanicStateKeys,
+  };
 }

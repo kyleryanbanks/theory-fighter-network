@@ -10,6 +10,7 @@ function buildGuide(
     name: string;
     semanticKey: string;
     characterKey?: string;
+    parentKey?: string;
   }> = []
 ) {
   return {
@@ -24,6 +25,8 @@ describe('MoveEditor', () => {
     guide,
     createMove: vi.fn(async () => ({ status: 'success' })),
     deleteMove: vi.fn(async () => ({ status: 'success' })),
+    overrideMove: vi.fn(async () => ({ status: 'success' })),
+    promoteMove: vi.fn(async () => ({ status: 'success' })),
   };
 
   beforeEach(async () => {
@@ -59,7 +62,7 @@ describe('MoveEditor', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Hadoken');
   });
 
-  it('shows universal Moves alongside a Character\'s own Moves when scoped', () => {
+  it("shows universal Moves alongside a Character's own Moves when scoped, with an Override action for the inherited one", () => {
     guide.set(
       buildGuide(
         [{ name: 'Ryu', semanticKey: 'character-ryu' }],
@@ -78,9 +81,72 @@ describe('MoveEditor', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Universal Parry');
     expect(fixture.nativeElement.textContent).toContain('Hadoken');
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Override Universal Parry"]')
+      .click();
+
+    expect(mockStore.overrideMove).toHaveBeenCalledWith({
+      characterKey: 'character-ryu',
+      universalMoveKey: 'move-parry',
+    });
+  });
+
+  it('shows a Move override with a Revert to Universal action instead of the locked entry', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Ryu', semanticKey: 'character-ryu' }],
+        [
+          { name: 'Universal Parry', semanticKey: 'move-parry' },
+          {
+            name: 'Universal Parry',
+            semanticKey: 'move-parry-override',
+            characterKey: 'character-ryu',
+            parentKey: 'move-parry',
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('character-ryu');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Overrides move-parry');
     expect(
-      fixture.nativeElement.querySelectorAll('[data-testid="inherited-badge"]')
-    ).toHaveLength(1);
+      fixture.nativeElement.querySelector('[aria-label="Override Universal Parry"]')
+    ).toBeNull();
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Revert Universal Parry to Universal"]')
+      .click();
+
+    expect(mockStore.deleteMove).toHaveBeenCalledWith({
+      moveKey: 'move-parry-override',
+    });
+  });
+
+  it("promotes a Character's own Move to universal from its row action", () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Ryu', semanticKey: 'character-ryu' }],
+        [
+          {
+            name: 'Hadoken',
+            semanticKey: 'move-hadoken',
+            characterKey: 'character-ryu',
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('character-ryu');
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Promote Hadoken to Universal"]')
+      .click();
+
+    expect(mockStore.promoteMove).toHaveBeenCalledWith({
+      moveKey: 'move-hadoken',
+    });
   });
 
   it('creates a universal Move from the name field and clears the draft', async () => {

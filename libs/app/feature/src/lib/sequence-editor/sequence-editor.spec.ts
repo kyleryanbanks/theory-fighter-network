@@ -10,6 +10,7 @@ function buildGuide(
     name: string;
     semanticKey: string;
     characterKey?: string;
+    parentKey?: string;
   }> = [],
   sequences: Array<{
     semanticKey: string;
@@ -136,6 +137,35 @@ describe('SequenceEditor', () => {
     expect(
       fixture.nativeElement.querySelectorAll('[data-testid="inherited-badge"]')
     ).toHaveLength(1);
+  });
+
+  it('hides the raw universal Move once a Character overrides it, showing only the override tile', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Ryu', semanticKey: 'character-ryu' }],
+        [
+          { name: 'Universal Parry', semanticKey: 'move-parry' },
+          {
+            name: 'Universal Parry',
+            semanticKey: 'move-parry-override',
+            characterKey: 'character-ryu',
+            parentKey: 'move-parry',
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('character-ryu');
+    fixture.detectChanges();
+
+    const tiles: HTMLButtonElement[] = Array.from(
+      fixture.nativeElement.querySelectorAll('[data-testid="move-tile"]')
+    );
+
+    expect(tiles).toHaveLength(1);
+    expect(tiles[0].textContent).toContain('Universal Parry');
+    expect(fixture.componentInstance.scopedMoves()).toEqual([
+      expect.objectContaining({ semanticKey: 'move-parry-override' }),
+    ]);
   });
 
   it('creates a character-scoped Sequence when a character scope is selected', async () => {

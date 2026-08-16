@@ -4,9 +4,17 @@ import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { vi } from 'vitest';
 import { StageEditor } from './stage-editor';
 
-function buildGuide(stages: Array<{ name: string; semanticKey: string }> = []) {
+function buildGuide(
+  stages: Array<{ name: string; semanticKey: string }> = [],
+  stageZones: Array<{
+    name: string;
+    semanticKey: string;
+    stageKey?: string;
+    inheritedFromZoneKey?: string;
+  }> = []
+) {
   return {
-    entities: { stages },
+    entities: { stages, stageZones },
   };
 }
 
@@ -17,6 +25,10 @@ describe('StageEditor', () => {
     guide,
     createStage: vi.fn(async () => ({ status: 'success' })),
     deleteStage: vi.fn(async () => ({ status: 'success' })),
+    createStageZone: vi.fn(async () => ({ status: 'success' })),
+    overrideStageZone: vi.fn(async () => ({ status: 'success' })),
+    deleteStageZone: vi.fn(async () => ({ status: 'success' })),
+    promoteStageZone: vi.fn(async () => ({ status: 'success' })),
   };
 
   beforeEach(async () => {
@@ -107,6 +119,134 @@ describe('StageEditor', () => {
 
     expect(mockStore.deleteStage).toHaveBeenCalledWith({
       stageKey: 'stage-training',
+    });
+  });
+
+  it('creates a universal Zone from the zone name field', async () => {
+    const input: HTMLInputElement = fixture.nativeElement.querySelector(
+      '[data-testid="universal-zone-name"]'
+    );
+    input.value = 'Hazard Pit';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('[data-testid="add-universal-zone"]')
+      .click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(mockStore.createStageZone).toHaveBeenCalledWith({
+      name: 'Hazard Pit',
+    });
+    expect(input.value).toBe('');
+  });
+
+  it('shows universal Zones as inherited (locked) for a Stage with an Override action', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Training Room', semanticKey: 'stage-training' }],
+        [{ name: 'Hazard Pit', semanticKey: 'zone-hazard' }]
+      )
+    );
+    fixture.detectChanges();
+
+    const stageZoneEntries = fixture.nativeElement.querySelectorAll(
+      '[data-testid="stage-zone-list"] [data-testid="zone-entry"]'
+    );
+    expect(stageZoneEntries).toHaveLength(1);
+    expect(stageZoneEntries[0].textContent).toContain('Hazard Pit');
+    expect(stageZoneEntries[0].textContent).toContain('Universal');
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Override Hazard Pit for Training Room"]')
+      .click();
+
+    expect(mockStore.overrideStageZone).toHaveBeenCalledWith({
+      stageKey: 'stage-training',
+      universalZoneKey: 'zone-hazard',
+    });
+  });
+
+  it('shows a Stage override with a Revert to Universal action instead of the locked entry', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Training Room', semanticKey: 'stage-training' }],
+        [
+          { name: 'Hazard Pit', semanticKey: 'zone-hazard' },
+          {
+            name: 'Hazard Pit',
+            semanticKey: 'zone-hazard-override',
+            stageKey: 'stage-training',
+            inheritedFromZoneKey: 'zone-hazard',
+          },
+        ]
+      )
+    );
+    fixture.detectChanges();
+
+    const stageZoneEntries = fixture.nativeElement.querySelectorAll(
+      '[data-testid="stage-zone-list"] [data-testid="zone-entry"]'
+    );
+    expect(stageZoneEntries).toHaveLength(1);
+    expect(stageZoneEntries[0].textContent).toContain('Overrides zone-hazard');
+
+    fixture.nativeElement
+      .querySelector(
+        '[aria-label="Revert Hazard Pit to Universal for Training Room"]'
+      )
+      .click();
+
+    expect(mockStore.deleteStageZone).toHaveBeenCalledWith({
+      stageZoneKey: 'zone-hazard-override',
+    });
+  });
+
+  it('shows a Stage-only Zone with a plain Delete action', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Training Room', semanticKey: 'stage-training' }],
+        [
+          {
+            name: 'Pit Trap',
+            semanticKey: 'zone-pit-trap',
+            stageKey: 'stage-training',
+          },
+        ]
+      )
+    );
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Delete Zone Pit Trap"]')
+      .click();
+
+    expect(mockStore.deleteStageZone).toHaveBeenCalledWith({
+      stageZoneKey: 'zone-pit-trap',
+    });
+  });
+
+  it('promotes a Stage-only Zone to universal from its row action', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Training Room', semanticKey: 'stage-training' }],
+        [
+          {
+            name: 'Pit Trap',
+            semanticKey: 'zone-pit-trap',
+            stageKey: 'stage-training',
+          },
+        ]
+      )
+    );
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Promote Pit Trap to Universal"]')
+      .click();
+
+    expect(mockStore.promoteStageZone).toHaveBeenCalledWith({
+      stageZoneKey: 'zone-pit-trap',
     });
   });
 });

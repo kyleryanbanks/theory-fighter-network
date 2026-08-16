@@ -2,7 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
-import { LocalGuideFacadeStore, type Step } from '@theory-fighter-network/data';
+import {
+  LocalGuideFacadeStore,
+  resolveEffectiveMove,
+  type Step,
+} from '@theory-fighter-network/data';
 
 const UNIVERSAL_SCOPE = '';
 
@@ -32,20 +36,28 @@ export class SequenceEditor {
     }
 
     const team = this.team();
-    if (team) {
-      return [
-        ...universalMoves,
-        ...allMoves.filter(
+    const ownMoves = team
+      ? allMoves.filter(
           (move) =>
             move.characterKey &&
             team.orderedCharacterKeys.includes(move.characterKey)
-        ),
-      ];
-    }
+        )
+      : allMoves.filter((move) => move.characterKey === scope);
+
+    // A locally overridden universal Move should only appear as its
+    // override (with its parent's fields live-cascaded in), not also as
+    // the raw universal entry.
+    const overriddenParentKeys = new Set(
+      ownMoves
+        .filter((move) => move.parentKey)
+        .map((move) => move.parentKey)
+    );
 
     return [
-      ...universalMoves,
-      ...allMoves.filter((move) => move.characterKey === scope),
+      ...universalMoves.filter(
+        (move) => !overriddenParentKeys.has(move.semanticKey)
+      ),
+      ...ownMoves.map((move) => resolveEffectiveMove(move, allMoves)),
     ];
   });
   readonly sequences = computed(() => {

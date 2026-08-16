@@ -89,7 +89,9 @@ h2 {
 }
 
 .move-entry span.move-identity {
-  display: grid;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -98,20 +100,20 @@ h2 {
   overflow-wrap: anywhere;
 }
 
-.inherited-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 10px;
-  background: #e4ede8;
-  color: #3f6654;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .move-entry small {
   color: #68776f;
+}
+
+.move-entry--inherited {
+  background: #eaeeec;
+}
+
+.move-entry--override strong {
+  color: #3f6654;
+}
+
+.lock-icon {
+  font-size: 0.8125rem;
 }
 
 .empty-state {

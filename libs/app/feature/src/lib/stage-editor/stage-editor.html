@@ -29,6 +29,57 @@
     <p class="stage-alert" role="alert">{{ stageError() }}</p>
   }
 
+  <div class="universal-zones">
+    <h3>Universal Stage Zones</h3>
+    <p class="zone-hint">
+      Universal Zones are inherited by every Stage. Override one from a
+      Stage's own zone list below to customize it there.
+    </p>
+    <form class="zone-form" (submit)="$event.preventDefault(); createUniversalZone()">
+      <mat-form-field appearance="outline">
+        <mat-label>Zone name</mat-label>
+        <input
+          matInput
+          autocomplete="off"
+          data-testid="universal-zone-name"
+          [formField]="zoneForm.name"
+        />
+        @if (zoneForm.name().touched() && zoneForm.name().invalid()) {
+          <mat-error>{{ zoneForm.name().errors()[0].message }}</mat-error>
+        }
+      </mat-form-field>
+      <button matButton="filled" type="submit" data-testid="add-universal-zone">
+        Add Universal Zone
+      </button>
+    </form>
+
+    @if (zoneError()) {
+      <p class="stage-alert" role="alert">{{ zoneError() }}</p>
+    }
+
+    <div class="zone-list" data-testid="universal-zone-list">
+      @for (zone of universalZones(); track zone.semanticKey) {
+        <div class="zone-entry" data-testid="universal-zone-entry">
+          <span>
+            <strong>{{ zone.name }}</strong>
+            <small>{{ zone.semanticKey }}</small>
+          </span>
+          <button
+            matButton
+            type="button"
+            [attr.aria-label]="'Delete Universal Zone ' + zone.name"
+            (click)="deleteZone(zone.semanticKey)"
+          >
+            Delete
+          </button>
+        </div>
+      } @empty {
+        <p class="empty-state">No universal Zones added.</p>
+      }
+    </div>
+  </div>
+
+
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
       <div class="stage-entry" data-testid="stage-entry">
@@ -44,6 +95,79 @@
         >
           Delete
         </button>
+      </div>
+      <div class="zone-list" data-testid="stage-zone-list">
+        @for (universalZone of universalZones(); track universalZone.semanticKey) {
+          @if (isOverridden(stage.semanticKey, universalZone.semanticKey)) {
+            @for (
+              override of localZonesFor(stage.semanticKey);
+              track override.semanticKey
+            ) {
+              @if (override.inheritedFromZoneKey === universalZone.semanticKey) {
+                <div class="zone-entry zone-entry--override" data-testid="zone-entry">
+                  <span>
+                    <strong>{{ override.name }}</strong>
+                    <small>Overrides {{ universalZone.semanticKey }}</small>
+                  </span>
+                  <button
+                    matButton
+                    type="button"
+                    [attr.aria-label]="
+                      'Revert ' + override.name + ' to Universal for ' + stage.name
+                    "
+                    (click)="deleteZone(override.semanticKey)"
+                  >
+                    Revert to Universal
+                  </button>
+                </div>
+              }
+            }
+          } @else {
+            <div class="zone-entry zone-entry--inherited" data-testid="zone-entry">
+              <span>
+                <span class="lock-icon" aria-hidden="true">&#128274;</span>
+                <strong>{{ universalZone.name }}</strong>
+                <small>Universal</small>
+              </span>
+              <button
+                matButton
+                type="button"
+                [attr.aria-label]="
+                  'Override ' + universalZone.name + ' for ' + stage.name
+                "
+                (click)="overrideZone(stage.semanticKey, universalZone.semanticKey)"
+              >
+                Override
+              </button>
+            </div>
+          }
+        }
+        @for (zone of localZonesFor(stage.semanticKey); track zone.semanticKey) {
+          @if (!zone.inheritedFromZoneKey) {
+            <div class="zone-entry" data-testid="zone-entry">
+              <span>
+                <strong>{{ zone.name }}</strong>
+                <small>{{ zone.semanticKey }}</small>
+              </span>
+              <button
+                matButton
+                type="button"
+                [attr.aria-label]="'Promote ' + zone.name + ' to Universal'"
+                (click)="promoteZone(zone.semanticKey)"
+              >
+                Promote to Universal
+              </button>
+              <button
+                matButton
+                type="button"
+                [attr.aria-label]="'Delete Zone ' + zone.name"
+                (click)="deleteZone(zone.semanticKey)"
+              >
+                Delete
+              </button>
+            </div>
+          }
+        }
       </div>
     } @empty {
       <p class="empty-state">No Stages added.</p>
