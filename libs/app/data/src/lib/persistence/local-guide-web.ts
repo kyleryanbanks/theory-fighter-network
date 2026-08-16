@@ -2,16 +2,16 @@ import {
   buildTfnArchive,
   parseTfnArchive,
 } from '../guide/archive/index';
-import type { LocalGuideWorkspace } from '../guide/guide.types';
+import type { LocalGuide } from '../guide/guide.types';
 
-export function buildArchiveBlob(workspace: LocalGuideWorkspace): Blob {
-  const archive = buildTfnArchive(workspace);
+export function buildArchiveBlob(guide: LocalGuide): Blob {
+  const archive = buildTfnArchive(guide);
   return new Blob([archive], { type: 'application/json' });
 }
 
 export async function parseArchiveBlob(
   archiveBlob: Blob
-): Promise<LocalGuideWorkspace> {
+): Promise<LocalGuide> {
   const rawArchive = await readBlobText(archiveBlob);
   const archive = parseTfnArchive(rawArchive);
 
@@ -22,10 +22,10 @@ export async function parseArchiveBlob(
 }
 
 export function buildArchiveFile(
-  workspace: LocalGuideWorkspace,
+  guide: LocalGuide,
   fileName = 'guide.tfn'
 ): File {
-  const archiveBlob = buildArchiveBlob(workspace);
+  const archiveBlob = buildArchiveBlob(guide);
   return new File([archiveBlob], fileName, {
     type: 'application/json',
   });
@@ -33,7 +33,7 @@ export function buildArchiveFile(
 
 export async function parseArchiveFile(
   archiveFile: File
-): Promise<LocalGuideWorkspace> {
+): Promise<LocalGuide> {
   return parseArchiveBlob(archiveFile);
 }
 

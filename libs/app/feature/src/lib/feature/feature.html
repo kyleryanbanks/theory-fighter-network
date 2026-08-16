@@ -1,11 +1,11 @@
 <main>
 	<h1>Theory Fighter Network</h1>
 	<div class="guide-header-slot" data-testid="guide-header-slot">
-		@if (startupComplete() && facade.hasWorkspace()) {
+		@if (startupComplete() && facade.hasGuide()) {
 			<div class="guide-toolbar" data-testid="guide-toolbar">
 				<div class="guide-status">
-					<p data-testid="workspace-key">
-						Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
+					<p data-testid="guide-key">
+						Guide game: {{ facade.guide()?.guide?.gameKey ?? 'none' }}
 					</p>
 					<p data-testid="busy-status">
 						Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
@@ -50,13 +50,13 @@
 		}
 	</div>
 
-	@if (!startupComplete() && !facade.hasWorkspace()) {
+	@if (!startupComplete() && !facade.hasGuide()) {
 		<section class="startup-pending" aria-live="polite">
 			@if (showStartupLoading()) {
 				<p data-testid="recent-guides-loading">Loading recent guides...</p>
 			}
 		</section>
-	} @else if (!facade.hasWorkspace() && !isCreatingGuide()) {
+	} @else if (!facade.hasGuide() && !isCreatingGuide()) {
 		<section class="guide-empty-state" data-testid="guide-empty-state">
 			<p class="empty-eyebrow">No guide open</p>
 			<h2>Start a guide</h2>
@@ -115,7 +115,7 @@
 	} @else {
 		<tfn-game-root />
 
-		@if (facade.hasWorkspace()) {
+		@if (facade.hasGuide()) {
 			<tfn-ui></tfn-ui>
 		}
 	}

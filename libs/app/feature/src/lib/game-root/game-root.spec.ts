@@ -4,7 +4,7 @@ import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { vi } from 'vitest';
 import { GameRoot } from './game-root';
 
-function createWorkspace(
+function createGuide(
   name: string,
   version: string,
   inputs = {
@@ -30,18 +30,18 @@ function createWorkspace(
 
 describe('GameRoot', () => {
   let fixture: ComponentFixture<GameRoot>;
-  const workspace = signal<ReturnType<typeof createWorkspace> | undefined>(
+  const guide = signal<ReturnType<typeof createGuide> | undefined>(
     undefined
   );
   const mockStore = {
-    workspace,
-    createWorkspace: vi.fn(async () => ({ status: 'success' })),
+    guide,
+    createGuide: vi.fn(async () => ({ status: 'success' })),
     updateActiveGame: vi.fn(async () => ({ status: 'success' })),
   };
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    workspace.set(undefined);
+    guide.set(undefined);
 
     await TestBed.configureTestingModule({
       imports: [GameRoot],
@@ -52,8 +52,8 @@ describe('GameRoot', () => {
     fixture.detectChanges();
   });
 
-  it('updates the game draft when a workspace is loaded', () => {
-    workspace.set(createWorkspace('Loaded Fighter', '2.3.0'));
+  it('updates the game draft when a Guide is loaded', () => {
+    guide.set(createGuide('Loaded Fighter', '2.3.0'));
     fixture.detectChanges();
 
     const name: HTMLInputElement = fixture.nativeElement.querySelector(
@@ -67,7 +67,7 @@ describe('GameRoot', () => {
     expect(version.value).toBe('2.3.0');
   });
 
-  it('creates a workspace from the new-game draft', async () => {
+  it('creates a Guide from the new-game draft', async () => {
     const name: HTMLInputElement = fixture.nativeElement.querySelector(
       '[data-testid="game-name"]'
     );
@@ -75,12 +75,12 @@ describe('GameRoot', () => {
     name.dispatchEvent(new Event('input'));
 
     const button: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="create-workspace"]'
+      '[data-testid="create-guide"]'
     );
     button.click();
     await fixture.whenStable();
 
-    expect(mockStore.createWorkspace).toHaveBeenCalledWith({
+    expect(mockStore.createGuide).toHaveBeenCalledWith({
       name: 'Test Fighter',
       version: '1.0.0',
       frameRate: 60,
@@ -91,7 +91,7 @@ describe('GameRoot', () => {
   });
 
   it('updates loaded game metadata from the draft', async () => {
-    workspace.set(createWorkspace('Loaded Fighter', '2.3.0'));
+    guide.set(createGuide('Loaded Fighter', '2.3.0'));
     fixture.detectChanges();
     const teamSize: HTMLInputElement = fixture.nativeElement.querySelector(
       '[data-testid="team-size"]'
@@ -132,8 +132,8 @@ describe('GameRoot', () => {
   });
 
   it('loads vocabulary as individual entries and saves the complete lists', async () => {
-    workspace.set(
-      createWorkspace('Loaded Fighter', '2.3.0', {
+    guide.set(
+      createGuide('Loaded Fighter', '2.3.0', {
         directions: [{ label: 'Neutral', value: '5' }],
         buttons: [{ label: 'Heavy Punch', value: 'hp' }],
       })
@@ -178,8 +178,8 @@ describe('GameRoot', () => {
   });
 
   it('removes a vocabulary entry before saving the game', async () => {
-    workspace.set(
-      createWorkspace('Loaded Fighter', '2.3.0', {
+    guide.set(
+      createGuide('Loaded Fighter', '2.3.0', {
         directions: [
           { label: 'Neutral', value: '5' },
           { label: 'Forward', value: '6' },

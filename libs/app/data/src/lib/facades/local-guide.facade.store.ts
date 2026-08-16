@@ -16,7 +16,7 @@ import { from, of } from 'rxjs';
 import {
   createGuideJson,
   markEntityUnsaved,
-  type LocalGuideWorkspace,
+  type LocalGuide,
 } from '../guide';
 import {
   createGame,
@@ -24,6 +24,7 @@ import {
   type CreateGameInput,
   type GameMetadataUpdate,
 } from '../models/game';
+import { createStage } from '../models/stage';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -36,9 +37,9 @@ import {
  * which keeps orchestration testable and allows swapping implementations.
  */
 export interface LocalGuidePersistencePort {
-  parseArchiveFile(archiveFile: File): Promise<LocalGuideWorkspace>;
+  parseArchiveFile(archiveFile: File): Promise<LocalGuide>;
   buildArchiveFile(
-    workspace: LocalGuideWorkspace,
+    guide: LocalGuide,
     fileName?: string
   ): Promise<File>;
 }
@@ -48,8 +49,8 @@ export interface LocalGuidePersistencePort {
  */
 const DEFAULT_LOCAL_GUIDE_PERSISTENCE: LocalGuidePersistencePort = {
   parseArchiveFile,
-  buildArchiveFile: async (workspace, fileName) =>
-    buildArchiveFile(workspace, fileName),
+  buildArchiveFile: async (guide, fileName) =>
+    buildArchiveFile(guide, fileName),
 };
 
 /**
@@ -65,10 +66,10 @@ export const TFN_LOCAL_GUIDE_PERSISTENCE =
   );
 
 type LocalGuideFacadeState = {
-  value: LocalGuideWorkspace | undefined;
+  value: LocalGuide | undefined;
 };
 
-type CreateWorkspaceInput = CreateGameInput;
+type CreateGuideInput = CreateGameInput;
 
 /**
  * Primary data-layer facade for local guide workflows.
@@ -88,11 +89,11 @@ export const LocalGuideFacadeStore = signalStore(
   })),
   // Mutations are command handlers for local guide workflows.
   withMutations((store) => ({
-    createWorkspace: rxMutation({
-      operation: (input: CreateWorkspaceInput) =>
-        of(buildInitialWorkspace(input)),
-      onSuccess: (workspace) => {
-        patchState(store, { value: workspace });
+    createGuide: rxMutation({
+      operation: (input: CreateGuideInput) =>
+        of(buildInitialGuide(input)),
+      onSuccess: (guide) => {
+        patchState(store, { value: guide });
       },
     }),
 
@@ -100,17 +101,17 @@ export const LocalGuideFacadeStore = signalStore(
       operation: (updates: GameMetadataUpdate) =>
         from(
           (async () => {
-            const workspace = store.value();
-            if (!workspace) {
-              throw new Error('No active workspace to update.');
+            const localGuide = store.value();
+            if (!localGuide) {
+              throw new Error('No active Guide to update.');
             }
 
-            const game = updateGameMetadata(workspace.entities.game, updates);
+            const game = updateGameMetadata(localGuide.entities.game, updates);
             const guide = {
-              ...workspace.guide,
-              localChanges: [...workspace.guide.localChanges],
-              syncedChanges: [...workspace.guide.syncedChanges],
-              unsavedStatus: { ...workspace.guide.unsavedStatus },
+              ...localGuide.guide,
+              localChanges: [...localGuide.guide.localChanges],
+              syncedChanges: [...localGuide.guide.syncedChanges],
+              unsavedStatus: { ...localGuide.guide.unsavedStatus },
             };
             markEntityUnsaved(guide, {
               entityType: 'game',
@@ -118,22 +119,100 @@ export const LocalGuideFacadeStore = signalStore(
             });
 
             return {
-              ...workspace,
+              ...localGuide,
               guide,
-              entities: { ...workspace.entities, game },
+              entities: { ...localGuide.entities, game },
             };
           })()
         ),
-      onSuccess: (workspace) => {
-        patchState(store, { value: workspace });
+      onSuccess: (guide) => {
+        patchState(store, { value: guide });
       },
+    }),
+
+    createStage: rxMutation({
+      operation: ({ name }: { name: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const stage = createStage({
+              gameKey: localGuide.entities.game.semanticKey,
+              name,
+            });
+
+            if (
+              localGuide.entities.stages.some(
+                (existing) => existing.semanticKey === stage.semanticKey
+              )
+            ) {
+              throw new Error(`Stage "${stage.name}" already exists.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stage',
+              entityKey: stage.semanticKey,
+            });
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                stages: [...localGuide.entities.stages, stage],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteStage: rxMutation({
+      operation: ({ stageKey }: { stageKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            if (
+              !localGuide.entities.stages.some(
+                (stage) => stage.semanticKey === stageKey
+              )
+            ) {
+              throw new Error(`Stage "${stageKey}" does not exist.`);
+            }
+            if (
+              localGuide.entities.stageZones.some(
+                (zone) => zone.stageKey === stageKey
+              )
+            ) {
+              throw new Error('A Stage with local zones cannot be deleted.');
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stage',
+              entityKey: stageKey,
+            });
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                stages: localGuide.entities.stages.filter(
+                  (stage) => stage.semanticKey !== stageKey
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
     importArchive: rxMutation({
       operation: (archiveFile: File) =>
         from(store.persistence.parseArchiveFile(archiveFile)),
-      onSuccess: (workspace) => {
-        patchState(store, { value: workspace });
+      onSuccess: (guide) => {
+        patchState(store, { value: guide });
       },
     }),
 
@@ -141,14 +220,14 @@ export const LocalGuideFacadeStore = signalStore(
       operation: ({ fileName }: { fileName?: string }) =>
         from(
           (async () => {
-            const workspace = store.value();
+            const guide = store.value();
 
-            if (!workspace) {
-              throw new Error('No active workspace to export.');
+            if (!guide) {
+              throw new Error('No active Guide to export.');
             }
 
             return store.persistence.buildArchiveFile(
-              workspace,
+              guide,
               fileName
             );
           })()
@@ -157,19 +236,19 @@ export const LocalGuideFacadeStore = signalStore(
   })),
   withMethods((store) => ({
     /**
-     * Clears in-memory active workspace value.
+    * Clears the active in-memory Guide.
      */
-    clearActiveWorkspace(): void {
+    clearActiveGuide(): void {
       patchState(store, { value: undefined });
     },
   })),
   // Computed helpers keep feature components declarative and thin.
   withComputed((store) => ({
-    workspace: computed(() => store.value()),
-    hasWorkspace: computed(() => !!store.value()),
+    guide: computed(() => store.value()),
+    hasGuide: computed(() => !!store.value()),
     isBusy: computed(
       () =>
-        store.createWorkspaceIsPending() ||
+        store.createGuideIsPending() ||
         store.updateActiveGameIsPending() ||
         store.importArchiveIsPending() ||
         store.exportArchiveIsPending()
@@ -178,11 +257,11 @@ export const LocalGuideFacadeStore = signalStore(
 );
 
 /**
- * Creates a minimal initialized workspace used by createWorkspace mutation.
+ * Creates a minimal initialized Guide.
  */
-function buildInitialWorkspace(
-  input: CreateWorkspaceInput
-): LocalGuideWorkspace {
+function buildInitialGuide(
+  input: CreateGuideInput
+): LocalGuide {
   const game = createGame(input);
 
   return {
@@ -198,5 +277,23 @@ function buildInitialWorkspace(
       projectiles: [],
       matchups: [],
     },
+  };
+}
+
+function requireGuide(
+  guide: LocalGuide | undefined
+): LocalGuide {
+  if (!guide) {
+    throw new Error('No active Guide.');
+  }
+  return guide;
+}
+
+function cloneGuideMetadata(localGuide: LocalGuide) {
+  return {
+    ...localGuide.guide,
+    localChanges: [...localGuide.guide.localChanges],
+    syncedChanges: [...localGuide.guide.syncedChanges],
+    unsavedStatus: { ...localGuide.guide.unsavedStatus },
   };
 }

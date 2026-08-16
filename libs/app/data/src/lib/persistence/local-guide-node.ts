@@ -9,7 +9,7 @@ import {
   assertSupportedSchemaVersion,
   type GuideJson,
   type LocalGuideEntities,
-  type LocalGuideWorkspace,
+  type LocalGuide,
 } from '../guide';
 import { hydrateEntityDates } from '../guide/archive/index';
 
@@ -27,16 +27,16 @@ const ENTITY_FILES: Record<keyof LocalGuideEntities, string> = {
   matchups: 'matchups.json',
 };
 
-export async function saveWorkspaceToDirectory(
+export async function saveGuideToDirectory(
   directoryPath: string,
-  workspace: LocalGuideWorkspace
+  guide: LocalGuide
 ): Promise<void> {
   await mkdir(directoryPath, { recursive: true });
-  assertSupportedSchemaVersion(workspace.guide.schemaVersion);
+  assertSupportedSchemaVersion(guide.guide.schemaVersion);
 
   await writeJsonAtomic(
     join(directoryPath, GUIDE_FILE),
-    workspace.guide
+    guide.guide
   );
 
   const entries = Object.entries(ENTITY_FILES) as Array<[
@@ -47,14 +47,14 @@ export async function saveWorkspaceToDirectory(
   for (const [entityKey, fileName] of entries) {
     await writeJsonAtomic(
       join(directoryPath, fileName),
-      workspace.entities[entityKey]
+      guide.entities[entityKey]
     );
   }
 }
 
-export async function loadWorkspaceFromDirectory(
+export async function loadGuideFromDirectory(
   directoryPath: string
-): Promise<LocalGuideWorkspace> {
+): Promise<LocalGuide> {
   const guide = (await readJson(
     join(directoryPath, GUIDE_FILE)
   )) as GuideJson;

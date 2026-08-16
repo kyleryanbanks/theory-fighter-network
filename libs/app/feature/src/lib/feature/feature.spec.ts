@@ -22,8 +22,8 @@ describe('Feature', () => {
     open: vi.fn(async () => new File(['{}'], 'recent.tfn')),
   };
   const mockStore = {
-    hasWorkspace: signal(false),
-    workspace: signal<
+    hasGuide: signal(false),
+    guide: signal<
       {
         entities: {
           game: {
@@ -38,9 +38,9 @@ describe('Feature', () => {
       } | undefined
     >(undefined),
     isBusy: signal(false),
-    clearActiveWorkspace: vi.fn(() => {
-      mockStore.hasWorkspace.set(false);
-      mockStore.workspace.set(undefined);
+    clearActiveGuide: vi.fn(() => {
+      mockStore.hasGuide.set(false);
+      mockStore.guide.set(undefined);
     }),
     importArchive: vi.fn(async () => ({ status: 'success' })),
     exportArchive: vi.fn(async () => ({
@@ -54,8 +54,8 @@ describe('Feature', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
-    mockStore.hasWorkspace.set(false);
-    mockStore.workspace.set(undefined);
+    mockStore.hasGuide.set(false);
+    mockStore.guide.set(undefined);
     recentGuides.set([]);
     mockRecentGuides.initialized.set(true);
 
@@ -172,7 +172,7 @@ describe('Feature', () => {
     recentGuides.set([recentGuide]);
     mockRecentGuides.open.mockResolvedValueOnce(file);
     mockStore.importArchive.mockImplementationOnce(async () => {
-      mockStore.hasWorkspace.set(true);
+      mockStore.hasGuide.set(true);
       return { status: 'success' };
     });
 
@@ -327,7 +327,7 @@ describe('Feature', () => {
   });
 
   it('places active Guide status and file actions below the title', () => {
-    mockStore.hasWorkspace.set(true);
+    mockStore.hasGuide.set(true);
     fixture.detectChanges();
     const toolbar: HTMLElement = fixture.nativeElement.querySelector(
       '[data-testid="guide-toolbar"]'
@@ -338,7 +338,7 @@ describe('Feature', () => {
 
     expect(toolbar).toBeTruthy();
     expect(headerSlot.contains(toolbar)).toBe(true);
-    expect(toolbar.querySelector('[data-testid="workspace-key"]')).toBeTruthy();
+    expect(toolbar.querySelector('[data-testid="guide-key"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="busy-status"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="import-archive"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="export-archive"]')).toBeTruthy();
@@ -465,8 +465,8 @@ describe('Feature', () => {
     const fileHandle = { createWritable, getFile };
     const showSaveFilePicker = vi.fn(async () => fileHandle);
     vi.stubGlobal('showSaveFilePicker', showSaveFilePicker);
-    mockStore.hasWorkspace.set(true);
-    mockStore.workspace.set({
+    mockStore.hasGuide.set(true);
+    mockStore.guide.set({
       entities: {
         game: {
           name: 'MARVEL Tōkon: Fighting Souls',
@@ -510,7 +510,7 @@ describe('Feature', () => {
   });
 
   it('closes the active Guide and returns to the empty state', () => {
-    mockStore.hasWorkspace.set(true);
+    mockStore.hasGuide.set(true);
     fixture.detectChanges();
 
     const button: HTMLButtonElement = fixture.nativeElement.querySelector(
@@ -519,7 +519,7 @@ describe('Feature', () => {
     button.click();
     fixture.detectChanges();
 
-    expect(mockStore.clearActiveWorkspace).toHaveBeenCalledTimes(1);
+    expect(mockStore.clearActiveGuide).toHaveBeenCalledTimes(1);
     expect(
       fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
     ).toBeTruthy();
@@ -531,7 +531,7 @@ describe('Feature', () => {
       fixture.nativeElement.querySelector('[data-testid="open-directory"]')
     ).toBeNull();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="save-workspace"]')
+      fixture.nativeElement.querySelector('[data-testid="save-directory"]')
     ).toBeNull();
   });
 });

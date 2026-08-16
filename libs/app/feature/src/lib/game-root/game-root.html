@@ -1,10 +1,10 @@
 <section aria-labelledby="game-root-heading">
 	<h2 id="game-root-heading">Game</h2>
-	<form class="game-form" (submit)="$event.preventDefault(); createWorkspace()">
+	<form class="game-form" (submit)="$event.preventDefault(); createGuide()">
 		<section class="form-section" aria-labelledby="identity-heading">
 			<div class="section-heading">
 				<h3 id="identity-heading">Identity</h3>
-				@if (facade.workspace()) {
+				@if (facade.guide()) {
 					<p>Name and version are fixed after game creation.</p>
 				}
 			</div>
@@ -200,8 +200,8 @@
 		</section>
 
 		<footer class="form-actions">
-			@if (!facade.workspace()) {
-				<button matButton="filled" type="submit" data-testid="create-workspace">
+			@if (!facade.guide()) {
+				<button matButton="filled" type="submit" data-testid="create-guide">
 					Create guide
 				</button>
 			} @else {

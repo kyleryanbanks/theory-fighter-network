@@ -7,11 +7,12 @@ import {
 } from './local-guide.facade.store';
 import {
   createGuideJson,
-  type LocalGuideWorkspace,
+  type LocalGuide,
 } from '../guide';
+import { createStateModel } from '../models';
 
 // Shared fixture builder used to keep tests focused on facade behavior.
-function buildWorkspace(gameKey = 'game-demo-1x'): LocalGuideWorkspace {
+function buildGuide(gameKey = 'game-demo-1x'): LocalGuide {
   return {
     guide: createGuideJson({ gameKey }),
     entities: {
@@ -26,7 +27,7 @@ function buildWorkspace(gameKey = 'game-demo-1x'): LocalGuideWorkspace {
           directions: [{ label: '5', value: '5' }],
           buttons: [{ label: 'LP', value: 'lp' }],
         },
-        states: {},
+        states: createStateModel(),
         community: { ownerId: 'local-user' },
         meta: {
           createdAt: new Date('2026-01-01T00:00:00.000Z'),
@@ -48,9 +49,9 @@ function buildWorkspace(gameKey = 'game-demo-1x'): LocalGuideWorkspace {
 // Mock port lets tests verify orchestration without real filesystem side effects.
 function createPersistenceMock(): LocalGuidePersistencePort {
   return {
-    parseArchiveFile: vi.fn(async () => buildWorkspace('imported-game')),
+    parseArchiveFile: vi.fn(async () => buildGuide('imported-game')),
     buildArchiveFile: vi.fn(
-      async (_workspace, fileName = 'guide.tfn') =>
+      async (_guide, fileName = 'guide.tfn') =>
         new File(['{}'], fileName, { type: 'application/json' })
     ),
   };
@@ -75,8 +76,8 @@ describe('LocalGuideFacadeStore', () => {
     store = TestBed.inject(LocalGuideFacadeStore);
   });
 
-  it('creates a new workspace through a mutation and stores it as the active value', async () => {
-    const result = await store.createWorkspace({
+  it('creates a new Guide through a mutation and stores it as the active value', async () => {
+    const result = await store.createGuide({
       name: 'Created Fighter',
       version: '1.2.0',
       frameRate: 60,
@@ -93,7 +94,7 @@ describe('LocalGuideFacadeStore', () => {
   });
 
   it('updates active game metadata while preserving identity and marking it unsaved', async () => {
-    await store.createWorkspace({
+    await store.createGuide({
       name: 'Editable Fighter', version: '1.0.0', frameRate: 60,
       is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
     });
@@ -107,14 +108,53 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.guide.localChanges).toContain(`game:${semanticKey}`);
   });
 
-  it('imports a workspace through a mutation and replaces active value', async () => {
-    const importedWorkspace = buildWorkspace('imported-game');
+  it('creates and deletes Stages while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Stage Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+
+    expect(created.status).toBe('success');
+    expect(stage?.name).toBe('Training Room');
+    expect(store.value()?.guide.localChanges).toContain(
+      `stage:${stage?.semanticKey}`
+    );
+
+    const deleted = await store.deleteStage({
+      stageKey: stage?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.stages).toEqual([]);
+    expect(store.value()?.guide.localChanges).toContain(
+      `stage:${stage?.semanticKey}`
+    );
+  });
+
+  it('rejects duplicate Stage identity within a Guide', async () => {
+    await store.createGuide({
+      name: 'Stage Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+
+    const duplicate = await store.createStage({ name: ' training-room ' });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.stages).toHaveLength(1);
+  });
+
+  it('imports a Guide through a mutation and replaces the active Guide', async () => {
+    const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {
       type: 'application/json',
     });
 
     vi.mocked(persistence.parseArchiveFile).mockResolvedValue(
-      importedWorkspace
+      importedGuide
     );
 
     const result = await store.importArchive(archiveFile);
@@ -123,8 +163,8 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.guide.gameKey).toBe('imported-game');
   });
 
-  it('exports the active workspace through a mutation', async () => {
-    await store.createWorkspace({
+  it('exports the active Guide through a mutation', async () => {
+    await store.createGuide({
       name: 'Export Fighter', version: '3.0.0', frameRate: 60,
       is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
     });

@@ -10,8 +10,8 @@ import {
 } from '../guide';
 import { createStateModel } from '../models';
 import {
-  loadWorkspaceFromDirectory,
-  saveWorkspaceToDirectory,
+  loadGuideFromDirectory,
+  saveGuideToDirectory,
 } from './local-guide-node';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -107,15 +107,15 @@ describe('local guide foundation', () => {
     ).toThrow(/upgrade/i);
   });
 
-  it('imports and exports folder-based workspace data', async () => {
+  it('imports and exports folder-based Guide data', async () => {
     const tempRoot = await mkdtemp(join(tmpdir(), 'tfn-local-guide-'));
 
     try {
       const entities = buildFixtureEntities();
       const guide = createGuideJson({ gameKey: entities.game.semanticKey });
 
-      await saveWorkspaceToDirectory(tempRoot, { guide, entities });
-      const loaded = await loadWorkspaceFromDirectory(tempRoot);
+      await saveGuideToDirectory(tempRoot, { guide, entities });
+      const loaded = await loadGuideFromDirectory(tempRoot);
 
       expect(loaded.guide.gameKey).toBe('game-demo-1x');
       expect(loaded.entities.game.name).toBe('Demo Fighter');

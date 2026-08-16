@@ -1,7 +1,7 @@
 import {
   buildTfnArchive,
   createGuideJson,
-  type LocalGuideWorkspace,
+  type LocalGuide,
 } from '../guide';
 import { createGameDocument } from '../models';
 import {
@@ -11,7 +11,7 @@ import {
   parseArchiveFile,
 } from './local-guide-web';
 
-function buildWorkspace(): LocalGuideWorkspace {
+function buildGuide(): LocalGuide {
   const game = createGameDocument({
     semanticKey: 'game-demo-1x',
     name: 'Demo Fighter',
@@ -35,32 +35,32 @@ function buildWorkspace(): LocalGuideWorkspace {
 
 describe('local Guide web persistence', () => {
   it('builds a .tfn File with the requested name and JSON media type', () => {
-    const archiveFile = buildArchiveFile(buildWorkspace(), 'demo-guide.tfn');
+    const archiveFile = buildArchiveFile(buildGuide(), 'demo-guide.tfn');
 
     expect(archiveFile.name).toBe('demo-guide.tfn');
     expect(archiveFile.type).toBe('application/json');
   });
 
   it('uses guide.tfn as the default archive filename', () => {
-    expect(buildArchiveFile(buildWorkspace()).name).toBe('guide.tfn');
+    expect(buildArchiveFile(buildGuide()).name).toBe('guide.tfn');
   });
 
   it('round-trips a Guide through browser File APIs', async () => {
-    const workspace = buildWorkspace();
-    const archiveFile = buildArchiveFile(workspace, 'demo-guide.tfn');
+    const guide = buildGuide();
+    const archiveFile = buildArchiveFile(guide, 'demo-guide.tfn');
 
     const loaded = await parseArchiveFile(archiveFile);
 
     expect(loaded.guide.gameKey).toBe('game-demo-1x');
     expect(loaded.entities.game.meta.createdAt).toBeInstanceOf(Date);
     expect(loaded.entities.game.meta.createdAt.toISOString()).toBe(
-      workspace.entities.game.meta.createdAt.toISOString()
+      guide.entities.game.meta.createdAt.toISOString()
     );
   });
 
   it('rejects corrupted browser archive data', async () => {
-    const workspace = buildWorkspace();
-    const archive = buildTfnArchive(workspace).replace(
+    const guide = buildGuide();
+    const archive = buildTfnArchive(guide).replace(
       'Demo Fighter',
       'Tampered Fighter'
     );
@@ -71,6 +71,6 @@ describe('local Guide web persistence', () => {
   });
 
   it('builds a JSON archive Blob', () => {
-    expect(buildArchiveBlob(buildWorkspace()).type).toBe('application/json');
+    expect(buildArchiveBlob(buildGuide()).type).toBe('application/json');
   });
 });

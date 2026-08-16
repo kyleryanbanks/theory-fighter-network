@@ -53,7 +53,7 @@ export class Feature implements OnInit {
       const recentGuide = this.recentGuides.recentGuides()[0];
 
       if (
-        !this.facade.hasWorkspace() &&
+        !this.facade.hasGuide() &&
         (recentGuide?.hasFileHandle || recentGuide?.hasSnapshot)
       ) {
         await this.openRecentGuide(recentGuide, false, true);
@@ -83,7 +83,7 @@ export class Feature implements OnInit {
   }
 
   closeGuide(): void {
-    this.facade.clearActiveWorkspace();
+    this.facade.clearActiveGuide();
     this.isCreatingGuide.set(false);
   }
 
@@ -163,7 +163,7 @@ export class Feature implements OnInit {
   }
 
   async saveTfn(): Promise<void> {
-    const gameName = this.facade.workspace()?.entities.game.name || 'Guide';
+    const gameName = this.facade.guide()?.entities.game.name || 'Guide';
     const normalizedGameName = normalizeGameName(gameName);
     const fileName = `${normalizedGameName || 'guide'}.tfn`;
     const saveFilePicker = (globalThis as SaveFilePickerGlobal)
@@ -245,7 +245,7 @@ export class Feature implements OnInit {
 
     if (result.status === 'success') {
       const gameName =
-        this.facade.workspace()?.entities.game.name || file.name;
+        this.facade.guide()?.entities.game.name || file.name;
       await this.recentGuides.remember(file, gameName, handle);
       this.recentGuideError.set('');
       this.isCreatingGuide.set(false);

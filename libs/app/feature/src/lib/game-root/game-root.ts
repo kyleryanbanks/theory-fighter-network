@@ -68,15 +68,15 @@ export class GameRoot {
     required(path.version, { message: 'Version is required.' });
     min(path.frameRate, 1, { message: 'Frame rate must be positive.' });
     min(path.teamSize, 1, { message: 'Team size must be at least one.' });
-    readonly(path.name, { when: () => !!this.facade.workspace() });
-    readonly(path.version, { when: () => !!this.facade.workspace() });
+    readonly(path.name, { when: () => !!this.facade.guide() });
+    readonly(path.version, { when: () => !!this.facade.guide() });
   });
   readonly directionDraftForm = form(this.directionDraftModel);
   readonly buttonDraftForm = form(this.buttonDraftModel);
 
   constructor() {
     effect(() => {
-      const game = this.facade.workspace()?.entities.game;
+      const game = this.facade.guide()?.entities.game;
       if (!game) {
         return;
       }
@@ -95,10 +95,10 @@ export class GameRoot {
     });
   }
 
-  createWorkspace(): void {
+  createGuide(): void {
     submit(this.gameForm, async () => {
       const model = this.gameModel();
-      await this.facade.createWorkspace({
+      await this.facade.createGuide({
         name: model.name.trim(),
         version: model.version.trim(),
         frameRate: model.frameRate,
