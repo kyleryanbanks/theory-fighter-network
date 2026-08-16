@@ -96,19 +96,18 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ---
 
-### Phase 1.4: Entity Hierarchy Foundation (Game-Level Children)
-**Status: Partially complete (2026-08-15).** Stage CRUD is implemented end-to-end. Stage semantic identity is derived from Game identity plus normalized Stage name; duplicate Stage identity is rejected; deletes are blocked when local zones exist; Guide changes are tracked; browser `.tfn` persistence is covered; and the active Guide includes a responsive Stage editor. Universal Stage Zones, zone inheritance/override UI, and universal sequences remain.
-**Scope**: Build hierarchy starting from game downward: universal stage zones, stages + inheritance, universal sequences.
+### Phase 1.4: Entity Hierarchy Foundation (Stages + Zone Inheritance)
+**Status: Stage CRUD + Zone CRUD complete (2026-08-16).** Stage creation, deletion, and unsaved tracking are implemented. Stage-scoped zone CRUD mutations update parent `Stage.hierarchy.zoneKeys` bidirectionally. Zone semantic keys derive from game + stage + name. Zone inheritance/override UI remains.
+**Scope**: Build hierarchy starting from game downward: universal stage zones, stages, zone inheritance, and zone overrides.
 
 **Deliverables**:
 - Universal stage zones: StageZoneDocument with `stageKey: null` (game-level, inherited by all stages)
 - Stage creation/CRUD: StageDocument with gameKey, name, semanticKey
-- Inherited zones: StageZoneDocument with `stageKey: <stageId>` + optional `inheritedFromZoneKey`
-- Universal sequences: SequenceDocument with `characterKey: null, teamKey: null` (game-level, inherited by all)
+- Stage-scoped zones: StageZoneDocument with `stageKey: <stageId>` (stage-specific override)
+- Inherited zones: Optional `inheritedFromZoneKey` tracking when stage zone overrides game zone
 - Inheritance UI: Show inherited fields with lock/override UI; changes to parent propagate to unlocked children
-- Promote-to-inherited workflow: Move character-scoped sequence → game-scoped (if applicable)
 
-**Validation**: Game zones visible to all stages; stage zones override game zones where applicable; sequences inherit correctly
+**Validation**: Game zones visible to all stages; stage zones override game zones where applicable
 
 **Ownership convention**: Child documents remain separate entities with their own `semanticKey` and parent scope key. Parent documents store ordered arrays of those existing child semantic keys (`Game.stageKeys`, `Stage.zoneKeys`, `Character.moveKeys`, etc.). Guide validation requires both directions to agree.
 
@@ -116,35 +115,49 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ---
 
-### Phase 1.5: Character Branch (Characters, Moves, Sequences)
-**Scope**: Build character entity hierarchy: character creation, move CRUD, character-scoped sequences.
+### Phase 1.5: Character Branch (Characters, Moves)
+**Scope**: Build character entity hierarchy: character creation, character-scoped moves.
 
 **Deliverables**:
 - CharacterDocument creation: Initialize with gameKey, name, archetypes, states (inherit from game)
 - Character-scoped moves: MoveDocument with gameKey + characterKey; inherit game-level moves
 - Move CRUD: Create, edit, delete moves; validate preconditions and phases
 - Move input parsing: Convert button/direction sequences to canonical input representation
-- Character-scoped sequences: SequenceDocument with gameKey + characterKey
-- Inheritance chains: Show parent game moves/sequences; highlight overrides
+- Inheritance chains: Show parent game moves; highlight character-scoped overrides
 
 **Validation**: Character inherits game moves; local overrides don't affect parent; semanticKeys stable across edits
 
-**Depends on**: Phase 1.2, 1.4
+---
+
+### Phase 1.5.1: Sequence Authoring (Universal + Scoped)
+**Scope**: Build sequence entities across scopes after moves are defined.
+
+**Deliverables**:
+- Universal sequences: SequenceDocument with `characterKey: null, teamKey: null` (game-level, inherited by all)
+- Character-scoped sequences: SequenceDocument with gameKey + characterKey
+- Team-scoped sequences: SequenceDocument with gameKey + teamKey
+- Sequence CRUD: Create, edit, delete sequences; validate move references
+- Inheritance UI: Show inherited sequences; allow character/team override or promotion to universal
+- Promote-to-inherited workflow: Move character-scoped sequence → game-scoped (if applicable)
+
+**Validation**: All referenced moves exist in scope; sequences inherit correctly; promotion preserves semantics
+
+**Depends on**: Phase 1.2, 1.4, 1.5
 
 ---
 
-### Phase 1.6: Team Branch (Teams, Sequences)
-**Scope**: Build team entity hierarchy: team creation, team-scoped sequences.
+### Phase 1.6: Team Branch (Teams)
+**Scope**: Build team entity hierarchy: team creation.
 
 **Deliverables**:
 - TeamDocument creation: Select ordered list of CharacterDocuments; compute semanticKey from character order
-- Team-scoped sequences: SequenceDocument with gameKey + teamKey
-- Assist/loadout scoping: Team values override character values for assist/loadout selection
+- Team CRUD: Create, edit, delete teams; reorder members
+- Assist/loadout scoping: Team-level values for assist/loadout selection
 - Team validation: All characters must exist in game; order preserved in semanticKey
 
 **Validation**: Create team → verify all characters exist; reorder team → semanticKey updates
 
-**Depends on**: Phase 1.5
+**Depends on**: Phase 1.5, 1.5.1
 
 ---
 
@@ -161,7 +174,7 @@ These phases establish the offline foundation. All features are local-only; no n
 
 **Validation**: Matchup requires both characters; scenarios have consistent game version; response tree is acyclic
 
-**Depends on**: Phase 1.6
+**Depends on**: Phase 1.6, 1.5.1
 
 ---
 

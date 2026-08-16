@@ -151,6 +151,38 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.stages).toHaveLength(1);
   });
 
+  it('creates and deletes stage-scoped Zones while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createStage({ name: 'Training Room' });
+    const stage = store.value()?.entities.stages[0];
+
+    const created = await store.createStageZone({
+      name: 'Platform',
+      stageKey: stage?.semanticKey ?? '',
+    });
+    const zone = store.value()?.entities.stageZones[0];
+    const updatedStage = store.value()?.entities.stages[0];
+
+    expect(created.status).toBe('success');
+    expect(zone?.name).toBe('Platform');
+    expect(zone?.stageKey).toBe(stage?.semanticKey);
+    expect(updatedStage?.hierarchy.zoneKeys).toContain(zone?.semanticKey);
+    expect(store.value()?.guide.localChanges).toContain(
+      `stageZone:${zone?.semanticKey}`
+    );
+
+    const deleted = await store.deleteStageZone({
+      stageZoneKey: zone?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.stageZones).toEqual([]);
+    expect(store.value()?.entities.stages[0]?.hierarchy.zoneKeys).toEqual([]);
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

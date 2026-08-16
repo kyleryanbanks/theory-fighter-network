@@ -24,7 +24,7 @@ import {
   type CreateGameInput,
   type GameMetadataUpdate,
 } from '../models/game';
-import { createStage } from '../models/stage';
+import { createStage, createStageZone } from '../models/stage';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -242,6 +242,169 @@ export const LocalGuideFacadeStore = signalStore(
                 ),
               },
             };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    createStageZone: rxMutation({
+      operation: (input: { name: string; stageKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const stage = localGuide.entities.stages.find(
+              (s) => s.semanticKey === input.stageKey
+            );
+            if (!stage) {
+              throw new Error(`Stage "${input.stageKey}" does not exist.`);
+            }
+
+            const zone = createStageZone({
+              gameKey: localGuide.entities.game.semanticKey,
+              stageKey: input.stageKey,
+              name: input.name,
+            });
+
+            if (
+              localGuide.entities.stageZones.some(
+                (existing) => existing.semanticKey === zone.semanticKey
+              )
+            ) {
+              throw new Error(`Zone "${zone.name}" already exists in this Stage.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stageZone',
+              entityKey: zone.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'stage',
+              entityKey: stage.semanticKey,
+            });
+
+            const updatedStage = {
+              ...stage,
+              hierarchy: {
+                ...stage.hierarchy,
+                zoneKeys: [...stage.hierarchy.zoneKeys, zone.semanticKey],
+              },
+              meta: {
+                ...stage.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                stages: localGuide.entities.stages.map((s) =>
+                  s.semanticKey === stage.semanticKey ? updatedStage : s
+                ),
+                stageZones: [...localGuide.entities.stageZones, zone],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteStageZone: rxMutation({
+      operation: ({ stageZoneKey }: { stageZoneKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const zone = localGuide.entities.stageZones.find(
+              (z) => z.semanticKey === stageZoneKey
+            );
+            if (!zone) {
+              throw new Error(`Zone "${stageZoneKey}" does not exist.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'stageZone',
+              entityKey: stageZoneKey,
+            });
+
+            if (zone.stageKey) {
+              // Stage-scoped zone
+              const stage = localGuide.entities.stages.find(
+                (s) => s.semanticKey === zone.stageKey
+              );
+              if (!stage) {
+                throw new Error(
+                  `Stage "${zone.stageKey}" for zone "${stageZoneKey}" not found.`
+                );
+              }
+
+              markEntityUnsaved(guide, {
+                entityType: 'stage',
+                entityKey: stage.semanticKey,
+              });
+
+              const updatedStage = {
+                ...stage,
+                hierarchy: {
+                  ...stage.hierarchy,
+                  zoneKeys: stage.hierarchy.zoneKeys.filter(
+                    (key) => key !== stageZoneKey
+                  ),
+                },
+                meta: {
+                  ...stage.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  stages: localGuide.entities.stages.map((s) =>
+                    s.semanticKey === stage.semanticKey ? updatedStage : s
+                  ),
+                  stageZones: localGuide.entities.stageZones.filter(
+                    (z) => z.semanticKey !== stageZoneKey
+                  ),
+                },
+              };
+            } else {
+              // Game-level universal zone
+              markEntityUnsaved(guide, {
+                entityType: 'game',
+                entityKey: localGuide.entities.game.semanticKey,
+              });
+
+              const game = {
+                ...localGuide.entities.game,
+                universal: {
+                  ...localGuide.entities.game.universal,
+                  stageZoneKeys: localGuide.entities.game.universal.stageZoneKeys.filter(
+                    (key) => key !== stageZoneKey
+                  ),
+                },
+                meta: {
+                  ...localGuide.entities.game.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  game,
+                  stageZones: localGuide.entities.stageZones.filter(
+                    (z) => z.semanticKey !== stageZoneKey
+                  ),
+                },
+              };
+            }
           })()
         ),
       onSuccess: (guide) => patchState(store, { value: guide }),
