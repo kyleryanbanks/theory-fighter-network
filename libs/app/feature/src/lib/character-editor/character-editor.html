@@ -46,6 +46,32 @@
             (address)="addressNote(character.semanticKey, $event)"
           />
         </tfn-expansion-panel>
+        <tfn-expansion-panel subsection secondary header="Moves">
+          @for (move of characterMoves(character.semanticKey); track move.semanticKey) {
+            <a
+              class="child-entity-link"
+              [routerLink]="['/moves', move.semanticKey]"
+            >
+              <strong>{{ move.name }}</strong>
+              <small>{{ move.semanticKey }}</small>
+            </a>
+          } @empty {
+            <p class="empty-state">No Moves added for this Character.</p>
+          }
+        </tfn-expansion-panel>
+        <tfn-expansion-panel subsection secondary header="Sequences">
+          @for (sequence of characterSequences(character.semanticKey); track sequence.semanticKey) {
+            <a
+              class="child-entity-link"
+              [routerLink]="['/sequences', sequence.semanticKey]"
+            >
+              <strong>{{ sequenceLabel(sequence) }}</strong>
+              <small>{{ sequence.semanticKey }}</small>
+            </a>
+          } @empty {
+            <p class="empty-state">No Sequences added for this Character.</p>
+          }
+        </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary header="Metadata">
           <tfn-entity-metadata [metadata]="character.meta" />
           <tfn-delete-button

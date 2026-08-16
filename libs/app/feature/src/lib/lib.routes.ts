@@ -7,6 +7,8 @@ import { MoveEditor } from './move-editor/move-editor';
 import { SequenceEditor } from './sequence-editor/sequence-editor';
 import { TeamEditor } from './team-editor/team-editor';
 import { MatchupEditor } from './matchup-editor/matchup-editor';
+import { MoveDetail } from './move-detail/move-detail';
+import { SequenceDetail } from './sequence-detail/sequence-detail';
 
 export const featureRoutes: Route[] = [
   {
@@ -18,7 +20,9 @@ export const featureRoutes: Route[] = [
       { path: 'stages', component: StageEditor },
       { path: 'characters', component: CharacterEditor },
       { path: 'moves', component: MoveEditor },
+      { path: 'moves/:moveKey', component: MoveDetail },
       { path: 'sequences', component: SequenceEditor },
+      { path: 'sequences/:sequenceKey', component: SequenceDetail },
       { path: 'teams', component: TeamEditor },
       { path: 'matchups', component: MatchupEditor },
     ],

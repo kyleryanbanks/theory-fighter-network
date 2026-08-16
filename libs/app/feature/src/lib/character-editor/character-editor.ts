@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,7 +15,7 @@ interface CharacterDraft {
 
 @Component({
   selector: 'tfn-character-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton],
   templateUrl: './character-editor.html',
   styleUrl: './character-editor.css',
 })
@@ -24,11 +25,46 @@ export class CharacterEditor {
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? []
   );
+  readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
+  readonly sequences = computed(
+    () => this.facade.guide()?.entities.sequences ?? []
+  );
   readonly characterModel = signal<CharacterDraft>({ name: '' });
   readonly characterError = signal('');
   readonly characterForm = form(this.characterModel, (path) => {
     required(path.name, { message: 'Character name is required.' });
   });
+
+  characterMoves(characterKey: string) {
+    const character = this.characters().find(
+      (candidate) => candidate.semanticKey === characterKey
+    );
+    const keys = character?.hierarchy?.moveKeys ?? [];
+    return keys
+      .map((key) => this.moves().find((move) => move.semanticKey === key))
+      .filter((move): move is NonNullable<typeof move> => Boolean(move));
+  }
+
+  characterSequences(characterKey: string) {
+    const character = this.characters().find(
+      (candidate) => candidate.semanticKey === characterKey
+    );
+    const keys = character?.hierarchy?.sequenceKeys ?? [];
+    return keys
+      .map((key) =>
+        this.sequences().find((sequence) => sequence.semanticKey === key)
+      )
+      .filter((sequence): sequence is NonNullable<typeof sequence> => Boolean(sequence));
+  }
+
+  sequenceLabel(sequence: { sequence: Array<{ moveKey?: string }> }): string {
+    return sequence.sequence
+      .map((step) =>
+        this.moves().find((move) => move.semanticKey === step.moveKey)?.name ??
+        step.moveKey
+      )
+      .join(' → ');
+  }
 
   createCharacter(): void {
     submit(this.characterForm, async () => {

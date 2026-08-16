@@ -94,6 +94,25 @@ h2 {
   background: #f9faf8;
 }
 
+.child-entity-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid #d8e2dc;
+  border-radius: 4px;
+  color: #244b38;
+  text-decoration: none;
+}
+
+.child-entity-link:hover {
+  background: #eef4f0;
+}
+
+.child-entity-link small {
+  color: #617168;
+}
+
 .character-entry span {
   display: grid;
   min-width: 0;
