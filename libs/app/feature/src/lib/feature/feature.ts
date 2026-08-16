@@ -16,9 +16,8 @@ import {
   type RecentFileHandle,
   type RecentGuide,
 } from '@theory-fighter-network/data';
-import { Ui } from '@theory-fighter-network/ui';
+import { GuideNav, Ui } from '@theory-fighter-network/ui';
 import { GameRoot } from '../game-root/game-root';
-import { GuideNav } from '../guide-nav/guide-nav';
 
 @Component({
   selector: 'tfn-feature',
