@@ -177,30 +177,77 @@ h2 {
 
 .response-outcome-menu {
   position: absolute;
-  left: 0;
-  top: calc(100% + 6px);
+  inset: 0;
   z-index: 1;
-  display: flex;
-  gap: 4px;
-  border: 1px solid #b7cbbd;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  border: 2px solid #244b38;
   border-radius: 6px;
-  padding: 4px;
+  overflow: hidden;
   background: #ffffff;
   box-shadow: 0 8px 20px rgba(26, 48, 39, 0.18);
 }
 
 .response-outcome-menu button {
+  min-width: 0;
   border: 0;
-  border-radius: 4px;
-  padding: 5px 8px;
-  background: transparent;
+  border-right: 1px solid #b7cbbd;
+  border-bottom: 1px solid #b7cbbd;
+  padding: 4px;
+  background: #ffffff;
   cursor: pointer;
   font: inherit;
   font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .response-outcome-menu button:hover {
   background: #eef4f0;
+}
+
+.response-outcome-menu .response-action--win {
+  background: #e6f4eb;
+  color: #14532d;
+}
+
+.response-outcome-menu .response-action--trade {
+  background: #fff8e5;
+  color: #713f12;
+}
+
+.response-outcome-menu .response-action--loss {
+  background: #fff0f0;
+  color: #7f1d1d;
+}
+
+.response-outcome-menu .response-action--reset {
+  background: #f3f7f4;
+  color: #244b38;
+}
+
+.response-outcome-menu .response-action--win:hover {
+  background: #b7e4c7;
+}
+
+.response-outcome-menu .response-action--trade:hover {
+  background: #f6d98b;
+}
+
+.response-outcome-menu .response-action--loss:hover {
+  background: #f5b5b5;
+}
+
+.response-outcome-menu .response-action--reset:hover {
+  background: #d8e2dc;
+}
+
+.response-outcome-menu button:nth-child(2n) {
+  border-right: 0;
+}
+
+.response-outcome-menu button:nth-last-child(-n + 2) {
+  border-bottom: 0;
 }
 
 .empty-state {

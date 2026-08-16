@@ -74,10 +74,10 @@
                         </button>
                         @if (editingResponseKey() === (response?.semanticKey ?? responseTileKey(scenario.semanticKey, move.semanticKey))) {
                           <div class="response-outcome-menu">
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 1)">Win</button>
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 0)">Trade</button>
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, -1)">Loss</button>
-                            @if (response) { <button type="button" (click)="$event.stopPropagation(); resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey)">Reset</button> }
+                            <button class="response-action--win" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 1)">Win</button>
+                            <button class="response-action--trade" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 0)">Trade</button>
+                            <button class="response-action--reset" type="button" (click)="$event.stopPropagation(); response ? resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey) : closeResponseMenu()">Reset</button>
+                            <button class="response-action--loss" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, -1)">Loss</button>
                           </div>
                         }
                       </div>
@@ -91,10 +91,10 @@
                         </button>
                         @if (editingResponseKey() === (response?.semanticKey ?? responseTileKey(scenario.semanticKey, sequence.semanticKey))) {
                           <div class="response-outcome-menu">
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 1)">Win</button>
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 0)">Trade</button>
-                            <button type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, -1)">Loss</button>
-                            @if (response) { <button type="button" (click)="$event.stopPropagation(); resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey)">Reset</button> }
+                            <button class="response-action--win" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 1)">Win</button>
+                            <button class="response-action--trade" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 0)">Trade</button>
+                            <button class="response-action--reset" type="button" (click)="$event.stopPropagation(); response ? resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey) : closeResponseMenu()">Reset</button>
+                            <button class="response-action--loss" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, -1)">Loss</button>
                           </div>
                         }
                       </div>
