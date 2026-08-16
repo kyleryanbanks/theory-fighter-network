@@ -48,10 +48,15 @@
   <div class="move-list">
     @for (move of moves(); track move.semanticKey) {
       <div class="move-entry" data-testid="move-entry">
-        <span>
+        <span class="move-identity">
           <strong>{{ move.name }}</strong>
           <small>{{ move.semanticKey }}</small>
         </span>
+        @if (!move.characterKey && scopeKey() !== '') {
+          <span class="inherited-badge" data-testid="inherited-badge">
+            Universal
+          </span>
+        }
         <button
           matButton
           type="button"

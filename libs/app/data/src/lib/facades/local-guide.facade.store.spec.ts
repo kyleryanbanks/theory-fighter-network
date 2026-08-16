@@ -383,6 +383,150 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.sequences).toEqual([]);
   });
 
+  it('creates and deletes Teams while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+
+    const created = await store.createTeam({
+      characterKeys: [ryu.semanticKey, ken.semanticKey],
+    });
+    const team = store.value()?.entities.teams[0];
+
+    expect(created.status).toBe('success');
+    expect(team?.orderedCharacterKeys).toEqual([
+      ryu.semanticKey,
+      ken.semanticKey,
+    ]);
+    expect(store.value()?.entities.game.hierarchy.teamKeys).toEqual([
+      team?.semanticKey,
+    ]);
+    expect(store.value()?.guide.localChanges).toContain(
+      `team:${team?.semanticKey}`
+    );
+
+    const deleted = await store.deleteTeam({
+      teamKey: team?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.teams).toEqual([]);
+    expect(store.value()?.entities.game.hierarchy.teamKeys).toEqual([]);
+  });
+
+  it('rejects creating a Team with a nonexistent Character', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createTeam({
+      characterKeys: ['character-missing'],
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.teams).toEqual([]);
+  });
+
+  it('rejects creating a Team when the Game Team Size is 1', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+
+    const created = await store.createTeam({
+      characterKeys: [character?.semanticKey ?? ''],
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.teams).toEqual([]);
+  });
+
+  it('rejects a Team with more Characters than the Game Team Size', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    await store.createCharacter({ name: 'Chun-Li' });
+    const [ryu, ken, chunLi] = store.value()?.entities.characters ?? [];
+
+    const created = await store.createTeam({
+      characterKeys: [ryu.semanticKey, ken.semanticKey, chunLi.semanticKey],
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.teams).toEqual([]);
+  });
+
+  it('allows a Team subset smaller than the Game Team Size', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 3, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+
+    const created = await store.createTeam({
+      characterKeys: [character?.semanticKey ?? ''],
+    });
+
+    expect(created.status).toBe('success');
+    expect(store.value()?.entities.teams).toHaveLength(1);
+  });
+
+  it('rejects duplicate Team identity based on ordered Character keys', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+    await store.createTeam({
+      characterKeys: [ryu.semanticKey, ken.semanticKey],
+    });
+
+    const duplicate = await store.createTeam({
+      characterKeys: [ryu.semanticKey, ken.semanticKey],
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.teams).toHaveLength(1);
+  });
+
+  it('rejects deleting a Team that still has Sequences', async () => {
+    await store.createGuide({
+      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+    const created = await store.createTeam({
+      characterKeys: [character?.semanticKey ?? ''],
+    });
+    const team = store.value()?.entities.teams[0];
+    await store.createSequence({
+      teamKey: team?.semanticKey ?? '',
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+
+    const deleted = await store.deleteTeam({
+      teamKey: team?.semanticKey ?? '',
+    });
+
+    expect(created.status).toBe('success');
+    expect(deleted.status).toBe('error');
+    expect(store.value()?.entities.teams).toHaveLength(1);
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

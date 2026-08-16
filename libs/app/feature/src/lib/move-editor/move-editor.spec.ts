@@ -59,6 +59,30 @@ describe('MoveEditor', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Hadoken');
   });
 
+  it('shows universal Moves alongside a Character\'s own Moves when scoped', () => {
+    guide.set(
+      buildGuide(
+        [{ name: 'Ryu', semanticKey: 'character-ryu' }],
+        [
+          { name: 'Universal Parry', semanticKey: 'move-parry' },
+          {
+            name: 'Hadoken',
+            semanticKey: 'move-hadoken',
+            characterKey: 'character-ryu',
+          },
+        ]
+      )
+    );
+    fixture.componentInstance.setScope('character-ryu');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Universal Parry');
+    expect(fixture.nativeElement.textContent).toContain('Hadoken');
+    expect(
+      fixture.nativeElement.querySelectorAll('[data-testid="inherited-badge"]')
+    ).toHaveLength(1);
+  });
+
   it('creates a universal Move from the name field and clears the draft', async () => {
     const input: HTMLInputElement = fixture.nativeElement.querySelector(
       '[data-testid="move-name"]'

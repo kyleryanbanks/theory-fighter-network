@@ -20,22 +20,35 @@
           {{ character.name }}
         </mat-option>
       }
+      @for (team of teams(); track team.semanticKey) {
+        <mat-option [value]="team.semanticKey">
+          {{ teamName(team.semanticKey) }} (Team)
+        </mat-option>
+      }
     </mat-select>
   </mat-form-field>
 
   <div class="sequence-draft">
-    <mat-form-field appearance="outline">
-      <mat-label>Add Move to Sequence</mat-label>
-      <mat-select
-        data-testid="sequence-move-picker"
-        [value]="nextMoveKey()"
-        (selectionChange)="addDraftMove($event.value)"
-      >
-        @for (move of scopedMoves(); track move.semanticKey) {
-          <mat-option [value]="move.semanticKey">{{ move.name }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    <p class="movelist-hint">Tap Moves in order to build the combo string.</p>
+    <div class="movelist-grid" data-testid="movelist-grid">
+      @for (move of scopedMoves(); track move.semanticKey) {
+        <button
+          type="button"
+          class="move-tile"
+          data-testid="move-tile"
+          (click)="addDraftMove(move.semanticKey)"
+        >
+          {{ move.name }}
+          @if (moveTileBadge(move); as badge) {
+            <span class="tile-badge" data-testid="inherited-badge">
+              {{ badge }}
+            </span>
+          }
+        </button>
+      } @empty {
+        <p class="empty-state">No Moves available in this scope.</p>
+      }
+    </div>
 
     @if (draftMoveKeys().length > 0) {
       <ol class="draft-steps" data-testid="draft-steps">

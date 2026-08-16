@@ -33,9 +33,14 @@ export class MoveEditor {
   readonly moves = computed(() => {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
     const scope = this.scopeKey();
+    const universalMoves = allMoves.filter((move) => !move.characterKey);
+
     return scope === UNIVERSAL_SCOPE
-      ? allMoves.filter((move) => !move.characterKey)
-      : allMoves.filter((move) => move.characterKey === scope);
+      ? universalMoves
+      : [
+          ...universalMoves,
+          ...allMoves.filter((move) => move.characterKey === scope),
+        ];
   });
   readonly moveModel = signal<MoveDraft>({ name: '' });
   readonly moveError = signal('');

@@ -1,0 +1,84 @@
+<section aria-labelledby="teams-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Game-level hierarchy</p>
+      <h2 id="teams-heading">Teams</h2>
+    </div>
+    <p>{{ teams().length }} total</p>
+  </div>
+
+  <div class="roster-select">
+    <p class="roster-hint">
+      Tap Characters in pick order to build the roster. Tap a picked
+      Character again to remove them.
+    </p>
+    <div class="character-grid" data-testid="character-grid">
+      @for (character of characters(); track character.semanticKey) {
+        <button
+          type="button"
+          class="character-tile"
+          data-testid="character-tile"
+          [class.character-tile--picked]="rosterPosition(character.semanticKey)"
+          [disabled]="
+            !rosterPosition(character.semanticKey) &&
+            (teamSize() <= 1 || atTeamSizeLimit())
+          "
+          (click)="toggleCharacterTile(character.semanticKey)"
+        >
+          @if (rosterPosition(character.semanticKey); as position) {
+            <span class="tile-badge" data-testid="tile-badge">{{
+              position
+            }}</span>
+          }
+          <span class="tile-name">{{ character.name }}</span>
+        </button>
+      } @empty {
+        <p class="empty-state">Add a Character to build a Team.</p>
+      }
+    </div>
+
+    @if (rosterStatus()) {
+      <p class="roster-status" data-testid="roster-status">
+        {{ rosterStatus() }}
+      </p>
+    }
+
+    <button
+      matButton="filled"
+      type="button"
+      data-testid="add-team"
+      (click)="createTeam()"
+    >
+      Add Team
+    </button>
+  </div>
+
+  @if (teamError()) {
+    <p class="team-alert" role="alert">{{ teamError() }}</p>
+  }
+
+  <div class="team-list">
+    @for (team of teams(); track team.semanticKey) {
+      <div class="team-entry" data-testid="team-entry">
+        <span>
+          <strong>
+            @for (characterKey of team.orderedCharacterKeys; track $index) {
+              {{ characterName(characterKey) }}{{ $last ? '' : ' + ' }}
+            }
+          </strong>
+          <small>{{ team.semanticKey }}</small>
+        </span>
+        <button
+          matButton
+          type="button"
+          [attr.aria-label]="'Delete Team ' + team.semanticKey"
+          (click)="deleteTeam(team.semanticKey)"
+        >
+          Delete
+        </button>
+      </div>
+    } @empty {
+      <p class="empty-state">No Teams added.</p>
+    }
+  </div>
+</section>

@@ -21,10 +21,11 @@ import { StageEditor } from '../stage-editor/stage-editor';
 import { CharacterEditor } from '../character-editor/character-editor';
 import { MoveEditor } from '../move-editor/move-editor';
 import { SequenceEditor } from '../sequence-editor/sequence-editor';
+import { TeamEditor } from '../team-editor/team-editor';
 
 @Component({
   selector: 'tfn-feature',
-  imports: [GameRoot, StageEditor, CharacterEditor, MoveEditor, SequenceEditor, Ui],
+  imports: [GameRoot, StageEditor, CharacterEditor, MoveEditor, SequenceEditor, TeamEditor, Ui],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })

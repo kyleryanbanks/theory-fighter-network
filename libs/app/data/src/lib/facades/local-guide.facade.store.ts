@@ -28,6 +28,7 @@ import { createStage, createStageZone } from '../models/stage';
 import { createCharacter } from '../models/character';
 import { createMove } from '../models/move';
 import { createSequence } from '../models/sequence';
+import { createTeam } from '../models/team';
 import type { Step } from '../models/move';
 import {
   buildArchiveFile,
@@ -1046,14 +1047,153 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    createTeam: rxMutation({
+      operation: (input: { characterKeys: string[] }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const teamSize = localGuide.entities.game.config.teamSize;
+
+            if (teamSize <= 1) {
+              throw new Error(
+                'Teams require a Game Team Size greater than 1.'
+              );
+            }
+            if (input.characterKeys.length > teamSize) {
+              throw new Error(
+                `A Team cannot have more than ${teamSize} Characters.`
+              );
+            }
+
+            for (const characterKey of input.characterKeys) {
+              if (
+                !localGuide.entities.characters.some(
+                  (character) => character.semanticKey === characterKey
+                )
+              ) {
+                throw new Error(`Character "${characterKey}" does not exist.`);
+              }
+            }
+
+            const team = createTeam({
+              gameKey: localGuide.entities.game.semanticKey,
+              orderedCharacterKeys: input.characterKeys,
+            });
+
+            if (
+              localGuide.entities.teams.some(
+                (existing) => existing.semanticKey === team.semanticKey
+              )
+            ) {
+              throw new Error('A Team with this Character order already exists.');
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'team',
+              entityKey: team.semanticKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                teamKeys: [
+                  ...localGuide.entities.game.hierarchy.teamKeys,
+                  team.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                teams: [...localGuide.entities.teams, team],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteTeam: rxMutation({
+      operation: ({ teamKey }: { teamKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            if (
+              !localGuide.entities.teams.some(
+                (team) => team.semanticKey === teamKey
+              )
+            ) {
+              throw new Error(`Team "${teamKey}" does not exist.`);
+            }
+            if (
+              localGuide.entities.sequences.some(
+                (sequence) => sequence.teamKey === teamKey
+              )
+            ) {
+              throw new Error('A Team with local Sequences cannot be deleted.');
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'team',
+              entityKey: teamKey,
+            });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                teamKeys: localGuide.entities.game.hierarchy.teamKeys.filter(
+                  (key) => key !== teamKey
+                ),
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                teams: localGuide.entities.teams.filter(
+                  (team) => team.semanticKey !== teamKey
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     importArchive: rxMutation({
       operation: (archiveFile: File) =>
         from(store.persistence.parseArchiveFile(archiveFile)),
       onSuccess: (guide) => {
         patchState(store, { value: guide });
       },
-    }),
-    exportArchive: rxMutation({
+    }),    exportArchive: rxMutation({
       operation: ({ fileName }: { fileName?: string }) =>
         from(
           (async () => {

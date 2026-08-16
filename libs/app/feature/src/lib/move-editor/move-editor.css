@@ -88,7 +88,7 @@ h2 {
   padding: 7px 8px 7px 14px;
 }
 
-.move-entry span {
+.move-entry span.move-identity {
   display: grid;
   min-width: 0;
 }
@@ -96,6 +96,18 @@ h2 {
 .move-entry strong,
 .move-entry small {
   overflow-wrap: anywhere;
+}
+
+.inherited-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e4ede8;
+  color: #3f6654;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .move-entry small {

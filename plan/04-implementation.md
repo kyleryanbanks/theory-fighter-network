@@ -148,7 +148,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.5.1: Sequence Authoring (Universal + Scoped)
-**Status: Complete for Universal and Character scopes (2026-08-16).** Sequence creation/deletion supports universal (game-level), character-scoped, and team-scoped sequences, deriving a semantic key from game + scope + a canonical (order-preserving, per-step-sorted) serialization of the Move-reference steps, rejecting duplicates within a scope, and rejecting a sequence scoped to both a Character and a Team. Bidirectional linkage updates `Character.hierarchy.sequenceKeys`, `Team.hierarchy.sequenceKeys`, or `Game.universal.sequenceKeys`. A Material Sequence editor lets users pick a scope, add existing Moves in that scope to an ordered draft, and submit/delete sequences. Team-scoped sequences are modeled and mutation-tested for the "Team does not exist" guard, but full authoring is blocked on Team CRUD (Phase 1.6). Promote-to-inherited workflow remains for Phase 3.3.
+**Status: Complete (2026-08-16).** Sequence creation/deletion supports universal (game-level), character-scoped, and team-scoped sequences, deriving a semantic key from game + scope + a canonical (order-preserving, per-step-sorted) serialization of the Move-reference steps, rejecting duplicates within a scope, and rejecting a sequence scoped to both a Character and a Team. Bidirectional linkage updates `Character.hierarchy.sequenceKeys`, `Team.hierarchy.sequenceKeys`, or `Game.universal.sequenceKeys`. A Material Sequence editor lets users pick a scope, add existing Moves in that scope to an ordered draft, and submit/delete sequences. Team-scoped sequence authoring is fully unblocked now that Team CRUD exists (Phase 1.6). Promote-to-inherited workflow remains for Phase 3.3.
 **Scope**: Build sequence entities across scopes after moves are defined.
 
 **Deliverables**:
@@ -166,15 +166,16 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.6: Team Branch (Teams)
+**Status: Team CRUD complete (2026-08-16).** Team creation/deletion derives a semantic key from game + the ordered list of member Character semantic keys (order-preserving, so reordering members changes identity), validates every referenced Character exists in the Guide, rejects duplicate Character orderings, and blocks deletion while local Sequences still reference the Team. Team creation also enforces the Game's `config.teamSize`: rejected entirely when `teamSize <= 1`, and rejected when more Characters are given than `teamSize` allows; subsets smaller than `teamSize` are allowed for combo-tracking purposes. Bidirectional linkage updates `Game.hierarchy.teamKeys`. A Material Team editor lets users add Characters to an ordered draft and submit/delete Teams. This also unblocks full authoring for the team-scoped Sequences added in Phase 1.5.1. Reordering an existing Team's members (as an edit rather than delete+recreate) and assist/loadout scoping remain open — assists are modeled as ordinary Moves per [plan/03-workflows.md](../plan/03-workflows.md), so "assist/loadout scoping" needs a concrete schema (e.g. team-level references to specific Move/Character assist selections) before it can be implemented; deferred to a future pass once that design is settled.
 **Scope**: Build team entity hierarchy: team creation.
 
 **Deliverables**:
 - TeamDocument creation: Select ordered list of CharacterDocuments; compute semanticKey from character order
 - Team CRUD: Create, edit, delete teams; reorder members
-- Assist/loadout scoping: Team-level values for assist/loadout selection
-- Team validation: All characters must exist in game; order preserved in semanticKey
+- Assist/loadout scoping: Team-level values for assist/loadout selection *(deferred — needs schema design; assists are modeled as Moves per [03-workflows.md](../plan/03-workflows.md))*
+- Team validation: All characters must exist in game; order preserved in semanticKey; Team Size must be greater than 1; a Team cannot exceed the Game's Team Size (smaller subsets are allowed)
 
-**Validation**: Create team → verify all characters exist; reorder team → semanticKey updates
+**Validation**: Create team → verify all characters exist; reorder team → semanticKey updates; team creation is rejected when `teamSize <= 1` or when the Character count exceeds `teamSize`
 
 **Depends on**: Phase 1.5, 1.5.1
 
