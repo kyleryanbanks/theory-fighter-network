@@ -1,37 +1,72 @@
 <main>
 	<h1>Theory Fighter Network</h1>
-	<div class="guide-toolbar" data-testid="guide-toolbar">
-		<div class="guide-status">
-			<p data-testid="workspace-key">
-				Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
-			</p>
-			<p data-testid="busy-status">
-				Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
-			</p>
-		</div>
+	@if (!facade.hasWorkspace() && !isCreatingGuide()) {
+		<section class="guide-empty-state" data-testid="guide-empty-state">
+			<p class="empty-eyebrow">No guide open</p>
+			<h2>Start a guide</h2>
+			<p>Create a new guide for a game, or load an existing .tfn file.</p>
+			<div class="empty-actions">
+				<button data-testid="create-guide" (click)="createGuide()">
+					Create new guide
+				</button>
+				<label class="file-action">
+					Load existing guide
+					<input
+						class="visually-hidden"
+						type="file"
+						accept=".tfn"
+						data-testid="import-archive"
+						(change)="onTfnSelected($event)"
+					/>
+				</label>
+			</div>
+		</section>
+	} @else {
+		@if (facade.hasWorkspace()) {
+			<div class="guide-toolbar" data-testid="guide-toolbar">
+				<div class="guide-status">
+					<p data-testid="workspace-key">
+						Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
+					</p>
+					<p data-testid="busy-status">
+						Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
+					</p>
+				</div>
 
-		<div class="guide-actions">
-			<label class="file-action">
-				Load .tfn
-				<input
-					class="visually-hidden"
-					type="file"
-					accept=".tfn"
-					data-testid="import-archive"
-					(change)="onTfnSelected($event)"
-				/>
-			</label>
-			<button
-				data-testid="export-archive"
-				[disabled]="!facade.hasWorkspace()"
-				(click)="saveTfn()"
-			>
-				Save .tfn
-			</button>
-		</div>
-	</div>
+				<div class="guide-actions">
+					<label class="file-action">
+						Load .tfn
+						<input
+							class="visually-hidden"
+							type="file"
+							accept=".tfn"
+							data-testid="import-archive"
+							(change)="onTfnSelected($event)"
+						/>
+					</label>
+					<button data-testid="export-archive" (click)="saveTfn()">
+						Save .tfn
+					</button>
+					<button
+						class="close-guide"
+						data-testid="close-guide"
+						(click)="closeGuide()"
+					>
+						Close guide
+					</button>
+				</div>
+			</div>
+		} @else {
+			<div class="create-toolbar">
+				<p>New guide</p>
+				<button type="button" (click)="cancelCreateGuide()">Cancel</button>
+			</div>
+		}
 
-	<tfn-game-root />
+		<tfn-game-root />
 
-	<tfn-ui></tfn-ui>
+		@if (facade.hasWorkspace()) {
+			<tfn-ui></tfn-ui>
+		}
+	}
 </main>

@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-import { inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { Ui } from '@theory-fighter-network/ui';
 import { GameRoot } from '../game-root/game-root';
@@ -12,6 +11,20 @@ import { GameRoot } from '../game-root/game-root';
 })
 export class Feature {
   readonly facade = inject(LocalGuideFacadeStore);
+  readonly isCreatingGuide = signal(false);
+
+  createGuide(): void {
+    this.isCreatingGuide.set(true);
+  }
+
+  cancelCreateGuide(): void {
+    this.isCreatingGuide.set(false);
+  }
+
+  closeGuide(): void {
+    this.facade.clearActiveWorkspace();
+    this.isCreatingGuide.set(false);
+  }
 
   async onTfnSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement | null;

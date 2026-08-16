@@ -16,6 +16,90 @@ h1 {
 	letter-spacing: 0;
 }
 
+.guide-empty-state {
+	display: grid;
+	align-content: center;
+	justify-items: center;
+	min-height: 360px;
+	border-top: 3px solid #276749;
+	border-bottom: 1px solid #cbd5cf;
+	padding: 56px clamp(20px, 7vw, 80px);
+	background:
+		linear-gradient(180deg, rgba(39, 103, 73, 0.08), transparent 68%),
+		#fff;
+	text-align: center;
+}
+
+.empty-eyebrow {
+	margin: 0 0 8px;
+	color: #276749;
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0;
+	text-transform: uppercase;
+}
+
+.guide-empty-state h2 {
+	margin: 0 0 10px;
+	font-family: 'Rockwell', 'Avenir Next', sans-serif;
+	font-size: clamp(1.5rem, 4vw, 2.25rem);
+	letter-spacing: 0;
+}
+
+.guide-empty-state > p:not(.empty-eyebrow) {
+	max-width: 560px;
+	margin: 0;
+	color: #52635b;
+}
+
+.empty-actions {
+	display: grid;
+	width: min(100%, 280px);
+	gap: 10px;
+	margin-top: 28px;
+}
+
+.empty-actions button,
+.empty-actions .file-action {
+	width: 100%;
+	min-height: 44px;
+	padding: 0 18px;
+}
+
+.empty-actions button {
+	border: 1px solid #276749;
+	background: #276749;
+	color: #fff;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.create-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+	border-top: 1px solid #d9e0dc;
+	border-bottom: 1px solid #d9e0dc;
+	padding: 8px 0;
+}
+
+.create-toolbar p {
+	margin: 0;
+	color: #52635b;
+	font-size: 0.8125rem;
+	font-weight: 700;
+}
+
+.create-toolbar button {
+	min-height: 36px;
+	border: 0;
+	background: transparent;
+	color: #276749;
+	font-weight: 700;
+	cursor: pointer;
+}
+
 .guide-toolbar {
 	display: flex;
 	align-items: center;
@@ -66,6 +150,12 @@ h1 {
 	cursor: not-allowed;
 }
 
+.guide-actions .close-guide {
+	border-color: transparent;
+	background: transparent;
+	color: #7b332b;
+}
+
 .visually-hidden {
 	position: absolute;
 	width: 1px;
@@ -91,6 +181,12 @@ h1 {
 
 	.guide-actions {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
+
+	.guide-empty-state {
+		min-height: 320px;
+		padding: 40px 22px;
+	}
+
 }
