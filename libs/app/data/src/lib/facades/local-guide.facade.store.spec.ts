@@ -104,7 +104,7 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(result.status).toBe('success');
     expect(store.value()?.entities.game.semanticKey).toBe(semanticKey);
-    expect(store.value()?.entities.game.teamSize).toBe(2);
+    expect(store.value()?.entities.game.config.teamSize).toBe(2);
     expect(store.value()?.guide.localChanges).toContain(`game:${semanticKey}`);
   });
 
@@ -119,6 +119,9 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(created.status).toBe('success');
     expect(stage?.name).toBe('Training Room');
+    expect(store.value()?.entities.game.hierarchy.stageKeys).toEqual([
+      stage?.semanticKey,
+    ]);
     expect(store.value()?.guide.localChanges).toContain(
       `stage:${stage?.semanticKey}`
     );
@@ -129,6 +132,7 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(deleted.status).toBe('success');
     expect(store.value()?.entities.stages).toEqual([]);
+    expect(store.value()?.entities.game.hierarchy.stageKeys).toEqual([]);
     expect(store.value()?.guide.localChanges).toContain(
       `stage:${stage?.semanticKey}`
     );

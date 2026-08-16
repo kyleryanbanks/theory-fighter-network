@@ -11,10 +11,19 @@ import {
 import { normalizeGameName } from './game';
 
 export interface StageDocument {
+  // Scope
   gameKey: string;
+  
+  // Identity
   name: string;
   semanticKey: string; // hash(gameSemanticKey + normalizedStageName)
 
+  // Hierarchy (direct children)
+  hierarchy: {
+    zoneKeys: string[];
+  };
+
+  // Metadata
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
@@ -25,6 +34,9 @@ export const createStageDocument = (
   gameKey: '',
   name: '',
   semanticKey: '',
+  hierarchy: {
+    zoneKeys: [],
+  },
   community: createCommunityMetadata(),
   meta: createEntityMetadata(),
   ...overrides,

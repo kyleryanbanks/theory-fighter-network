@@ -14,26 +14,47 @@ import { createStateModel, StateModel } from './state';
 export type { StateModel } from './state';
 
 export interface GameDocument {
+  // Identity (immutable)
   name: string;
   version: string;
   semanticKey: string; // hash(normalizedGameName + versionFamily)
 
-  frameRate?: number;  // Game's frame rate (e.g., 60 for 60fps, 59.94 for NTSC arcade)
-  is3d: boolean;       // Whether game uses 3D space (affects position/velocity dimensions)
-  teamSize: number;
-  inputs: Inputs;
+  // Configuration
+  config: {
+    frameRate?: number;  // Game's frame rate (e.g., 60 for 60fps, 59.94 for NTSC arcade)
+    is3d: boolean;       // Whether game uses 3D space (affects position/velocity dimensions)
+    teamSize: number;
+    inputs: Inputs;
+    /**
+     * Semantic state keys that should run before other registered state behavior.
+     * Remaining behavior runs in first-registration order.
+     * Keys without registered frame behavior are ignored.
+     * 
+     * Example: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
+     */
+    stateExecutionOrder?: string[];
+  };
 
+  // Hierarchy (direct children)
+  hierarchy: {
+    stageKeys: string[];
+    characterKeys: string[];
+    teamKeys: string[];
+    matchupKeys: string[];
+  };
+
+  // Universal shared entities
+  universal: {
+    stageZoneKeys: string[];
+    moveKeys: string[];
+    sequenceKeys: string[];
+    projectileKeys: string[];
+  };
+
+  // Runtime behavior
   states: StateModel;
 
-  /**
-   * Semantic state keys that should run before other registered state behavior.
-   * Remaining behavior runs in first-registration order.
-   * Keys without registered frame behavior are ignored.
-   * 
-   * Example: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
-   */
-  stateExecutionOrder?: string[];
-
+  // Metadata
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
@@ -44,9 +65,23 @@ export const createGameDocument = (
   name: '',
   version: '',
   semanticKey: '',
-  is3d: false,
-  teamSize: 1,
-  inputs: createInputs(),
+  config: {
+    is3d: false,
+    teamSize: 1,
+    inputs: createInputs(),
+  },
+  hierarchy: {
+    stageKeys: [],
+    characterKeys: [],
+    teamKeys: [],
+    matchupKeys: [],
+  },
+  universal: {
+    stageZoneKeys: [],
+    moveKeys: [],
+    sequenceKeys: [],
+    projectileKeys: [],
+  },
   states: createStateModel(),
   community: createCommunityMetadata(),
   meta: createEntityMetadata(),
@@ -63,14 +98,21 @@ export interface CreateGameInput {
 }
 
 export type GameMetadataUpdate = Partial<Pick<
-  GameDocument,
+  GameDocument['config'],
   'frameRate' | 'is3d' | 'teamSize' | 'inputs' | 'stateExecutionOrder'
 >>;
 
 export function createGame(input: CreateGameInput): GameDocument {
   const game = createGameDocument({
-    ...input,
+    name: input.name,
+    version: input.version,
     semanticKey: createGameSemanticKey(input.name, input.version),
+    config: {
+      frameRate: input.frameRate,
+      is3d: input.is3d,
+      teamSize: input.teamSize,
+      inputs: input.inputs,
+    },
   });
   assertValidGameDocument(game);
   return game;
@@ -82,7 +124,10 @@ export function updateGameMetadata(
 ): GameDocument {
   const updated = {
     ...game,
-    ...updates,
+    config: {
+      ...game.config,
+      ...updates,
+    },
     meta: {
       ...game.meta,
       lastUpdatedAt: new Date(),
@@ -108,10 +153,10 @@ export function validateGameDocument(game: GameDocument): string[] {
   if (!game.version.trim()) {
     errors.push('version is required.');
   }
-  if (!Number.isInteger(game.teamSize) || game.teamSize < 1) {
+  if (!Number.isInteger(game.config.teamSize) || game.config.teamSize < 1) {
     errors.push('teamSize must be a positive integer.');
   }
-  if (game.frameRate !== undefined && game.frameRate <= 0) {
+  if (game.config.frameRate !== undefined && game.config.frameRate <= 0) {
     errors.push('frameRate must be positive.');
   }
   if (game.name.trim() && game.version.trim()) {
@@ -120,7 +165,7 @@ export function validateGameDocument(game: GameDocument): string[] {
       errors.push('semanticKey does not match the game name and version family.');
     }
   }
-  if (!hasUniqueInputValues(game.inputs)) {
+  if (!hasUniqueInputValues(game.config.inputs)) {
     errors.push('Input values must be unique.');
   }
 

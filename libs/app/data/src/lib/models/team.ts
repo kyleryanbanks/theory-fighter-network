@@ -10,11 +10,21 @@ import {
 } from './shared';
 
 export interface TeamDocument {
+  // Scope
   gameKey: string;
+  
+  // Identity
+  semanticKey: string; // hash(gameSemanticKey + ordered character semanticKeys)
+  
+  // Composition
   orderedCharacterKeys: string[];
 
-  semanticKey: string; // hash(gameSemanticKey + ordered character semanticKeys)
+  // Hierarchy (direct children)
+  hierarchy: {
+    sequenceKeys: string[];
+  };
 
+  // Metadata
   community: CommunityMetadata;
   meta: EntityMetadata;
 }
@@ -23,8 +33,11 @@ export const createTeamDocument = (
   overrides: Partial<TeamDocument> = {}
 ): TeamDocument => ({
   gameKey: '',
-  orderedCharacterKeys: [],
   semanticKey: '',
+  orderedCharacterKeys: [],
+  hierarchy: {
+    sequenceKeys: [],
+  },
   community: createCommunityMetadata(),
   meta: createEntityMetadata(),
   ...overrides,

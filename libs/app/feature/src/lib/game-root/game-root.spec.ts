@@ -19,10 +19,24 @@ function createGuide(
         name,
         version,
         semanticKey: 'loaded-game',
-        frameRate: 60,
-        is3d: false,
-        teamSize: 1,
-        inputs,
+        config: {
+          frameRate: 60,
+          is3d: false,
+          teamSize: 1,
+          inputs,
+        },
+        hierarchy: {
+          stageKeys: [],
+          characterKeys: [],
+          teamKeys: [],
+          matchupKeys: [],
+        },
+        universal: {
+          stageZoneKeys: [],
+          moveKeys: [],
+          sequenceKeys: [],
+          projectileKeys: [],
+        },
       },
     },
   };

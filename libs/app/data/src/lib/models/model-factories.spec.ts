@@ -45,15 +45,20 @@ describe('model factories', () => {
     expect(createStateModel().attacks).toEqual({});
     expect(createRuntimeStateModel().projectiles).toEqual({});
     expect(createGameDocument().community.ownerId).toBe('local-user');
-    expect(createStageDocument().name).toBe('');
+    expect(createGameDocument().hierarchy.stageKeys).toEqual([]);
+    expect(createGameDocument().universal.moveKeys).toEqual([]);
+    expect(createStageDocument().hierarchy.zoneKeys).toEqual([]);
     expect(createStageZoneDocument().mechanicStateKeys).toEqual([]);
     expect(createCharacterDocument().neutralRegions).toEqual({});
+    expect(createCharacterDocument().hierarchy.moveKeys).toEqual([]);
+    expect(createCharacterDocument().hierarchy.sequenceKeys).toEqual([]);
     expect(createStep().frames).toBe(1);
     expect(createMovePhase()).toEqual({});
     expect(createMoveDocument().preconditions).toEqual({});
     expect(createProjectilePhase().duration).toEqual({ exact: 0 });
     expect(createProjectileDocument().state.projectiles).toEqual({});
     expect(createTeamDocument().orderedCharacterKeys).toEqual([]);
+    expect(createTeamDocument().hierarchy.sequenceKeys).toEqual([]);
     expect(createSequenceDocument().sequence).toEqual([]);
     expect(createScenarioResponse().outcome).toBe(0);
     expect(createMatchupScenario().responses).toEqual([]);
@@ -61,11 +66,11 @@ describe('model factories', () => {
   });
 
   it('applies top-level overrides after defaults', () => {
-    const game = createGameDocument({ name: 'Street Fighter', teamSize: 2 });
+    const game = createGameDocument({ name: 'Street Fighter', config: { is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] } } });
     const phase = createProjectilePhase({ destroyedAfter: true });
 
     expect(game.name).toBe('Street Fighter');
-    expect(game.teamSize).toBe(2);
+    expect(game.config.teamSize).toBe(2);
     expect(phase.destroyedAfter).toBe(true);
   });
 });

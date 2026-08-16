@@ -153,12 +153,32 @@ export const LocalGuideFacadeStore = signalStore(
               entityType: 'stage',
               entityKey: stage.semanticKey,
             });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                stageKeys: [
+                  ...localGuide.entities.game.hierarchy.stageKeys,
+                  stage.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
 
             return {
               ...localGuide,
               guide,
               entities: {
                 ...localGuide.entities,
+                game,
                 stages: [...localGuide.entities.stages, stage],
               },
             };
@@ -192,12 +212,31 @@ export const LocalGuideFacadeStore = signalStore(
               entityType: 'stage',
               entityKey: stageKey,
             });
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              hierarchy: {
+                ...localGuide.entities.game.hierarchy,
+                stageKeys: localGuide.entities.game.hierarchy.stageKeys.filter(
+                  (key) => key !== stageKey
+                ),
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
 
             return {
               ...localGuide,
               guide,
               entities: {
                 ...localGuide.entities,
+                game,
                 stages: localGuide.entities.stages.filter(
                   (stage) => stage.semanticKey !== stageKey
                 ),

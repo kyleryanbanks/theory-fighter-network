@@ -90,6 +90,8 @@ These phases establish the offline foundation. All features are local-only; no n
 
 **Validation**: Save → Load → Compare == original; forward-migration works; downgrade attempt fails gracefully
 
+**Pre-release policy**: Keep Guide schema version `1` while the product is unreleased and models are still changing. Begin schema-version bumps and Guide-data migrations with the first official release; archive-envelope migrations remain separately versioned.
+
 **Depends on**: Phase 1.1, 1.2
 
 ---
@@ -107,6 +109,8 @@ These phases establish the offline foundation. All features are local-only; no n
 - Promote-to-inherited workflow: Move character-scoped sequence → game-scoped (if applicable)
 
 **Validation**: Game zones visible to all stages; stage zones override game zones where applicable; sequences inherit correctly
+
+**Ownership convention**: Child documents remain separate entities with their own `semanticKey` and parent scope key. Parent documents store ordered arrays of those existing child semantic keys (`Game.stageKeys`, `Stage.zoneKeys`, `Character.moveKeys`, etc.). Guide validation requires both directions to agree.
 
 **Depends on**: Phase 1.2
 

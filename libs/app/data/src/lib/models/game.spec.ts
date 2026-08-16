@@ -46,10 +46,13 @@ describe('game root operations', () => {
         teamSize: 1,
         inputs: { directions: [], buttons: [] },
       }),
-      teamSize: 0,
-      inputs: {
-        directions: [{ label: 'Forward', value: '6' }],
-        buttons: [{ label: 'Punch', value: '6' }],
+      config: {
+        is3d: false,
+        teamSize: 0,
+        inputs: {
+          directions: [{ label: 'Forward', value: '6' }],
+          buttons: [{ label: 'Punch', value: '6' }],
+        },
       },
     });
 
@@ -65,8 +68,8 @@ describe('game root operations', () => {
     const updated = updateGameMetadata(game, { frameRate: 59.94, teamSize: 2 });
 
     expect(updated.semanticKey).toBe(game.semanticKey);
-    expect(updated.frameRate).toBe(59.94);
-    expect(updated.teamSize).toBe(2);
+    expect(updated.config.frameRate).toBe(59.94);
+    expect(updated.config.teamSize).toBe(2);
     expect(updated.meta.lastUpdatedAt.getTime()).toBeGreaterThanOrEqual(
       game.meta.lastUpdatedAt.getTime()
     );

@@ -77,19 +77,19 @@ export class GameRoot {
   constructor() {
     effect(() => {
       const game = this.facade.guide()?.entities.game;
-      if (!game) {
+      if (!game?.config) {
         return;
       }
 
       this.gameModel.set({
         name: game.name,
         version: game.version,
-        frameRate: game.frameRate ?? 60,
-        is3d: game.is3d,
-        teamSize: game.teamSize,
+        frameRate: game.config.frameRate ?? 60,
+        is3d: game.config.is3d,
+        teamSize: game.config.teamSize,
         inputs: {
-          directions: game.inputs.directions.map((input) => ({ ...input })),
-          buttons: game.inputs.buttons.map((input) => ({ ...input })),
+          directions: game.config.inputs.directions.map((input) => ({ ...input })),
+          buttons: game.config.inputs.buttons.map((input) => ({ ...input })),
         },
       });
     });

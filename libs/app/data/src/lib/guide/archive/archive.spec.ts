@@ -1,4 +1,4 @@
-import { createGameDocument } from '../../models/game';
+import { createGameDocument } from '../../models';
 import { createGuideJson, type LocalGuideEntities } from '../index';
 import { computeChecksum } from './archive.checksum';
 import { buildTfnArchive, parseTfnArchive } from './archive.service';
