@@ -1,28 +1,7 @@
 <main>
 	<h1>Theory Fighter Network</h1>
-	@if (!facade.hasWorkspace() && !isCreatingGuide()) {
-		<section class="guide-empty-state" data-testid="guide-empty-state">
-			<p class="empty-eyebrow">No guide open</p>
-			<h2>Start a guide</h2>
-			<p>Create a new guide for a game, or load an existing .tfn file.</p>
-			<div class="empty-actions">
-				<button data-testid="create-guide" (click)="createGuide()">
-					Create new guide
-				</button>
-				<label class="file-action">
-					Load existing guide
-					<input
-						class="visually-hidden"
-						type="file"
-						accept=".tfn"
-						data-testid="import-archive"
-						(change)="onTfnSelected($event)"
-					/>
-				</label>
-			</div>
-		</section>
-	} @else {
-		@if (facade.hasWorkspace()) {
+	<div class="guide-header-slot" data-testid="guide-header-slot">
+		@if (startupComplete() && facade.hasWorkspace()) {
 			<div class="guide-toolbar" data-testid="guide-toolbar">
 				<div class="guide-status">
 					<p data-testid="workspace-key">
@@ -34,16 +13,23 @@
 				</div>
 
 				<div class="guide-actions">
-					<label class="file-action">
+					<button
+						class="file-action"
+						type="button"
+						(click)="chooseTfn(activeFileInput)"
+					>
 						Load .tfn
-						<input
-							class="visually-hidden"
-							type="file"
-							accept=".tfn"
-							data-testid="import-archive"
-							(change)="onTfnSelected($event)"
-						/>
-					</label>
+					</button>
+					<input
+						#activeFileInput
+						class="visually-hidden"
+						type="file"
+						tabindex="-1"
+						aria-hidden="true"
+						accept=".tfn"
+						data-testid="import-archive"
+						(change)="onTfnSelected($event)"
+					/>
 					<button data-testid="export-archive" (click)="saveTfn()">
 						Save .tfn
 					</button>
@@ -56,13 +42,77 @@
 					</button>
 				</div>
 			</div>
-		} @else {
+		} @else if (startupComplete() && isCreatingGuide()) {
 			<div class="create-toolbar">
 				<p>New guide</p>
 				<button type="button" (click)="cancelCreateGuide()">Cancel</button>
 			</div>
 		}
+	</div>
 
+	@if (!startupComplete() && !facade.hasWorkspace()) {
+		<section class="startup-pending" aria-live="polite">
+			@if (showStartupLoading()) {
+				<p data-testid="recent-guides-loading">Loading recent guides...</p>
+			}
+		</section>
+	} @else if (!facade.hasWorkspace() && !isCreatingGuide()) {
+		<section class="guide-empty-state" data-testid="guide-empty-state">
+			<p class="empty-eyebrow">No guide open</p>
+			<h2>Start a guide</h2>
+			<p>Create a new guide for a game, or load an existing .tfn file.</p>
+			<div class="empty-actions">
+				<button data-testid="create-guide" (click)="createGuide()">
+					Create new guide
+				</button>
+				<button
+					class="file-action"
+					type="button"
+					(click)="chooseTfn(emptyFileInput)"
+				>
+					Load existing guide
+				</button>
+				<input
+					#emptyFileInput
+					class="visually-hidden"
+					type="file"
+					tabindex="-1"
+					aria-hidden="true"
+					accept=".tfn"
+					data-testid="import-archive"
+					(change)="onTfnSelected($event)"
+				/>
+			</div>
+
+			@if (recentGuides.recentGuides().length) {
+				<section class="recent-guides" aria-labelledby="recent-guides-heading">
+					<h3 id="recent-guides-heading">Recent guides</h3>
+					<div class="recent-guide-list">
+						@for (guide of recentGuides.recentGuides(); track guide.id) {
+							<button
+								type="button"
+								[attr.data-testid]="'recent-guide-' + guide.id"
+								(click)="openRecentGuide(guide)"
+							>
+								<strong>{{ guide.gameName }}</strong>
+								<small>{{ guide.location }}</small>
+							</button>
+						}
+					</div>
+				</section>
+			}
+
+			@if (recentGuideError()) {
+				<p
+					class="recent-guide-error"
+					role="alert"
+					data-testid="recent-guide-error"
+				>
+					{{ recentGuideError() }}
+				</p>
+			}
+		</section>
+	} @else {
 		<tfn-game-root />
 
 		@if (facade.hasWorkspace()) {

@@ -16,6 +16,11 @@ h1 {
 	letter-spacing: 0;
 }
 
+.guide-header-slot {
+	min-height: 62px;
+	margin-bottom: 24px;
+}
+
 .guide-empty-state {
 	display: grid;
 	align-content: center;
@@ -28,6 +33,20 @@ h1 {
 		linear-gradient(180deg, rgba(39, 103, 73, 0.08), transparent 68%),
 		#fff;
 	text-align: center;
+}
+
+.startup-pending {
+	display: grid;
+	place-items: center;
+	min-height: 240px;
+	border-top: 3px solid #276749;
+	border-bottom: 1px solid #cbd5cf;
+	background: #fff;
+	color: #52635b;
+}
+
+.startup-pending p {
+	margin: 0;
 }
 
 .empty-eyebrow {
@@ -74,11 +93,67 @@ h1 {
 	cursor: pointer;
 }
 
+.recent-guides {
+	width: min(100%, 520px);
+	margin-top: 34px;
+	border-top: 1px solid #d9e0dc;
+	padding-top: 20px;
+}
+
+.recent-guides h3 {
+	margin: 0 0 10px;
+	font-size: 0.875rem;
+	letter-spacing: 0;
+}
+
+.recent-guide-list {
+	display: grid;
+	gap: 1px;
+	background: #d9e0dc;
+}
+
+.recent-guide-list button {
+	display: grid;
+	gap: 2px;
+	width: 100%;
+	min-height: 54px;
+	border: 0;
+	padding: 8px 14px;
+	background: #f9faf8;
+	color: #17221d;
+	text-align: left;
+	cursor: pointer;
+}
+
+.recent-guide-list button:hover,
+.recent-guide-list button:focus-visible {
+	background: #eef4f0;
+}
+
+.recent-guide-list strong,
+.recent-guide-list small {
+	overflow-wrap: anywhere;
+}
+
+.recent-guide-list small {
+	color: #68776f;
+}
+
+.recent-guide-error {
+	width: min(100%, 520px);
+	margin: 14px 0 0;
+	border-left: 3px solid #b42318;
+	padding: 9px 12px;
+	background: #fff1f0;
+	color: #8c1d18;
+	font-size: 0.875rem;
+	text-align: left;
+}
+
 .create-toolbar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	margin-bottom: 12px;
 	border-top: 1px solid #d9e0dc;
 	border-bottom: 1px solid #d9e0dc;
 	padding: 8px 0;
@@ -105,7 +180,6 @@ h1 {
 	align-items: center;
 	justify-content: space-between;
 	gap: 20px;
-	margin-bottom: 24px;
 	border-top: 1px solid #d9e0dc;
 	border-bottom: 1px solid #d9e0dc;
 	padding: 10px 0;
@@ -171,6 +245,10 @@ h1 {
 	main {
 		width: min(100% - 20px, 1120px);
 		padding-top: 20px;
+	}
+
+	.guide-header-slot {
+		min-height: 92px;
 	}
 
 	.guide-toolbar {

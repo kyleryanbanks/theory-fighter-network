@@ -14,17 +14,18 @@ This roadmap restructures development around agreed priority order. The work is 
 
 Commit history since this roadmap was last updated confirms the following:
 
-- **Phase 1.1 is complete.** The local guide metadata model, schema-version validation, unsaved/synced tracking, and `.tfn` archive creation/parsing with integrity checks are implemented and covered by unit tests.
-- **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File` before download.
+- **Phase 1.1 is complete.** The local Guide metadata model, schema-version validation, unsaved/synced tracking, and Guide lifecycle UI are implemented. The app opens to a centered empty state where users create a Guide or load an existing `.tfn`; active Guides expose load, save, and close actions in the header toolbar.
+- **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File`. Supported browsers prompt for destination and filename; other browsers use a standard download.
 - **Phase 1.2 is complete.** Game creation, validation, semantic identity, metadata editing, and one-at-a-time input vocabulary authoring are implemented with Angular Material and Signal Forms.
 - **Phases 1.4-1.7 are not complete.** Their document schemas and model factories exist, but hierarchy authoring workflows have not been implemented.
 
 ### Completed Supporting Work Not Previously Captured Here
 
 - Nx `data`, `feature`, and `ui` libraries were created, and the application now hosts the feature shell instead of the generated welcome screen.
-- `LocalGuideFacadeStore` provides workspace lifecycle orchestration, including creation, save, import, and export, and the feature shell exposes those operations.
+- `LocalGuideFacadeStore` provides in-memory Guide lifecycle orchestration, including creation, update, `.tfn` import/export, and close. The feature shell exposes an empty state, creation flow, active Guide toolbar, and return-to-empty-state flow.
 - Primary persisted models and direct nested model types now have colocated `createX` factories with tested defaults and override behavior.
 - Guide persistence was separated from model definitions into a `guide/` domain with a nested `guide/archive/` module. Guide factory/mutation, archive service, checksum, and serialization behavior each have focused unit coverage.
+- Recent Guide metadata, IndexedDB file handles, reopen behavior, and refresh restoration live in the data library's `persistence/recent-guides` boundary; Feature only renders and invokes that API.
 
 ---
 
@@ -40,10 +41,18 @@ These phases establish the offline foundation. All features are local-only; no n
 - Guide metadata schema: gameKey, schemaVersion, lastModified, localChanges[], syncedChanges[], unsavedStatus per entity
 - `.tfn` save format with version header and integrity validation
 - Browser import/export: Load one `.tfn` file into the in-memory Guide; save the active Guide as one `.tfn` file
+- Empty state: Offer Create new guide and Load existing guide without mounting the Game editor prematurely
+- Creation transition: Open the Game editor only after Create new guide; allow cancellation back to the empty state
+- Active Guide toolbar: Show Guide identity/status with Load `.tfn`, Save `.tfn`, and Close guide actions
+- Stable header layout: Reserve one responsive Guide action-bar slot in pending, empty, creating, and active states so toolbar insertion never shifts the content below it
+- Close workflow: Clear only the in-memory Guide and return to the empty state without modifying a saved `.tfn`
+- Recent Guides: Register successful `.tfn` loads and saves; use IndexedDB as the single browser source of truth for Game/file metadata, reopenable file handles, and validated `.tfn` snapshots
+- Recent recovery: Request read permission on explicit recent-item clicks, distinguish permission denial from missing files, and keep the empty state active with an inline recovery message when reopening fails
+- Refresh restore: Keep a startup gate active through IndexedDB initialization and automatic `.tfn` import; render a stable blank shell for fast restores, show loading only after 200ms, and keep an displayed loader visible for at least 400ms so neither the empty state nor loading text flashes
 - Unsaved/synced tracking: Mark entities as `unsaved` after edits, `synced` after save
 - Schema version registration and forward-compatibility checks
 
-**Validation**: Load/save round-trip preserves all data; schema version mismatch is caught with clear error message
+**Validation**: Initial load shows only create/load choices; create opens the Game editor; load/save round-trip preserves all data; close returns to the empty state; schema version mismatch is caught with a clear error message
 
 ---
 
@@ -65,12 +74,13 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.3: .tfn Save/Load Pipeline (Locked Structure + Migration)
-**Status: Complete (2026-08-15).** The v1 archive header, canonical entity order, deterministic checksum, exact date serialization/hydration, format-0 to format-1 migration, future-version rejection, browser `File` import/export, and formal format specification are implemented and tested.
+**Status: Complete (2026-08-15).** The v1 archive header, canonical entity order, deterministic checksum, exact date serialization/hydration, format-0 to format-1 migration, future-version rejection, browser `File` import/export, native save-location selection with download fallback, dedicated web persistence tests, and formal format specification are implemented and tested.
 **Scope**: Build the locked file format and forward-only migration system.
 
 **Deliverables**:
 - `.tfn` format specification: Binary or JSON with version header, checksums, entity order
 - Save pipeline: GameDocument → complete validated `.tfn` `File`; prompt for destination where supported, otherwise use browser download
+- Save filename: Suggest a Unicode-normalized, lowercase slug of the Game name with the `.tfn` extension
 - Load pipeline: `.tfn` → validate header + schema version → deserialize entities
 - Forward-only migration: Accept registered older formats such as format 0 → 1; reject format 2 files in a format 1 client
 - Unknown schema rejection: If schemaVersion > current client version, fail with instruction to upgrade

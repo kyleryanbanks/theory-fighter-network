@@ -134,9 +134,11 @@ function assertValidGameDocument(game: GameDocument): void {
   }
 }
 
-function normalizeGameName(name: string): string {
+export function normalizeGameName(name: string): string {
   return name
     .trim()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');

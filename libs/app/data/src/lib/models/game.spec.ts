@@ -1,11 +1,18 @@
 import {
   createGame,
   createGameSemanticKey,
+  normalizeGameName,
   updateGameMetadata,
   validateGameDocument,
 } from './game';
 
 describe('game root operations', () => {
+  it('normalizes Game names for stable identifiers and filenames', () => {
+    expect(normalizeGameName('  MARVEL Tōkon: Fighting Souls!!  ')).toBe(
+      'marvel-tokon-fighting-souls'
+    );
+  });
+
   it('creates a canonical key from normalized name and version family', () => {
     expect(createGameSemanticKey('Street Fighter 6', '1.0.7'))
       .toBe(createGameSemanticKey(' street-fighter 6 ', '1.5.0'));
