@@ -1,0 +1,17 @@
+<section aria-labelledby="entity-detail-heading">
+  <tfn-link class="back-link" appearance="text" [routerLink]="backLink()">{{ backLabel() }}</tfn-link>
+  <h3 id="entity-detail-heading">{{ title() }}</h3>
+  <p class="entity-key">{{ entityKey() }}</p>
+
+  <tfn-expansion-panel header="Notes">
+    <ng-content select="[detail-notes]" />
+  </tfn-expansion-panel>
+
+  <div class="entity-detail-shell__unique-content">
+    <ng-content />
+  </div>
+
+  <tfn-expansion-panel header="Metadata">
+    <tfn-entity-metadata [metadata]="metadata()" />
+  </tfn-expansion-panel>
+</section>

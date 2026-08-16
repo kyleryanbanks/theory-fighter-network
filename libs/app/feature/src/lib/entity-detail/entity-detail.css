@@ -3,44 +3,6 @@
   height: 100%;
 }
 
-section {
-  min-height: 100%;
-  box-sizing: border-box;
-  padding: 24px 28px 28px;
-  background: rgba(255, 255, 255, 0.92);
-}
-
-h3 {
-  margin-bottom: 4px;
-}
-
-.entity-key {
-  margin-top: 0;
-  color: #617168;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8125rem;
-  overflow-wrap: anywhere;
-}
-
-.back-link {
-  display: inline-block;
-  margin-bottom: 18px;
-  color: #245d43;
-  font-weight: 700;
-}
-
-pre {
-  max-width: 100%;
-  overflow: auto;
-  margin: 0;
-  padding: 14px;
-  background: #10241c;
-  color: #e7f1eb;
-  font-size: 0.8125rem;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 .empty-state {
   padding: 28px;
   color: #617168;

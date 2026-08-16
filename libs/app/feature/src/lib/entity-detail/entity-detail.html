@@ -1,30 +1,18 @@
 @if (entity(); as currentEntity) {
-  <section aria-labelledby="entity-detail-heading">
-    <a class="back-link" [routerLink]="backRoute()">Back to {{ entityTypeLabel() }} list</a>
-    <h3 id="entity-detail-heading">{{ title() }}</h3>
-    <p class="entity-key">{{ entityKey }}</p>
-
-    @if (metadata(); as entityMetadata) {
-      <tfn-expansion-panel header="Notes">
-        <tfn-entity-notes
-          [entityType]="entityType"
-          [entityKey]="entityKey"
-          [notes]="entityMetadata.meta.notes || []"
-          [notAddressable]="true"
-        />
+  @if (metadata(); as entityMetadata) {
+    <tfn-entity-detail-shell
+      [title]="title()"
+      [entityKey]="entityKey"
+      [backLabel]="'Back to ' + entityTypeLabel() + ' list'"
+      [backLink]="backRoute()"
+      [metadata]="entityMetadata.meta"
+    >
+      <tfn-entity-notes detail-notes [entityType]="entityType" [entityKey]="entityKey" [notes]="entityMetadata.meta.notes || []" [notAddressable]="true" />
+      <tfn-expansion-panel header="Complete data" subheader="All stored fields for this entity">
+        <pre>{{ currentEntity | json }}</pre>
       </tfn-expansion-panel>
-    }
-
-    <tfn-expansion-panel header="Complete data" subheader="All stored fields for this entity">
-      <pre>{{ currentEntity | json }}</pre>
-    </tfn-expansion-panel>
-
-    @if (metadata(); as entityMetadata) {
-      <tfn-expansion-panel header="Metadata">
-        <tfn-entity-metadata [metadata]="entityMetadata.meta" />
-      </tfn-expansion-panel>
-    }
-  </section>
+    </tfn-entity-detail-shell>
+  }
 } @else {
   <p class="empty-state">{{ entityTypeLabel() }} not found.</p>
 }

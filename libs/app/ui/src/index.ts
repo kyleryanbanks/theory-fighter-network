@@ -5,3 +5,4 @@ export * from './lib/exp-panel/expansion-panel';
 export * from './lib/entity-metadata/entity-metadata';
 export * from './lib/delete-button/delete-button';
 export * from './lib/link/link';
+export * from './lib/entity-detail-shell/entity-detail-shell';

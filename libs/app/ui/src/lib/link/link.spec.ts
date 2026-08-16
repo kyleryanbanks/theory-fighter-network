@@ -15,6 +15,12 @@ class HostComponent {}
 })
 class StringLinkHostComponent {}
 
+@Component({
+  imports: [TfnLink],
+  template: '<tfn-link appearance="text" routerLink="/characters">Back to Characters</tfn-link>',
+})
+class TextLinkHostComponent {}
+
 describe('TfnLink', () => {
   let fixture: ComponentFixture<HostComponent>;
 
@@ -46,5 +52,14 @@ describe('TfnLink', () => {
     const link = stringFixture.nativeElement.querySelector('a');
     expect(link.getAttribute('href')).toBe('/characters');
     expect(link.textContent).toContain('Back to Characters');
+  });
+
+  it('supports a Material text-link appearance', () => {
+    const textFixture = TestBed.createComponent(TextLinkHostComponent);
+    textFixture.detectChanges();
+
+    const link = textFixture.nativeElement.querySelector('a');
+    expect(link.getAttribute('href')).toBe('/characters');
+    expect(link.classList.contains('tfn-link')).toBe(true);
   });
 });

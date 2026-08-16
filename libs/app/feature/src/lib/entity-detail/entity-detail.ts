@@ -1,9 +1,10 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import type { EntityMetadata } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { ExpansionPanel } from '@theory-fighter-network/ui';
+import { EntityDetailShell } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 type EntityType =
@@ -17,7 +18,7 @@ type EntityType =
 
 @Component({
   selector: 'tfn-entity-detail',
-  imports: [JsonPipe, RouterLink, EntityMetadataView, ExpansionPanel, EntityNotes],
+  imports: [JsonPipe, ExpansionPanel, EntityDetailShell, EntityNotes],
   templateUrl: './entity-detail.html',
   styleUrl: './entity-detail.css',
 })

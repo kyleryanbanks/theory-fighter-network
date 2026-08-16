@@ -1,24 +1,16 @@
 @if (move(); as currentMove) {
-  <section aria-labelledby="move-detail-heading">
-    <a class="back-link" [routerLink]="['/moves']">Back to Move list</a>
-    <h3 id="move-detail-heading">{{ currentMove.name }}</h3>
-    <p class="entity-key">{{ currentMove.semanticKey }}</p>
-
-    <tfn-expansion-panel header="Notes">
-      <tfn-entity-notes
-        entityType="move"
-        [entityKey]="currentMove.semanticKey"
-        [notes]="currentMove.meta && currentMove.meta.notes || []"
-        [notAddressable]="true"
-      />
-    </tfn-expansion-panel>
+  <tfn-entity-detail-shell
+    [title]="currentMove.name"
+    [entityKey]="currentMove.semanticKey"
+    backLabel="Back to Move list"
+    [backLink]="['/moves']"
+    [metadata]="currentMove.meta"
+  >
+    <tfn-entity-notes detail-notes entityType="move" [entityKey]="currentMove.semanticKey" [notes]="currentMove.meta && currentMove.meta.notes || []" [notAddressable]="true" />
     <tfn-expansion-panel header="Move data" subheader="Resolved effective values">
       <pre>{{ currentMove | json }}</pre>
     </tfn-expansion-panel>
-    <tfn-expansion-panel header="Metadata">
-      <tfn-entity-metadata [metadata]="currentMove.meta" />
-    </tfn-expansion-panel>
-  </section>
+  </tfn-entity-detail-shell>
 } @else {
   <p class="empty-state">Move not found.</p>
 }

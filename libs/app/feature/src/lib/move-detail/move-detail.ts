@@ -1,13 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { JsonPipe } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
-import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
+import { ExpansionPanel, EntityDetailShell } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [JsonPipe, RouterLink, EntityMetadataView, EntityNotes, ExpansionPanel],
+  imports: [JsonPipe, ExpansionPanel, EntityDetailShell, EntityNotes],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })

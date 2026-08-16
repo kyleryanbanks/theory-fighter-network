@@ -1,24 +1,16 @@
 @if (sequence(); as currentSequence) {
-  <section aria-labelledby="sequence-detail-heading">
-    <a class="back-link" [routerLink]="['/sequences']">Back to Sequence list</a>
-    <h3 id="sequence-detail-heading">Sequence</h3>
-    <p class="entity-key">{{ currentSequence.semanticKey }}</p>
-
-    <tfn-expansion-panel header="Notes">
-      <tfn-entity-notes
-        entityType="sequence"
-        [entityKey]="currentSequence.semanticKey"
-        [notes]="currentSequence.meta && currentSequence.meta.notes || []"
-        [notAddressable]="true"
-      />
-    </tfn-expansion-panel>
+  <tfn-entity-detail-shell
+    title="Sequence"
+    [entityKey]="currentSequence.semanticKey"
+    backLabel="Back to Sequence list"
+    [backLink]="['/sequences']"
+    [metadata]="currentSequence.meta"
+  >
+    <tfn-entity-notes detail-notes entityType="sequence" [entityKey]="currentSequence.semanticKey" [notes]="currentSequence.meta && currentSequence.meta.notes || []" [notAddressable]="true" />
     <tfn-expansion-panel header="Sequence data" subheader="Ordered Move steps">
       <pre>{{ currentSequence | json }}</pre>
     </tfn-expansion-panel>
-    <tfn-expansion-panel header="Metadata">
-      <tfn-entity-metadata [metadata]="currentSequence.meta" />
-    </tfn-expansion-panel>
-  </section>
+  </tfn-entity-detail-shell>
 } @else {
   <p class="empty-state">Sequence not found.</p>
 }
