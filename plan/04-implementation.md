@@ -148,6 +148,7 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.5.1: Sequence Authoring (Universal + Scoped)
+**Status: Complete for Universal and Character scopes (2026-08-16).** Sequence creation/deletion supports universal (game-level), character-scoped, and team-scoped sequences, deriving a semantic key from game + scope + a canonical (order-preserving, per-step-sorted) serialization of the Move-reference steps, rejecting duplicates within a scope, and rejecting a sequence scoped to both a Character and a Team. Bidirectional linkage updates `Character.hierarchy.sequenceKeys`, `Team.hierarchy.sequenceKeys`, or `Game.universal.sequenceKeys`. A Material Sequence editor lets users pick a scope, add existing Moves in that scope to an ordered draft, and submit/delete sequences. Team-scoped sequences are modeled and mutation-tested for the "Team does not exist" guard, but full authoring is blocked on Team CRUD (Phase 1.6). Promote-to-inherited workflow remains for Phase 3.3.
 **Scope**: Build sequence entities across scopes after moves are defined.
 
 **Deliverables**:

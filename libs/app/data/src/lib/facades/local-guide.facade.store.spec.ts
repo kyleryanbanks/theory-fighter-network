@@ -297,6 +297,92 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.moves).toHaveLength(1);
   });
 
+  it('creates and deletes character-scoped Sequences while tracking Guide changes', async () => {
+    await store.createGuide({
+      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    const character = store.value()?.entities.characters[0];
+
+    const created = await store.createSequence({
+      characterKey: character?.semanticKey ?? '',
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+    const sequence = store.value()?.entities.sequences[0];
+    const updatedCharacter = store.value()?.entities.characters[0];
+
+    expect(created.status).toBe('success');
+    expect(sequence?.characterKey).toBe(character?.semanticKey);
+    expect(updatedCharacter?.hierarchy.sequenceKeys).toContain(
+      sequence?.semanticKey
+    );
+    expect(store.value()?.guide.localChanges).toContain(
+      `sequence:${sequence?.semanticKey}`
+    );
+
+    const deleted = await store.deleteSequence({
+      sequenceKey: sequence?.semanticKey ?? '',
+    });
+
+    expect(deleted.status).toBe('success');
+    expect(store.value()?.entities.sequences).toEqual([]);
+    expect(
+      store.value()?.entities.characters[0]?.hierarchy.sequenceKeys
+    ).toEqual([]);
+  });
+
+  it('creates a universal Sequence scoped to the Game when no character or team is given', async () => {
+    await store.createGuide({
+      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createSequence({
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+    const sequence = store.value()?.entities.sequences[0];
+
+    expect(created.status).toBe('success');
+    expect(sequence?.characterKey).toBeUndefined();
+    expect(sequence?.teamKey).toBeUndefined();
+    expect(store.value()?.entities.game.universal.sequenceKeys).toContain(
+      sequence?.semanticKey
+    );
+  });
+
+  it('rejects duplicate Sequence identity within the same scope', async () => {
+    await store.createGuide({
+      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createSequence({
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+
+    const duplicate = await store.createSequence({
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+
+    expect(duplicate.status).toBe('error');
+    expect(store.value()?.entities.sequences).toHaveLength(1);
+  });
+
+  it('rejects creating a Sequence scoped to a nonexistent Team', async () => {
+    await store.createGuide({
+      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const created = await store.createSequence({
+      teamKey: 'team-missing',
+      sequence: [{ directions: ['6'], buttons: ['mp'] }],
+    });
+
+    expect(created.status).toBe('error');
+    expect(store.value()?.entities.sequences).toEqual([]);
+  });
+
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
     const archiveFile = new File(['{}'], 'import.tfn', {

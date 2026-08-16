@@ -20,10 +20,11 @@ import { GameRoot } from '../game-root/game-root';
 import { StageEditor } from '../stage-editor/stage-editor';
 import { CharacterEditor } from '../character-editor/character-editor';
 import { MoveEditor } from '../move-editor/move-editor';
+import { SequenceEditor } from '../sequence-editor/sequence-editor';
 
 @Component({
   selector: 'tfn-feature',
-  imports: [GameRoot, StageEditor, CharacterEditor, MoveEditor, Ui],
+  imports: [GameRoot, StageEditor, CharacterEditor, MoveEditor, SequenceEditor, Ui],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })

@@ -1,0 +1,96 @@
+<section aria-labelledby="sequences-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Character-level hierarchy</p>
+      <h2 id="sequences-heading">Sequences</h2>
+    </div>
+    <p>{{ sequences().length }} total</p>
+  </div>
+
+  <mat-form-field appearance="outline" class="scope-select">
+    <mat-label>Scope</mat-label>
+    <mat-select
+      data-testid="sequence-scope"
+      [value]="scopeKey()"
+      (selectionChange)="setScope($event.value)"
+    >
+      <mat-option value="">Universal (Game-level)</mat-option>
+      @for (character of characters(); track character.semanticKey) {
+        <mat-option [value]="character.semanticKey">
+          {{ character.name }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <div class="sequence-draft">
+    <mat-form-field appearance="outline">
+      <mat-label>Add Move to Sequence</mat-label>
+      <mat-select
+        data-testid="sequence-move-picker"
+        [value]="nextMoveKey()"
+        (selectionChange)="addDraftMove($event.value)"
+      >
+        @for (move of scopedMoves(); track move.semanticKey) {
+          <mat-option [value]="move.semanticKey">{{ move.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (draftMoveKeys().length > 0) {
+      <ol class="draft-steps" data-testid="draft-steps">
+        @for (moveKey of draftMoveKeys(); track $index) {
+          <li>
+            {{ moveName(moveKey) }}
+            <button
+              matButton
+              type="button"
+              [attr.aria-label]="'Remove step ' + ($index + 1)"
+              (click)="removeDraftMove($index)"
+            >
+              Remove
+            </button>
+          </li>
+        }
+      </ol>
+    }
+
+    <button
+      matButton="filled"
+      type="button"
+      data-testid="add-sequence"
+      (click)="createSequence()"
+    >
+      Add Sequence
+    </button>
+  </div>
+
+  @if (sequenceError()) {
+    <p class="sequence-alert" role="alert">{{ sequenceError() }}</p>
+  }
+
+  <div class="sequence-list">
+    @for (sequence of sequences(); track sequence.semanticKey) {
+      <div class="sequence-entry" data-testid="sequence-entry">
+        <span>
+          <strong>
+            @for (step of sequence.sequence; track $index) {
+              {{ moveName(step.moveKey) }}{{ $last ? '' : ' → ' }}
+            }
+          </strong>
+          <small>{{ sequence.semanticKey }}</small>
+        </span>
+        <button
+          matButton
+          type="button"
+          [attr.aria-label]="'Delete Sequence ' + sequence.semanticKey"
+          (click)="deleteSequence(sequence.semanticKey)"
+        >
+          Delete
+        </button>
+      </div>
+    } @empty {
+      <p class="empty-state">No Sequences added in this scope.</p>
+    }
+  </div>
+</section>

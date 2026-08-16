@@ -27,6 +27,8 @@ import {
 import { createStage, createStageZone } from '../models/stage';
 import { createCharacter } from '../models/character';
 import { createMove } from '../models/move';
+import { createSequence } from '../models/sequence';
+import type { Step } from '../models/move';
 import {
   buildArchiveFile,
   parseArchiveFile,
@@ -737,6 +739,305 @@ export const LocalGuideFacadeStore = signalStore(
                 game,
                 moves: localGuide.entities.moves.filter(
                   (m) => m.semanticKey !== moveKey
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    createSequence: rxMutation({
+      operation: (input: {
+        sequence: Step[];
+        characterKey?: string;
+        teamKey?: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            let character;
+            let team;
+
+            if (input.characterKey) {
+              character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === input.characterKey
+              );
+              if (!character) {
+                throw new Error(
+                  `Character "${input.characterKey}" does not exist.`
+                );
+              }
+            } else if (input.teamKey) {
+              team = localGuide.entities.teams.find(
+                (t) => t.semanticKey === input.teamKey
+              );
+              if (!team) {
+                throw new Error(`Team "${input.teamKey}" does not exist.`);
+              }
+            }
+
+            const sequence = createSequence({
+              gameKey: localGuide.entities.game.semanticKey,
+              characterKey: input.characterKey,
+              teamKey: input.teamKey,
+              sequence: input.sequence,
+            });
+
+            if (
+              localGuide.entities.sequences.some(
+                (existing) => existing.semanticKey === sequence.semanticKey
+              )
+            ) {
+              throw new Error('This Sequence already exists in this scope.');
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'sequence',
+              entityKey: sequence.semanticKey,
+            });
+
+            if (character) {
+              markEntityUnsaved(guide, {
+                entityType: 'character',
+                entityKey: character.semanticKey,
+              });
+
+              const updatedCharacter = {
+                ...character,
+                hierarchy: {
+                  ...character.hierarchy,
+                  sequenceKeys: [
+                    ...character.hierarchy.sequenceKeys,
+                    sequence.semanticKey,
+                  ],
+                },
+                meta: {
+                  ...character.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === character.semanticKey
+                      ? updatedCharacter
+                      : c
+                  ),
+                  sequences: [...localGuide.entities.sequences, sequence],
+                },
+              };
+            }
+
+            if (team) {
+              markEntityUnsaved(guide, {
+                entityType: 'team',
+                entityKey: team.semanticKey,
+              });
+
+              const updatedTeam = {
+                ...team,
+                hierarchy: {
+                  ...team.hierarchy,
+                  sequenceKeys: [
+                    ...team.hierarchy.sequenceKeys,
+                    sequence.semanticKey,
+                  ],
+                },
+                meta: {
+                  ...team.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  teams: localGuide.entities.teams.map((t) =>
+                    t.semanticKey === team.semanticKey ? updatedTeam : t
+                  ),
+                  sequences: [...localGuide.entities.sequences, sequence],
+                },
+              };
+            }
+
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                sequenceKeys: [
+                  ...localGuide.entities.game.universal.sequenceKeys,
+                  sequence.semanticKey,
+                ],
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                sequences: [...localGuide.entities.sequences, sequence],
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteSequence: rxMutation({
+      operation: ({ sequenceKey }: { sequenceKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const sequence = localGuide.entities.sequences.find(
+              (s) => s.semanticKey === sequenceKey
+            );
+            if (!sequence) {
+              throw new Error(`Sequence "${sequenceKey}" does not exist.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'sequence',
+              entityKey: sequenceKey,
+            });
+
+            if (sequence.characterKey) {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === sequence.characterKey
+              );
+              if (!character) {
+                throw new Error(
+                  `Character "${sequence.characterKey}" for sequence "${sequenceKey}" not found.`
+                );
+              }
+
+              markEntityUnsaved(guide, {
+                entityType: 'character',
+                entityKey: character.semanticKey,
+              });
+
+              const updatedCharacter = {
+                ...character,
+                hierarchy: {
+                  ...character.hierarchy,
+                  sequenceKeys: character.hierarchy.sequenceKeys.filter(
+                    (key) => key !== sequenceKey
+                  ),
+                },
+                meta: {
+                  ...character.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === character.semanticKey
+                      ? updatedCharacter
+                      : c
+                  ),
+                  sequences: localGuide.entities.sequences.filter(
+                    (s) => s.semanticKey !== sequenceKey
+                  ),
+                },
+              };
+            }
+
+            if (sequence.teamKey) {
+              const team = localGuide.entities.teams.find(
+                (t) => t.semanticKey === sequence.teamKey
+              );
+              if (!team) {
+                throw new Error(
+                  `Team "${sequence.teamKey}" for sequence "${sequenceKey}" not found.`
+                );
+              }
+
+              markEntityUnsaved(guide, {
+                entityType: 'team',
+                entityKey: team.semanticKey,
+              });
+
+              const updatedTeam = {
+                ...team,
+                hierarchy: {
+                  ...team.hierarchy,
+                  sequenceKeys: team.hierarchy.sequenceKeys.filter(
+                    (key) => key !== sequenceKey
+                  ),
+                },
+                meta: {
+                  ...team.meta,
+                  lastUpdatedAt: new Date(),
+                },
+              };
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  teams: localGuide.entities.teams.map((t) =>
+                    t.semanticKey === team.semanticKey ? updatedTeam : t
+                  ),
+                  sequences: localGuide.entities.sequences.filter(
+                    (s) => s.semanticKey !== sequenceKey
+                  ),
+                },
+              };
+            }
+
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              universal: {
+                ...localGuide.entities.game.universal,
+                sequenceKeys:
+                  localGuide.entities.game.universal.sequenceKeys.filter(
+                    (key) => key !== sequenceKey
+                  ),
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+                sequences: localGuide.entities.sequences.filter(
+                  (s) => s.semanticKey !== sequenceKey
                 ),
               },
             };
