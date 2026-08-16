@@ -14,8 +14,8 @@ This roadmap restructures development around agreed priority order. The work is 
 
 Commit history since this roadmap was last updated confirms the following:
 
-- **Phase 1.1 is complete.** The local guide metadata model, schema-version validation, unsaved/synced tracking, browser and Node directory persistence, `.tfn` archive creation/parsing with integrity checks, and the import/export CLI are implemented and covered by unit tests.
-- **Phase 1.3 is partially complete.** The v1 JSON `.tfn` archive format has a header, deterministic checksum, entity ordering, date hydration, and Node atomic folder writes. Forward migrations, a formal format specification, and atomic archive-file writes remain open.
+- **Phase 1.1 is complete.** The local guide metadata model, schema-version validation, unsaved/synced tracking, and `.tfn` archive creation/parsing with integrity checks are implemented and covered by unit tests.
+- **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File` before download.
 - **Phase 1.2 is complete.** Game creation, validation, semantic identity, metadata editing, and one-at-a-time input vocabulary authoring are implemented with Angular Material and Signal Forms.
 - **Phases 1.4-1.7 are not complete.** Their document schemas and model factories exist, but hierarchy authoring workflows have not been implemented.
 
@@ -34,12 +34,12 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ### Phase 1.1: Local Guide Foundation
 **Status: Complete (2026-08-15).**
-**Scope**: Build the guide.json metadata layer and local file I/O pipeline.
+**Scope**: Build the Guide metadata layer and browser `.tfn` import/export pipeline.
 
 **Deliverables**:
-- `guide.json` schema: gameKey, schemaVersion, lastModified, localChanges[], syncedChanges[], unsavedStatus per entity
-- Local file structure: `.tfn` save format with version header and integrity validation
-- File import/export CLI: Load guide.json + entity files → in-memory GameDocument + child entities
+- Guide metadata schema: gameKey, schemaVersion, lastModified, localChanges[], syncedChanges[], unsavedStatus per entity
+- `.tfn` save format with version header and integrity validation
+- Browser import/export: Load one `.tfn` file into the in-memory Guide; save the active Guide as one `.tfn` file
 - Unsaved/synced tracking: Mark entities as `unsaved` after edits, `synced` after save
 - Schema version registration and forward-compatibility checks
 
@@ -65,14 +65,14 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.3: .tfn Save/Load Pipeline (Locked Structure + Migration)
-**Status: Partially complete (2026-08-15).** The v1 archive header, checksum validation, serialization, parsing, and folder persistence are implemented. Forward migrations and atomic `.tfn` archive-file writes remain.
+**Status: Complete (2026-08-15).** The v1 archive header, canonical entity order, deterministic checksum, exact date serialization/hydration, format-0 to format-1 migration, future-version rejection, browser `File` import/export, and formal format specification are implemented and tested.
 **Scope**: Build the locked file format and forward-only migration system.
 
 **Deliverables**:
 - `.tfn` format specification: Binary or JSON with version header, checksums, entity order
-- Save pipeline: GameDocument → guide.json + entity files; write atomically to `.tfn`
+- Save pipeline: GameDocument → complete validated `.tfn` `File`; prompt for destination where supported, otherwise use browser download
 - Load pipeline: `.tfn` → validate header + schema version → deserialize entities
-- Forward-only migration: Accept v1 → v2 migrations; reject v2 files in v1 client
+- Forward-only migration: Accept registered older formats such as format 0 → 1; reject format 2 files in a format 1 client
 - Unknown schema rejection: If schemaVersion > current client version, fail with instruction to upgrade
 - Integrity validation: Checksums verify file not corrupted between saves
 
@@ -294,12 +294,12 @@ These phases establish the offline foundation. All features are local-only; no n
 **Scope**: Build auto-save and crash recovery features.
 
 **Deliverables**:
-- Auto-snapshot: Periodic snapshots of guide.json + all entities (e.g., every 5 minutes)
+- Auto-snapshot: Periodic browser-local snapshots of the in-memory Guide (e.g., every 5 minutes)
 - Snapshot versioning: Store 10 most recent snapshots with timestamps
 - Crash detection: On startup, check for incomplete save from previous session
 - Restore UI: "Last save crashed. Restore from backup?" with timestamp selection
 - Diff viewer: Show what would be restored; allow selective restoration
-- Atomic saves: Ensure writes to `.tfn` are atomic (all-or-nothing)
+- Explicit save: Build and validate the complete `.tfn` file before starting the browser download
 
 **Validation**: Snapshots are valid; restored state matches snapshot; atomic saves don't partially corrupt files
 

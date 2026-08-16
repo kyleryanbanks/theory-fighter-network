@@ -2,7 +2,6 @@ import {
   InjectionToken,
   computed,
   inject,
-  resource,
 } from '@angular/core';
 import {
   patchState,
@@ -12,11 +11,7 @@ import {
   withProps,
   withState,
 } from '@ngrx/signals';
-import {
-  rxMutation,
-  withMutations,
-  withResource,
-} from '@angular-architects/ngrx-toolkit';
+import { rxMutation, withMutations } from '@angular-architects/ngrx-toolkit';
 import { from, of } from 'rxjs';
 import {
   createGuideJson,
@@ -32,8 +27,6 @@ import {
 import {
   buildArchiveFile,
   parseArchiveFile,
-  loadWorkspaceFromDirectoryHandle,
-  saveWorkspaceToDirectoryHandle,
 } from '../persistence/local-guide-web';
 
 /**
@@ -43,13 +36,6 @@ import {
  * which keeps orchestration testable and allows swapping implementations.
  */
 export interface LocalGuidePersistencePort {
-  loadFromDirectoryHandle(
-    directoryHandle: FileSystemDirectoryHandle
-  ): Promise<LocalGuideWorkspace | undefined>;
-  saveToDirectoryHandle(
-    directoryHandle: FileSystemDirectoryHandle,
-    workspace: LocalGuideWorkspace
-  ): Promise<void>;
   parseArchiveFile(archiveFile: File): Promise<LocalGuideWorkspace>;
   buildArchiveFile(
     workspace: LocalGuideWorkspace,
@@ -61,8 +47,6 @@ export interface LocalGuidePersistencePort {
  * Default browser persistence adapter used in runtime.
  */
 const DEFAULT_LOCAL_GUIDE_PERSISTENCE: LocalGuidePersistencePort = {
-  loadFromDirectoryHandle: loadWorkspaceFromDirectoryHandle,
-  saveToDirectoryHandle: saveWorkspaceToDirectoryHandle,
   parseArchiveFile,
   buildArchiveFile: async (workspace, fileName) =>
     buildArchiveFile(workspace, fileName),
@@ -81,8 +65,7 @@ export const TFN_LOCAL_GUIDE_PERSISTENCE =
   );
 
 type LocalGuideFacadeState = {
-  directoryHandle: FileSystemDirectoryHandle | null;
-  reloadToken: number;
+  value: LocalGuideWorkspace | undefined;
 };
 
 type CreateWorkspaceInput = CreateGameInput;
@@ -91,41 +74,18 @@ type CreateWorkspaceInput = CreateGameInput;
  * Primary data-layer facade for local guide workflows.
  *
  * Pattern:
- * - Resource: directory-handle driven load lifecycle.
- * - Mutations: explicit commands (create/save/import/export).
+ * - State: active in-memory Guide loaded from or saved to a `.tfn` file.
+ * - Mutations: explicit commands (create/update/import/export).
  * - Computed signals: derived view state for feature components.
  */
 export const LocalGuideFacadeStore = signalStore(
   { providedIn: 'root' },
   withState<LocalGuideFacadeState>({
-    directoryHandle: null,
-    reloadToken: 0,
+    value: undefined,
   }),
   withProps(() => ({
     persistence: inject(TFN_LOCAL_GUIDE_PERSISTENCE),
   })),
-  // Resource is the read model for filesystem-backed workspace loading.
-  withResource((store) =>
-    resource<LocalGuideWorkspace | undefined, {
-      directoryHandle: FileSystemDirectoryHandle | null;
-      reloadToken: number;
-    }>({
-      params: () => ({
-        directoryHandle: store.directoryHandle(),
-        reloadToken: store.reloadToken(),
-      }),
-      loader: async ({ params }) => {
-        if (!params.directoryHandle) {
-          return undefined;
-        }
-
-        return store.persistence.loadFromDirectoryHandle(
-          params.directoryHandle
-        );
-      },
-      defaultValue: undefined,
-    })
-  ),
   // Mutations are command handlers for local guide workflows.
   withMutations((store) => ({
     createWorkspace: rxMutation({
@@ -169,34 +129,6 @@ export const LocalGuideFacadeStore = signalStore(
       },
     }),
 
-    saveWorkspaceToDirectory: rxMutation({
-      operation: ({
-        directoryHandle,
-      }: {
-        directoryHandle?: FileSystemDirectoryHandle | null;
-      }) =>
-        from(
-          (async () => {
-            const handle =
-              directoryHandle ?? store.directoryHandle();
-            const workspace = store.value();
-
-            if (!handle) {
-              throw new Error('Directory handle is required before save.');
-            }
-
-            if (!workspace) {
-              throw new Error('No active workspace to save.');
-            }
-
-            await store.persistence.saveToDirectoryHandle(
-              handle,
-              workspace
-            );
-          })()
-        ),
-    }),
-
     importArchive: rxMutation({
       operation: (archiveFile: File) =>
         from(store.persistence.parseArchiveFile(archiveFile)),
@@ -225,24 +157,6 @@ export const LocalGuideFacadeStore = signalStore(
   })),
   withMethods((store) => ({
     /**
-     * Sets the active directory handle that drives the load resource.
-     */
-    setDirectoryHandle(
-      directoryHandle: FileSystemDirectoryHandle | null
-    ): void {
-      patchState(store, { directoryHandle });
-    },
-
-    /**
-     * Forces a reload of directory-backed data by bumping resource params.
-     */
-    reloadDirectoryWorkspace(): void {
-      patchState(store, (state) => ({
-        reloadToken: state.reloadToken + 1,
-      }));
-    },
-
-    /**
      * Clears in-memory active workspace value.
      */
     clearActiveWorkspace(): void {
@@ -255,10 +169,8 @@ export const LocalGuideFacadeStore = signalStore(
     hasWorkspace: computed(() => !!store.value()),
     isBusy: computed(
       () =>
-        store.isLoading() ||
         store.createWorkspaceIsPending() ||
         store.updateActiveGameIsPending() ||
-        store.saveWorkspaceToDirectoryIsPending() ||
         store.importArchiveIsPending() ||
         store.exportArchiveIsPending()
     ),

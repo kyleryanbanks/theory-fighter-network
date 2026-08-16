@@ -9,35 +9,88 @@ main {
 }
 
 h1 {
-	margin: 0 0 24px;
+	margin: 0 0 16px;
 	font-family: 'Rockwell', 'Avenir Next', sans-serif;
 	font-size: clamp(1.75rem, 3vw, 2.5rem);
 	font-weight: 700;
 	letter-spacing: 0;
 }
 
-main > p {
-	display: inline-block;
-	margin: 0 20px 24px 0;
+.guide-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	margin-bottom: 24px;
+	border-top: 1px solid #d9e0dc;
+	border-bottom: 1px solid #d9e0dc;
+	padding: 10px 0;
+}
+
+.guide-status,
+.guide-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.guide-status {
+	gap: 20px;
+}
+
+.guide-status p {
+	margin: 0;
 	color: #52635b;
 	font-size: 0.8125rem;
 }
 
-main > div {
-	display: flex;
-	flex-wrap: wrap;
+.guide-actions {
 	gap: 8px;
-	margin-top: 24px;
 }
 
-main > div button,
-main > div input {
+.guide-actions button,
+.file-action {
+	display: inline-grid;
+	place-items: center;
 	min-height: 40px;
+	border: 1px solid #9caaa2;
+	padding: 0 16px;
+	background: #fff;
+	color: #1e4434;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.guide-actions button:disabled {
+	color: #8a958f;
+	cursor: not-allowed;
+}
+
+.visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	clip-path: inset(50%);
 }
 
 @media (max-width: 640px) {
 	main {
 		width: min(100% - 20px, 1120px);
 		padding-top: 20px;
+	}
+
+	.guide-toolbar {
+		align-items: stretch;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.guide-actions {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }

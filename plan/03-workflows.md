@@ -314,34 +314,28 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
 ## Local file format (locked)
 
 ```text
-my-guide.tfn-workspace/
-├── guide.json
-└── games/
-    └── {gameKey}/
-        ├── game.json
-        ├── universal-stage-zones.jsonl
-        ├── stages/
-        │   └── {stageKey}/
-        │       ├── stage.json
-        │       └── zones.jsonl
-        ├── combos.jsonl
-        ├── characters/
-        │   └── {characterKey}/
-        │       ├── character.json
-        │       ├── moves.jsonl
-        │       └── combos.jsonl
-        └── teams/
-            └── {teamKey}/
-                ├── team.json
-                └── combos.jsonl
+my-guide.tfn
+├── header
+├── guide
+├── entities
+│   ├── game
+│   ├── stages
+│   ├── stageZones
+│   ├── characters
+│   ├── teams
+│   ├── moves
+│   ├── sequences
+│   ├── projectiles
+│   └── matchups
+└── checksum
 ```
 
-- `.tfn` export/import is a compressed archive of this workspace structure.
-- `guide.json` includes a required `schemaVersion` field for import/export compatibility.
+- `.tfn` is the only user-facing save/load format.
+- The `guide` section includes a required `schemaVersion` field for import/export compatibility.
 - Imports support forward migration only: older guide files are migrated step-by-step to the current schema.
 - Guides from a newer unknown schema version are rejected with a clear compatibility message rather than opened best-effort.
 - Tags, assists, and similar team mechanics are modeled as moves with state/resource constraints rather than special file-layout cases.
-- JSONL is used for large entity lists to minimize corruption scope and reduce merge noise.
+- The complete format and checksum rules are defined in `05-tfn-format.md`.
 
 ---
 

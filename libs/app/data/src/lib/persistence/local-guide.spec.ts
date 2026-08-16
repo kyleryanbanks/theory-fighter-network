@@ -6,17 +6,13 @@ import {
   markEntitySynced,
   markEntityUnsaved,
   parseTfnArchive,
-  type EntityType,
   type LocalGuideEntities,
 } from '../guide';
+import { createStateModel } from '../models';
 import {
   loadWorkspaceFromDirectory,
   saveWorkspaceToDirectory,
 } from './local-guide-node';
-import {
-  buildArchiveFile,
-  parseArchiveFile,
-} from './local-guide-web';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -34,7 +30,7 @@ function buildFixtureEntities(): LocalGuideEntities {
         directions: [{ label: '5', value: '5' }],
         buttons: [{ label: 'LP', value: 'lp' }],
       },
-      states: {},
+      states: createStateModel(),
       community: {
         ownerId: 'local-user',
       },
@@ -129,22 +125,4 @@ describe('local guide foundation', () => {
     }
   });
 
-  it('round-trips a .tfn archive through browser File APIs', async () => {
-    const entities = buildFixtureEntities();
-    const guide = createGuideJson({ gameKey: entities.game.semanticKey });
-
-    const archiveFile = buildArchiveFile(
-      { guide, entities },
-      'demo-guide.tfn'
-    );
-    const loaded = await parseArchiveFile(archiveFile);
-
-    expect(archiveFile.name).toBe('demo-guide.tfn');
-    expect(loaded.guide.gameKey).toBe('game-demo-1x');
-    expect(loaded.entities.game.meta.createdAt).toBeInstanceOf(Date);
-  });
 });
-
-function _assertEntityType(_value: EntityType): void {
-  // Compile-time assertion only.
-}

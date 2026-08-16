@@ -11,10 +11,6 @@ describe('Feature', () => {
     hasWorkspace: signal(false),
     workspace: signal(undefined),
     isBusy: signal(false),
-    status: signal('idle'),
-    setDirectoryHandle: vi.fn(),
-    reloadDirectoryWorkspace: vi.fn(),
-    saveWorkspaceToDirectory: vi.fn(async () => ({ status: 'success' })),
     importArchive: vi.fn(async () => ({ status: 'success' })),
     exportArchive: vi.fn(async () => ({
       status: 'success',
@@ -26,6 +22,8 @@ describe('Feature', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    mockStore.hasWorkspace.set(false);
 
     await TestBed.configureTestingModule({
       imports: [Feature],
@@ -47,23 +45,20 @@ describe('Feature', () => {
     expect(component).toBeTruthy();
   });
 
-  it('saves the guide when a save location exists', async () => {
-    component.activeDirectoryHandle =
-      {} as unknown as FileSystemDirectoryHandle;
-    fixture.detectChanges();
+  it('places Guide status and file actions together below the title', () => {
+    const toolbar: HTMLElement = fixture.nativeElement.querySelector(
+      '[data-testid="guide-toolbar"]'
+    );
 
-    const button: HTMLButtonElement =
-      fixture.nativeElement.querySelector(
-        '[data-testid="save-workspace"]'
-      );
-
-    button.click();
-    await fixture.whenStable();
-
-    expect(mockStore.saveWorkspaceToDirectory).toHaveBeenCalledTimes(1);
+    expect(toolbar).toBeTruthy();
+    expect(toolbar.querySelector('[data-testid="workspace-key"]')).toBeTruthy();
+    expect(toolbar.querySelector('[data-testid="busy-status"]')).toBeTruthy();
+    expect(toolbar.querySelector('[data-testid="import-archive"]')).toBeTruthy();
+    expect(toolbar.querySelector('[data-testid="export-archive"]')).toBeTruthy();
+    expect(toolbar.nextElementSibling?.tagName).toBe('TFN-GAME-ROOT');
   });
 
-  it('imports archive when a file is selected', async () => {
+  it('loads a .tfn file when selected', async () => {
     const input: HTMLInputElement = fixture.nativeElement.querySelector(
       '[data-testid="import-archive"]'
     );
@@ -79,9 +74,18 @@ describe('Feature', () => {
     await fixture.whenStable();
 
     expect(mockStore.importArchive).toHaveBeenCalledWith(file);
+    expect(input.accept).toBe('.tfn');
   });
 
-  it('exports archive when export button is clicked', async () => {
+  it('saves the active guide as a .tfn file', async () => {
+    const write = vi.fn(async () => undefined);
+    const close = vi.fn(async () => undefined);
+    const createWritable = vi.fn(async () => ({ write, close }));
+    const showSaveFilePicker = vi.fn(async () => ({ createWritable }));
+    vi.stubGlobal('showSaveFilePicker', showSaveFilePicker);
+    mockStore.hasWorkspace.set(true);
+    fixture.detectChanges();
+
     const button: HTMLButtonElement =
       fixture.nativeElement.querySelector(
         '[data-testid="export-archive"]'
@@ -91,5 +95,25 @@ describe('Feature', () => {
     await fixture.whenStable();
 
     expect(mockStore.exportArchive).toHaveBeenCalledTimes(1);
+    expect(showSaveFilePicker).toHaveBeenCalledWith({
+      suggestedName: 'tfn-guide-export.tfn',
+      types: [
+        {
+          description: 'Theory Fighter Network Guide',
+          accept: { 'application/json': ['.tfn'] },
+        },
+      ],
+    });
+    expect(write).toHaveBeenCalledWith(expect.any(File));
+    expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not expose directory persistence actions', () => {
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="open-directory"]')
+    ).toBeNull();
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="save-workspace"]')
+    ).toBeNull();
   });
 });

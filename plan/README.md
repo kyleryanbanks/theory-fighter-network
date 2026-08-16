@@ -8,6 +8,7 @@ This folder contains the complete design specification for Theory Fighter Networ
 - **[02-data-model.md](./02-data-model.md)** — Complete Firestore schema, local file format, and all interface definitions
 - **[03-workflows.md](./03-workflows.md)** — Runtime workflows: move inheritance, suggestions, file sync, and community integration
 - **[04-implementation.md](./04-implementation.md)** — Implementation roadmap and phase breakdown
+- **[05-tfn-format.md](./05-tfn-format.md)** — Locked `.tfn` archive format, validation, and migration rules
 
 ## How to Use This Plan
 

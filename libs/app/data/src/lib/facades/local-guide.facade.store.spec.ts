@@ -48,8 +48,6 @@ function buildWorkspace(gameKey = 'game-demo-1x'): LocalGuideWorkspace {
 // Mock port lets tests verify orchestration without real filesystem side effects.
 function createPersistenceMock(): LocalGuidePersistencePort {
   return {
-    loadFromDirectoryHandle: vi.fn(async () => undefined),
-    saveToDirectoryHandle: vi.fn(async () => undefined),
     parseArchiveFile: vi.fn(async () => buildWorkspace('imported-game')),
     buildArchiveFile: vi.fn(
       async (_workspace, fileName = 'guide.tfn') =>
@@ -77,27 +75,6 @@ describe('LocalGuideFacadeStore', () => {
     store = TestBed.inject(LocalGuideFacadeStore);
   });
 
-  it('loads workspace through resource when directory handle changes', async () => {
-    const directoryHandle =
-      {} as unknown as FileSystemDirectoryHandle;
-    const expected = buildWorkspace('resource-game');
-
-    vi.mocked(persistence.loadFromDirectoryHandle).mockResolvedValue(
-      expected
-    );
-
-    store.setDirectoryHandle(directoryHandle);
-
-    await vi.waitFor(() => {
-      expect(store.value()).toBeDefined();
-      expect(store.value()?.guide.gameKey).toBe('resource-game');
-    });
-
-    expect(persistence.loadFromDirectoryHandle).toHaveBeenCalledWith(
-      directoryHandle
-    );
-  });
-
   it('creates a new workspace through a mutation and stores it as the active value', async () => {
     const result = await store.createWorkspace({
       name: 'Created Fighter',
@@ -113,23 +90,6 @@ describe('LocalGuideFacadeStore', () => {
       store.value()?.entities.game.semanticKey
     );
     expect(store.value()?.entities.game.name).toBe('Created Fighter');
-  });
-
-  it('saves the active workspace through a mutation', async () => {
-    const directoryHandle =
-      {} as unknown as FileSystemDirectoryHandle;
-
-    await store.createWorkspace({
-      name: 'Save Fighter', version: '2.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
-    });
-
-    const result = await store.saveWorkspaceToDirectory({
-      directoryHandle,
-    });
-
-    expect(result.status).toBe('success');
-    expect(persistence.saveToDirectoryHandle).toHaveBeenCalledTimes(1);
   });
 
   it('updates active game metadata while preserving identity and marking it unsaved', async () => {

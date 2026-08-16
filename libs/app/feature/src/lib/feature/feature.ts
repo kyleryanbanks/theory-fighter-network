@@ -13,36 +13,7 @@ import { GameRoot } from '../game-root/game-root';
 export class Feature {
   readonly facade = inject(LocalGuideFacadeStore);
 
-  activeDirectoryHandle: FileSystemDirectoryHandle | null = null;
-  async openDirectory(): Promise<void> {
-    const directoryHandle = await this.pickDirectoryHandle();
-
-    if (!directoryHandle) {
-      return;
-    }
-
-    this.activeDirectoryHandle = directoryHandle;
-    this.facade.setDirectoryHandle(directoryHandle);
-    this.facade.reloadDirectoryWorkspace();
-  }
-
-  async saveGuide(): Promise<void> {
-    const directoryHandle =
-      this.activeDirectoryHandle ??
-      (await this.pickDirectoryHandle());
-
-    if (!directoryHandle) {
-      return;
-    }
-
-    this.activeDirectoryHandle = directoryHandle;
-
-    await this.facade.saveWorkspaceToDirectory({
-      directoryHandle,
-    });
-  }
-
-  async onImportArchiveSelected(event: Event): Promise<void> {
+  async onTfnSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement | null;
     const archiveFile = input?.files?.[0];
 
@@ -54,12 +25,48 @@ export class Feature {
     input.value = '';
   }
 
-  async exportArchive(): Promise<void> {
+  async saveTfn(): Promise<void> {
+    const saveFilePicker = (globalThis as SaveFilePickerGlobal)
+      .showSaveFilePicker;
+    let fileHandle: SaveFileHandle | undefined;
+
+    if (saveFilePicker) {
+      try {
+        fileHandle = await saveFilePicker({
+          suggestedName: 'tfn-guide-export.tfn',
+          types: [
+            {
+              description: 'Theory Fighter Network Guide',
+              accept: { 'application/json': ['.tfn'] },
+            },
+          ],
+        });
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
+
+        throw error;
+      }
+    }
+
     const result = await this.facade.exportArchive({
       fileName: 'tfn-guide-export.tfn',
     });
 
     if (result.status !== 'success') {
+      return;
+    }
+
+    if (fileHandle) {
+      const writable = await fileHandle.createWritable();
+
+      try {
+        await writable.write(result.value);
+      } finally {
+        await writable.close();
+      }
+
       return;
     }
 
@@ -78,16 +85,27 @@ export class Feature {
     anchor.click();
     URL.revokeObjectURL(objectUrl);
   }
+}
 
-  private async pickDirectoryHandle(): Promise<FileSystemDirectoryHandle | null> {
-    const picker = (globalThis as {
-      showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
-    }).showDirectoryPicker;
+interface SaveFilePickerGlobal {
+  showSaveFilePicker?: (
+    options: SaveFilePickerOptions
+  ) => Promise<SaveFileHandle>;
+}
 
-    if (!picker) {
-      return null;
-    }
+interface SaveFilePickerOptions {
+  suggestedName: string;
+  types: Array<{
+    description: string;
+    accept: Record<string, string[]>;
+  }>;
+}
 
-    return picker();
-  }
+interface SaveFileHandle {
+  createWritable(): Promise<SaveFileWritable>;
+}
+
+interface SaveFileWritable {
+  write(data: File): Promise<void>;
+  close(): Promise<void>;
 }

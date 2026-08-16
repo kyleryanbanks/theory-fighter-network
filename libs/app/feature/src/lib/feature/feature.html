@@ -1,34 +1,37 @@
 <main>
 	<h1>Theory Fighter Network</h1>
-	<p data-testid="resource-status">
-		Load status: {{ facade.status() }}
-	</p>
-	<p data-testid="workspace-key">
-		Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
-	</p>
-	<p data-testid="busy-status">
-		Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
-	</p>
+	<div class="guide-toolbar" data-testid="guide-toolbar">
+		<div class="guide-status">
+			<p data-testid="workspace-key">
+				Guide game: {{ facade.workspace()?.guide?.gameKey ?? 'none' }}
+			</p>
+			<p data-testid="busy-status">
+				Busy: {{ facade.isBusy() ? 'yes' : 'no' }}
+			</p>
+		</div>
+
+		<div class="guide-actions">
+			<label class="file-action">
+				Load .tfn
+				<input
+					class="visually-hidden"
+					type="file"
+					accept=".tfn"
+					data-testid="import-archive"
+					(change)="onTfnSelected($event)"
+				/>
+			</label>
+			<button
+				data-testid="export-archive"
+				[disabled]="!facade.hasWorkspace()"
+				(click)="saveTfn()"
+			>
+				Save .tfn
+			</button>
+		</div>
+	</div>
 
 	<tfn-game-root />
-
-	<div>
-		<button data-testid="open-directory" (click)="openDirectory()">
-			Open guide folder
-		</button>
-		<button data-testid="save-workspace" (click)="saveGuide()">
-			Save guide
-		</button>
-		<input
-			type="file"
-			accept=".tfn,application/json"
-			data-testid="import-archive"
-			(change)="onImportArchiveSelected($event)"
-		/>
-		<button data-testid="export-archive" (click)="exportArchive()">
-			Export guide
-		</button>
-	</div>
 
 	<tfn-ui></tfn-ui>
 </main>
