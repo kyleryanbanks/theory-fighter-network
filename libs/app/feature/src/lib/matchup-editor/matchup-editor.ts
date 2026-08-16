@@ -210,7 +210,7 @@ export class MatchupEditor {
   // text, and remembers the note so it can be linked once the Scenario
   // is actually created (a note can't become a Scenario on its own since
   // it has no opponentOptionKey to reference).
-  promoteNote(matchupKey: string, note: NoteEntry): void {
+  addressNote(matchupKey: string, note: NoteEntry): void {
     this.selectedMatchupKey.set(matchupKey);
     this.draftScenarioName.set(note.text);
     this.promotingNote.set({ matchupKey, noteId: note.id });

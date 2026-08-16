@@ -1,4 +1,5 @@
 import { Component, inject, input, output, signal } from '@angular/core';
+import type { UrlTree } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   type EntityType,
@@ -18,7 +19,10 @@ export class EntityNotes {
   readonly entityType = input.required<EntityType>();
   readonly entityKey = input.required<string>();
   readonly notes = input<NoteEntry[]>([]);
-  readonly promote = output<NoteEntry>();
+  readonly notAddressable = input(false);
+  readonly addressLabel = input('Address note');
+  readonly addressUrl = input<((note: NoteEntry) => UrlTree) | null>(null);
+  readonly address = output<NoteEntry>();
   readonly error = signal('');
 
   async addNote(text: string): Promise<void> {
@@ -39,8 +43,8 @@ export class EntityNotes {
     this.setError(result);
   }
 
-  promoteNote(note: NoteEntry): void {
-    this.promote.emit(note);
+  addressNote(note: NoteEntry): void {
+    this.address.emit(note);
   }
 
   private setError(result: { status: string; error?: unknown }): void {

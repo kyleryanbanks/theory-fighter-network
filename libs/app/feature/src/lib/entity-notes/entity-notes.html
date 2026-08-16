@@ -3,7 +3,10 @@
 }
 <tfn-notes-list
   [notes]="notes()"
+  [notAddressable]="notAddressable()"
+  [addressLabel]="addressLabel()"
+  [addressUrl]="addressUrl()"
   (add)="addNote($event)"
   (remove)="removeNote($event)"
-  (promote)="promoteNote($event)"
+  (address)="addressNote($event)"
 />

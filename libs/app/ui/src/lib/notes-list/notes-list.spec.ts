@@ -44,25 +44,44 @@ describe('NotesList', () => {
     expect(fixture.nativeElement.textContent).toContain('No notes yet.');
   });
 
-  it('shows a Promote action for a note without a promotedToKey', () => {
-    fixture.componentRef.setInput('canPromote', true);
+  it('shows an Address action for a note without a promotedToKey', () => {
     fixture.componentRef.setInput('notes', [buildNote()]);
     fixture.detectChanges();
 
-    const promoteButton = fixture.nativeElement.querySelector(
-      '[data-testid="promote-note"]'
+    const addressButton = fixture.nativeElement.querySelector(
+      '[data-testid="address-note"]'
     );
-    expect(promoteButton).not.toBeNull();
+    expect(addressButton).not.toBeNull();
   });
 
-  it('shows a promoted indicator instead of Promote once a note has a promotedToKey', () => {
+  it('uses the supplied destination in the Address aria-label', () => {
+    fixture.componentRef.setInput(
+      'addressLabel',
+      'Create a new Scenario to address this note'
+    );
+    fixture.componentRef.setInput('notes', [buildNote()]);
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement
+        .querySelector('[data-testid="address-note"]')
+        .getAttribute('aria-label')
+    ).toBe('Create a new Scenario to address this note');
+    expect(
+      fixture.nativeElement
+        .querySelector('[data-testid="address-note"]')
+        .getAttribute('title')
+    ).toBe('Create a new Scenario to address this note');
+  });
+
+  it('shows a promoted indicator instead of Address once a note has a promotedToKey', () => {
     fixture.componentRef.setInput('notes', [
       buildNote({ promotedToKey: 'scenario-123' }),
     ]);
     fixture.detectChanges();
 
     expect(
-      fixture.nativeElement.querySelector('[data-testid="promote-note"]')
+      fixture.nativeElement.querySelector('[data-testid="address-note"]')
     ).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('Promoted');
   });
@@ -94,18 +113,17 @@ describe('NotesList', () => {
     expect(removeSpy).toHaveBeenCalledWith('note-1');
   });
 
-  it('emits promote with the full note entry', () => {
-    const promoteSpy = vi.fn();
-    fixture.componentInstance.promote.subscribe(promoteSpy);
-    fixture.componentRef.setInput('canPromote', true);
+  it('emits address with the full note entry', () => {
+    const addressSpy = vi.fn();
+    fixture.componentInstance.address.subscribe(addressSpy);
     const note = buildNote({ id: 'note-1' });
     fixture.componentRef.setInput('notes', [note]);
     fixture.detectChanges();
 
     fixture.nativeElement
-      .querySelector('[data-testid="promote-note"]')
+      .querySelector('[data-testid="address-note"]')
       .dispatchEvent(new Event('click'));
 
-    expect(promoteSpy).toHaveBeenCalledWith(note);
+    expect(addressSpy).toHaveBeenCalledWith(note);
   });
 });

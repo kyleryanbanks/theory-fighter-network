@@ -56,12 +56,12 @@ describe('EntityNotes', () => {
     });
   });
 
-  it('emits the note for the parent editor to promote', () => {
-    const promote = vi.fn();
-    fixture.componentInstance.promote.subscribe(promote);
+  it('emits the note for the parent editor to address', () => {
+    const address = vi.fn();
+    fixture.componentInstance.address.subscribe(address);
     const entry = note();
-    fixture.componentInstance.promoteNote(entry);
+    fixture.componentInstance.addressNote(entry);
 
-    expect(promote).toHaveBeenCalledWith(entry);
+    expect(address).toHaveBeenCalledWith(entry);
   });
 });

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
@@ -12,6 +13,7 @@ import { EntityNotes } from '../entity-notes/entity-notes';
 })
 export class TeamEditor {
   readonly facade = inject(LocalGuideFacadeStore);
+  private readonly router = inject(Router);
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? []
   );
@@ -98,6 +100,12 @@ export class TeamEditor {
     }
 
     this.teamError.set('');
+  }
+
+  addressNote(teamKey: string, note: { text: string }): void {
+    void this.router.navigate(['/sequences'], {
+      queryParams: { teamKey, addressNote: note.text },
+    });
   }
 }
 

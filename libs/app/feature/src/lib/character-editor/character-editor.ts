@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +20,7 @@ interface CharacterDraft {
 })
 export class CharacterEditor {
   readonly facade = inject(LocalGuideFacadeStore);
+  private readonly router = inject(Router);
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? []
   );
@@ -53,6 +55,12 @@ export class CharacterEditor {
     }
 
     this.characterError.set('');
+  }
+
+  addressNote(characterKey: string, note: { text: string }): void {
+    void this.router.navigate(['/moves'], {
+      queryParams: { characterKey, addressNote: note.text },
+    });
   }
 }
 

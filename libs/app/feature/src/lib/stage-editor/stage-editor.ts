@@ -3,7 +3,11 @@ import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import {
+  LocalGuideFacadeStore,
+  createStageZoneSemanticKey,
+  type NoteEntry,
+} from '@theory-fighter-network/data';
 import { EntityMetadataView, ExpansionPanel } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
@@ -42,6 +46,10 @@ export class StageEditor {
   readonly zoneForm = form(this.zoneModel, (path) => {
     required(path.name, { message: 'Zone name is required.' });
   });
+  private readonly addressedStageNote = signal<{
+    stageKey: string;
+    note: NoteEntry;
+  } | null>(null);
 
   createStage(): void {
     submit(this.stageForm, async () => {
@@ -72,8 +80,9 @@ export class StageEditor {
 
   createUniversalZone(): void {
     submit(this.zoneForm, async () => {
+      const zoneName = this.zoneModel().name.trim();
       const result = await this.facade.createStageZone({
-        name: this.zoneModel().name.trim(),
+        name: zoneName,
       });
 
       if (result.status === 'error') {
@@ -83,7 +92,31 @@ export class StageEditor {
 
       this.zoneForm().reset({ name: '' });
       this.zoneError.set('');
+
+      const addressed = this.addressedStageNote();
+      const game = this.facade.guide()?.entities.game;
+      if (addressed && game) {
+        const linked = await this.facade.promoteEntityNote({
+          entityType: 'stage',
+          entityKey: addressed.stageKey,
+          noteId: addressed.note.id,
+          promotedToKey: createStageZoneSemanticKey(
+            game.semanticKey,
+            undefined,
+            zoneName
+          ),
+        });
+        if (linked.status === 'error') {
+          this.zoneError.set(getErrorMessage(linked.error));
+        }
+        this.addressedStageNote.set(null);
+      }
     });
+  }
+
+  addressStageNote(stageKey: string, note: NoteEntry): void {
+    this.addressedStageNote.set({ stageKey, note });
+    this.zoneModel.set({ name: note.text });
   }
 
   // A Stage's own local Zones: stage-only Zones and overrides of universal Zones.

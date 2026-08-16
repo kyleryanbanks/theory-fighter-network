@@ -93,6 +93,8 @@
             entityType="stage"
             [entityKey]="stage.semanticKey"
             [notes]="stage.meta && stage.meta.notes || []"
+            addressLabel="Create a new Zone to address this note"
+            (address)="addressStageNote(stage.semanticKey, $event)"
           />
         </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary class="zone-list" data-testid="stage-zone-list" header="Zones">
@@ -113,6 +115,7 @@
                       entityType="stageZone"
                       [entityKey]="override.semanticKey"
                       [notes]="override.meta && override.meta.notes || []"
+                      [notAddressable]="true"
                     />
                   </tfn-expansion-panel>
                   <tfn-expansion-panel subsection secondary header="Metadata">
@@ -163,6 +166,7 @@
                   entityType="stageZone"
                   [entityKey]="zone.semanticKey"
                   [notes]="zone.meta && zone.meta.notes || []"
+                  [notAddressable]="true"
                 />
               </tfn-expansion-panel>
               <tfn-expansion-panel subsection secondary header="Metadata">

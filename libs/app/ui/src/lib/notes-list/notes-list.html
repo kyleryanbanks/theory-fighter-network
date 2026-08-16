@@ -2,23 +2,39 @@
   <ul class="notes-items">
     @for (note of notes(); track note.id) {
       <li class="note-item" data-testid="note-item">
-        <span class="note-text">{{ note.text }}</span>
-        <span class="note-actions">
+        <p class="note-text">{{ note.text }}</p>
+        <div class="note-actions">
           @if (note.promotedToKey) {
             <span class="note-promoted" data-testid="promoted-indicator">
               Promoted
             </span>
-          } @else if (canPromote()) {
-            <button
-              matButton
-              type="button"
-              data-testid="promote-note"
-              (click)="promoteNote(note)"
-            >
-              Promote
-            </button>
+          } @else if (!notAddressable()) {
+            @if (addressUrl(); as urlResolver) {
+              <a
+                matButton
+                type="button"
+                data-testid="address-note"
+                [routerLink]="urlResolver(note)"
+                [attr.aria-label]="addressLabel()"
+                [attr.title]="addressLabel()"
+              >
+                Address
+              </a>
+            } @else {
+              <button
+                matButton
+                type="button"
+                data-testid="address-note"
+                [attr.aria-label]="addressLabel()"
+                [attr.title]="addressLabel()"
+                (click)="addressNote(note)"
+              >
+                Address
+              </button>
+            }
           }
           <button
+            class="note-delete"
             matButton
             type="button"
             data-testid="remove-note"
@@ -27,7 +43,7 @@
           >
             Delete
           </button>
-        </span>
+        </div>
       </li>
     } @empty {
       <p class="notes-empty">No notes yet.</p>
@@ -35,14 +51,15 @@
   </ul>
 
   <div class="notes-draft">
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="notes-input">
       <mat-label>Add a note</mat-label>
-      <input
+      <textarea
         matInput
+        rows="3"
         data-testid="note-text"
         [value]="draftText()"
         (input)="draftText.set($any($event.target).value)"
-      />
+      ></textarea>
     </mat-form-field>
     <button
       matButton="filled"

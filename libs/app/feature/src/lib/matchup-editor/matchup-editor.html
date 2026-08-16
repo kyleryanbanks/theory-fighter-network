@@ -45,7 +45,8 @@
             entityType="matchup"
             [entityKey]="matchup.semanticKey"
             [notes]="matchup.meta && matchup.meta.notes || []"
-            (promote)="promoteNote(matchup.semanticKey, $event)"
+              addressLabel="Create a new Scenario to address this note"
+              (address)="addressNote(matchup.semanticKey, $event)"
             />
           </tfn-expansion-panel>
 

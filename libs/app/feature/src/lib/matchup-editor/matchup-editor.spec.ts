@@ -240,7 +240,7 @@ describe('MatchupEditor', () => {
       createdAt: new Date(),
     };
 
-    fixture.componentInstance.promoteNote('matchup-1', note);
+    fixture.componentInstance.addressNote('matchup-1', note);
 
     expect(fixture.componentInstance.selectedMatchupKey()).toBe('matchup-1');
     expect(fixture.componentInstance.draftScenarioName()).toBe(
@@ -248,7 +248,7 @@ describe('MatchupEditor', () => {
     );
   });
 
-  it('links a promoted note to the newly created Scenario once added', async () => {
+  it('links an addressed note to the newly created Scenario once added', async () => {
     guide.set(
       buildGuide(
         [
@@ -273,7 +273,7 @@ describe('MatchupEditor', () => {
       text: 'Got hit by something weird',
       createdAt: new Date(),
     };
-    fixture.componentInstance.promoteNote('matchup-1', note);
+    fixture.componentInstance.addressNote('matchup-1', note);
     fixture.componentInstance.draftOpponentOptionKey.set('move-fireball');
 
     await fixture.componentInstance.addScenario('matchup-1');

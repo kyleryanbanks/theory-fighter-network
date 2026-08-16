@@ -42,6 +42,8 @@
             entityType="character"
             [entityKey]="character.semanticKey"
             [notes]="character.meta && character.meta.notes || []"
+            addressLabel="Create a new Move to address this note"
+            (address)="addressNote(character.semanticKey, $event)"
           />
         </tfn-expansion-panel>
         <tfn-expansion-panel subsection secondary header="Metadata">

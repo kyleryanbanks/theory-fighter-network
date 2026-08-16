@@ -50,7 +50,7 @@
       @for (move of moves(); track move.semanticKey) {
         <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
           <tfn-expansion-panel subsection secondary header="Notes">
-            <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+            <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
           </tfn-expansion-panel>
           <tfn-expansion-panel subsection secondary header="Metadata">
             <tfn-entity-metadata [metadata]="move.meta" />
@@ -67,7 +67,7 @@
         @if (!isOverridden(universalMove.semanticKey)) {
           <tfn-expansion-panel class="move-entry move-entry--inherited" data-testid="move-entry" [header]="universalMove.name" subheader="Universal">
             <tfn-expansion-panel subsection secondary header="Notes">
-              <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" />
+              <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>
             <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="universalMove.meta" />
@@ -82,7 +82,7 @@
         @if (move.parentKey) {
           <tfn-expansion-panel class="move-entry move-entry--override" data-testid="move-entry" [header]="move.name" [subheader]="'Overrides ' + move.parentKey">
             <tfn-expansion-panel subsection secondary header="Notes">
-              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>
             <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="move.meta" />
@@ -94,7 +94,7 @@
         } @else {
           <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
             <tfn-expansion-panel subsection secondary header="Notes">
-              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
             </tfn-expansion-panel>
             <tfn-expansion-panel subsection secondary header="Metadata">
               <tfn-entity-metadata [metadata]="move.meta" />

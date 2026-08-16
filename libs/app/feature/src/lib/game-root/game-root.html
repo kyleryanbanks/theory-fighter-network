@@ -5,6 +5,7 @@
 			entityType="game"
 			[entityKey]="guide.entities.game.semanticKey"
 			[notes]="guide.entities.game.meta && guide.entities.game.meta.notes || []"
+			[notAddressable]="true"
 		/>
 	}
 	<form class="game-form" (submit)="$event.preventDefault(); createGuide()">
