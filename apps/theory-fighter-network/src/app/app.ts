@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import { Feature } from '@theory-fighter-network/feature';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
-  imports: [Feature],
+  imports: [RouterOutlet],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',

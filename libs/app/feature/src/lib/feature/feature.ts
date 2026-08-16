@@ -6,6 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   normalizeGameName,
@@ -17,15 +18,11 @@ import {
 } from '@theory-fighter-network/data';
 import { Ui } from '@theory-fighter-network/ui';
 import { GameRoot } from '../game-root/game-root';
-import { StageEditor } from '../stage-editor/stage-editor';
-import { CharacterEditor } from '../character-editor/character-editor';
-import { MoveEditor } from '../move-editor/move-editor';
-import { SequenceEditor } from '../sequence-editor/sequence-editor';
-import { TeamEditor } from '../team-editor/team-editor';
+import { GuideNav } from '../guide-nav/guide-nav';
 
 @Component({
   selector: 'tfn-feature',
-  imports: [GameRoot, StageEditor, CharacterEditor, MoveEditor, SequenceEditor, TeamEditor, Ui],
+  imports: [RouterOutlet, GameRoot, GuideNav, Ui],
   templateUrl: './feature.html',
   styleUrl: './feature.css',
 })

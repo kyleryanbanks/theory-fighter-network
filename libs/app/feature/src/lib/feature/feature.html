@@ -113,15 +113,16 @@
 			}
 		</section>
 	} @else {
-		<tfn-game-root />
-
 		@if (facade.hasGuide()) {
-			<tfn-stage-editor />
-			<tfn-character-editor />
-			<tfn-move-editor />
-			<tfn-sequence-editor />
-			<tfn-team-editor />
+			<div class="guide-layout">
+				<tfn-guide-nav />
+				<div class="guide-content">
+					<router-outlet />
+				</div>
+			</div>
 			<tfn-ui></tfn-ui>
+		} @else {
+			<tfn-game-root />
 		}
 	}
 </main>

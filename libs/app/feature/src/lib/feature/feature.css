@@ -21,6 +21,16 @@ h1 {
 	margin-bottom: 24px;
 }
 
+.guide-layout {
+	display: flex;
+	align-items: stretch;
+}
+
+.guide-content {
+	flex: 1;
+	min-width: 0;
+}
+
 .guide-empty-state {
 	display: grid;
 	align-content: center;

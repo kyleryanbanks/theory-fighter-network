@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import {
   LocalGuideFacadeStore,
@@ -62,6 +63,7 @@ describe('Feature', () => {
     await TestBed.configureTestingModule({
       imports: [Feature],
       providers: [
+        provideRouter([]),
         {
           provide: LocalGuideFacadeStore,
           useValue: mockStore,
@@ -186,7 +188,7 @@ describe('Feature', () => {
       useSnapshot: true,
     });
     expect(mockStore.importArchive).toHaveBeenCalledWith(file);
-    expect(fixture.nativeElement.querySelector('tfn-game-root')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('tfn-guide-nav')).toBeTruthy();
   });
 
   it('does not flash the empty state while automatic restore is in progress', async () => {
@@ -342,8 +344,10 @@ describe('Feature', () => {
     expect(toolbar.querySelector('[data-testid="busy-status"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="import-archive"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="export-archive"]')).toBeTruthy();
-    expect(headerSlot.nextElementSibling?.tagName).toBe('TFN-GAME-ROOT');
-    expect(fixture.nativeElement.querySelector('tfn-stage-editor')).toBeTruthy();
+    expect(headerSlot.nextElementSibling?.classList.contains('guide-layout')).toBe(
+      true
+    );
+    expect(fixture.nativeElement.querySelector('tfn-guide-nav')).toBeTruthy();
   });
 
   it('loads a .tfn file when selected', async () => {
