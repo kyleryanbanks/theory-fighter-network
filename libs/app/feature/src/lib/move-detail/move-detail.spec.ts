@@ -16,9 +16,13 @@ describe('MoveDetail', () => {
     phases: [{}],
   };
   const updateMovePhaseDuration = vi.fn(async () => ({ status: 'success' }));
+  const updateMoveOutcomeDataValue = vi.fn(async () => ({ status: 'success' }));
+  const addMovePhase = vi.fn(async () => ({ status: 'success' }));
+  const removeMovePhase = vi.fn(async () => ({ status: 'success' }));
 
   beforeEach(async () => {
     updateMovePhaseDuration.mockClear();
+    updateMoveOutcomeDataValue.mockClear();
     await TestBed.configureTestingModule({
       imports: [MoveDetail],
       providers: [
@@ -29,7 +33,7 @@ describe('MoveDetail', () => {
         },
         {
           provide: LocalGuideFacadeStore,
-          useValue: { guide: () => ({ entities: { moves: [move] } }), updateMovePhaseDuration },
+          useValue: { guide: () => ({ entities: { moves: [move] } }), updateMovePhaseDuration, updateMoveOutcomeDataValue, addMovePhase, removeMovePhase },
         },
       ],
     }).compileComponents();
@@ -38,9 +42,14 @@ describe('MoveDetail', () => {
   });
 
   it('renders editors for startup, active, and recovery durations', () => {
-    expect(fixture.nativeElement.querySelectorAll('tfn-data-value-editor')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelectorAll('tfn-data-value-editor')).toHaveLength(13);
     expect(fixture.nativeElement.textContent).toContain('Startup');
     expect(fixture.nativeElement.textContent).toContain('Active');
     expect(fixture.nativeElement.textContent).toContain('Recovery');
+    expect(fixture.nativeElement.textContent).toContain('On Hit');
+    expect(fixture.nativeElement.textContent).toContain('On Block');
+    expect(fixture.nativeElement.textContent).toContain('On Counter Hit');
+    expect(fixture.nativeElement.textContent).toContain('On Whiff');
+    expect(fixture.nativeElement.textContent).toContain('On Secondary Trigger');
   });
 });

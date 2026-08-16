@@ -397,6 +397,40 @@ describe('LocalGuideFacadeStore', () => {
     expect(phases?.[0]?.recovery?.duration).toEqual({ exact: 18, relative: 72 });
   });
 
+  it('adds and removes ordered Move phases', async () => {
+    await store.createGuide({
+      name: 'Phase CRUD Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createMove({ name: 'Hadoken' });
+    const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
+
+    expect((await store.addMovePhase({ moveKey })).status).toBe('success');
+    expect(store.value()?.entities.moves[0]?.phases).toHaveLength(2);
+    expect((await store.addMovePhase({ moveKey })).status).toBe('success');
+    expect(store.value()?.entities.moves[0]?.phases).toHaveLength(3);
+
+    expect((await store.removeMovePhase({ moveKey, phaseIndex: 0 })).status).toBe('success');
+    expect(store.value()?.entities.moves[0]?.phases).toHaveLength(2);
+  });
+
+  it('updates on-hit hit stop and stun DataValues independently', async () => {
+    await store.createGuide({
+      name: 'Outcome Data Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createMove({ name: 'Hadoken' });
+    const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
+
+    await store.updateMoveOutcomeDataValue({ moveKey, outcome: 'onHit', field: 'hitStop', value: { exact: 8 } });
+    await store.updateMoveOutcomeDataValue({ moveKey, outcome: 'onHit', field: 'stun', value: { relative: 70 } });
+
+    expect(store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit).toEqual({
+      hitStop: { exact: 8 },
+      stun: { relative: 70 },
+    });
+  });
+
   it('creates a universal Move scoped to the Game when no character is given', async () => {
     await store.createGuide({
       name: 'Move Fighter', version: '1.0.0', frameRate: 60,

@@ -24,6 +24,11 @@ section {
   gap: 6px;
 }
 
+.phase-panel-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .entity-key { margin: 0; color: #617168; font-size: 0.8125rem; }
 
 pre {

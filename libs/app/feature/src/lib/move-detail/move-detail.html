@@ -7,16 +7,39 @@
     [metadata]="currentMove.meta"
   >
     <tfn-entity-notes detail-notes entityType="move" [entityKey]="currentMove.semanticKey" [notes]="currentMove.meta && currentMove.meta.notes || []" [notAddressable]="true" />
-    <tfn-expansion-panel header="Frame durations" subheader="Startup, active, and recovery">
-      @for (phase of phaseNames; track phase) {
-        <div class="phase-duration">
-          <strong>{{ phase | titlecase }}</strong>
-          <tfn-data-value-editor
-            [value]="phaseDuration(phase)"
-            (valueChange)="updatePhaseDuration(phase, $event)"
-          />
-        </div>
+    <tfn-expansion-panel header="Move phases" subheader="Frame data and on-hit values">
+      @for (phaseIndex of phaseIndices(); track phaseIndex) {
+        <tfn-expansion-panel subsection secondary [header]="'Phase ' + (phaseIndex + 1)">
+          <div class="phase-panel-actions">
+            <button matButton type="button" (click)="removePhase(phaseIndex)" [disabled]="phaseIndices().length === 1">Remove phase</button>
+          </div>
+          <tfn-expansion-panel subsection header="Frame stages">
+            @for (phase of phaseNames; track phase) {
+              <div class="phase-duration">
+                <strong>{{ phase | titlecase }}</strong>
+                <tfn-data-value-editor [value]="phaseDuration(phaseIndex, phase)" (valueChange)="updatePhaseDuration(phaseIndex, phase, $event)" />
+              </div>
+            }
+          </tfn-expansion-panel>
+          <tfn-expansion-panel subsection header="Outcomes">
+            @for (outcome of outcomeNames; track outcome) {
+              <tfn-expansion-panel subsection header="{{ outcomeLabel(outcome) }}">
+                <div class="phase-outcome__fields">
+                  <div>
+                    <strong>Hit stop</strong>
+                    <tfn-data-value-editor [value]="outcomeDataValue(phaseIndex, outcome, 'hitStop')" (valueChange)="updateOutcomeDataValue(phaseIndex, outcome, 'hitStop', $event)" />
+                  </div>
+                  <div>
+                    <strong>Stun</strong>
+                    <tfn-data-value-editor [value]="outcomeDataValue(phaseIndex, outcome, 'stun')" (valueChange)="updateOutcomeDataValue(phaseIndex, outcome, 'stun', $event)" />
+                  </div>
+                </div>
+              </tfn-expansion-panel>
+            }
+          </tfn-expansion-panel>
+        </tfn-expansion-panel>
       }
+      <button matButton="outlined" type="button" (click)="addPhase()">Add phase</button>
     </tfn-expansion-panel>
     <tfn-expansion-panel header="Move data" subheader="Resolved effective values">
       <pre>{{ currentMove | json }}</pre>

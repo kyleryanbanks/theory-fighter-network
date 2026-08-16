@@ -15,6 +15,19 @@
 
   @if (mode() === 'relative') {
     <div class="data-value-editor__relative">
+      <mat-form-field appearance="outline" class="data-value-editor__relative-value">
+        <input
+          matInput
+          data-testid="relative-value"
+          aria-label="Relative value"
+          type="number"
+          min="0"
+          max="100"
+          step="1"
+          [value]="relativeValue()"
+          (input)="updateRelativeNumber($event)"
+        />
+      </mat-form-field>
       <mat-slider min="0" max="100" step="1" discrete>
         <input
           matSliderThumb
@@ -24,7 +37,6 @@
           (input)="updateRelative($event)"
         />
       </mat-slider>
-      <output>{{ relativeValue() }}</output>
     </div>
   } @else {
     <mat-form-field appearance="outline">

@@ -25,7 +25,8 @@ describe('DataValueEditor', () => {
 
     expect(element.textContent).toContain('Relative');
     expect(element.querySelector('input[type="range"]')).not.toBeNull();
-    expect(element.querySelector('input[type="number"]')).toBeNull();
+    expect(element.querySelector('input[data-testid="relative-value"]')).not.toBeNull();
+    expect(element.querySelector('input[matinput][type="number"]:not([data-testid="relative-value"])')).toBeNull();
   });
 
   it('swaps to exact mode without losing either stored value', () => {
@@ -49,5 +50,18 @@ describe('DataValueEditor', () => {
     fixture.detectChanges();
 
     expect(host.value).toEqual({ exact: 12, relative: 72 });
+  });
+
+  it('updates the relative value when the displayed number is edited', () => {
+    const host = fixture.componentInstance;
+    const input = fixture.nativeElement.querySelector(
+      'input[data-testid="relative-value"]'
+    ) as HTMLInputElement;
+
+    input.value = '84';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(host.value).toEqual({ exact: 12, relative: 84 });
   });
 });

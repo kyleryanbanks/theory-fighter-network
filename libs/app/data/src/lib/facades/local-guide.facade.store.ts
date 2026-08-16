@@ -949,6 +949,126 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    addMovePhase: rxMutation({
+      operation: ({ moveKey }: { moveKey: string }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === moveKey
+            );
+            if (!move) throw new Error(`Move "${moveKey}" does not exist.`);
+
+            const effectiveMove = resolveEffectiveMove(move, localGuide.entities.moves);
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: moveKey });
+            const updatedMove = {
+              ...move,
+              phases: [
+                ...(effectiveMove.phases ?? Array.from({ length: 1 }, () => ({}))),
+                {},
+              ],
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === moveKey ? updatedMove : candidate
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    removeMovePhase: rxMutation({
+      operation: ({ moveKey, phaseIndex }: { moveKey: string; phaseIndex: number }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === moveKey
+            );
+            if (!move) throw new Error(`Move "${moveKey}" does not exist.`);
+            const effectiveMove = resolveEffectiveMove(move, localGuide.entities.moves);
+            const phases = [...(effectiveMove.phases ?? [])];
+            if (!Number.isInteger(phaseIndex) || phaseIndex < 0 || phaseIndex >= phases.length) {
+              throw new Error(`Phase index "${phaseIndex}" is invalid.`);
+            }
+            phases.splice(phaseIndex, 1);
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: moveKey });
+            const updatedMove = {
+              ...move,
+              phases,
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === moveKey ? updatedMove : candidate
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    updateMoveOutcomeDataValue: rxMutation({
+      operation: (input: {
+        moveKey: string;
+        outcome: 'onHit' | 'onBlock' | 'onCounterHit' | 'onWhiff' | 'onSecondaryTrigger';
+        field: 'hitStop' | 'stun';
+        value: DataValue;
+        phaseIndex?: number;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === input.moveKey
+            );
+            if (!move) throw new Error(`Move "${input.moveKey}" does not exist.`);
+            const effectiveMove = resolveEffectiveMove(move, localGuide.entities.moves);
+            const phaseIndex = input.phaseIndex ?? 0;
+            const phases = [...(effectiveMove.phases ?? [])];
+            while (phases.length <= phaseIndex) phases.push({});
+            const currentPhase = phases[phaseIndex] as MovePhase;
+            const effects = { ...(currentPhase.effects ?? {}) };
+            const outcomeEffect = { ...(effects[input.outcome] ?? {}) };
+            effects[input.outcome] = { ...outcomeEffect, [input.field]: input.value };
+            phases[phaseIndex] = { ...currentPhase, effects };
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: input.moveKey });
+            const updatedMove = {
+              ...move,
+              phases,
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === input.moveKey ? updatedMove : candidate
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     deleteMove: rxMutation({
       operation: ({ moveKey }: { moveKey: string }) =>
         from(

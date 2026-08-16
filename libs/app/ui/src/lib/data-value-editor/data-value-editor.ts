@@ -31,6 +31,16 @@ export class DataValueEditor {
     }
   }
 
+  updateRelativeNumber(event: Event): void {
+    const value = Number((event.target as HTMLInputElement).value);
+    if (Number.isFinite(value)) {
+      this.valueChange.emit({
+        ...this.value(),
+        relative: Math.min(100, Math.max(0, value)),
+      });
+    }
+  }
+
   updateExact(event: Event): void {
     const input = event.target as HTMLInputElement;
     const exact = input.value === '' ? undefined : Number(input.value);
