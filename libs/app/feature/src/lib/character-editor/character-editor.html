@@ -31,20 +31,27 @@
 
   <div class="character-list">
     @for (character of characters(); track character.semanticKey) {
-      <div class="character-entry" data-testid="character-entry">
-        <span>
+      <details class="character-entry" data-testid="character-entry">
+        <summary>
           <strong>{{ character.name }}</strong>
           <small>{{ character.semanticKey }}</small>
-        </span>
-        <button
-          matButton
-          type="button"
-          [attr.aria-label]="'Delete Character ' + character.name"
-          (click)="deleteCharacter(character.semanticKey)"
-        >
-          Delete
-        </button>
-      </div>
+        </summary>
+        <div class="entity-entry-details">
+          <tfn-entity-notes
+            entityType="character"
+            [entityKey]="character.semanticKey"
+            [notes]="character.meta && character.meta.notes || []"
+          />
+          <button
+            matButton
+            type="button"
+            [attr.aria-label]="'Delete Character ' + character.name"
+            (click)="deleteCharacter(character.semanticKey)"
+          >
+            Delete Character
+          </button>
+        </div>
+      </details>
     } @empty {
       <p class="empty-state">No Characters added.</p>
     }

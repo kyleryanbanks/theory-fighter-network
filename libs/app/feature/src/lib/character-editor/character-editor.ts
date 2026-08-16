@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface CharacterDraft {
   name: string;
@@ -11,7 +12,7 @@ interface CharacterDraft {
 
 @Component({
   selector: 'tfn-character-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, EntityNotes],
   templateUrl: './character-editor.html',
   styleUrl: './character-editor.css',
 })

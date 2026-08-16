@@ -48,82 +48,71 @@
   <div class="move-list">
     @if (scopeKey() === '') {
       @for (move of moves(); track move.semanticKey) {
-        <div class="move-entry" data-testid="move-entry">
-          <span class="move-identity">
+        <details class="move-entry" data-testid="move-entry">
+          <summary class="move-identity">
             <strong>{{ move.name }}</strong>
             <small>{{ move.semanticKey }}</small>
-          </span>
-          <button
-            matButton
-            type="button"
-            [attr.aria-label]="'Delete Move ' + move.name"
-            (click)="deleteMove(move.semanticKey)"
-          >
-            Delete
-          </button>
-        </div>
+          </summary>
+          <div class="entity-entry-details">
+            <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+            <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
+              Delete Move
+            </button>
+          </div>
+        </details>
       } @empty {
         <p class="empty-state">No Moves added in this scope.</p>
       }
     } @else {
       @for (universalMove of universalMoves(); track universalMove.semanticKey) {
         @if (!isOverridden(universalMove.semanticKey)) {
-          <div class="move-entry move-entry--inherited" data-testid="move-entry">
-            <span class="move-identity">
+          <details class="move-entry move-entry--inherited" data-testid="move-entry">
+            <summary class="move-identity">
               <span class="lock-icon" aria-hidden="true">&#128274;</span>
               <strong>{{ universalMove.name }}</strong>
               <small>Universal</small>
-            </span>
-            <button
-              matButton
-              type="button"
-              [attr.aria-label]="'Override ' + universalMove.name"
-              (click)="overrideMove(universalMove.semanticKey)"
-            >
-              Override
-            </button>
-          </div>
+            </summary>
+            <div class="entity-entry-details">
+              <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" />
+              <button matButton type="button" [attr.aria-label]="'Override ' + universalMove.name" (click)="overrideMove(universalMove.semanticKey)">
+                Override Move
+              </button>
+            </div>
+          </details>
         }
       }
       @for (move of ownMoves(); track move.semanticKey) {
         @if (move.parentKey) {
-          <div class="move-entry move-entry--override" data-testid="move-entry">
-            <span class="move-identity">
+          <details class="move-entry move-entry--override" data-testid="move-entry">
+            <summary class="move-identity">
               <strong>{{ move.name }}</strong>
               <small>Overrides {{ move.parentKey }}</small>
-            </span>
-            <button
-              matButton
-              type="button"
-              [attr.aria-label]="'Revert ' + move.name + ' to Universal'"
-              (click)="deleteMove(move.semanticKey)"
-            >
-              Revert to Universal
-            </button>
-          </div>
+            </summary>
+            <div class="entity-entry-details">
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+              <button matButton type="button" [attr.aria-label]="'Revert ' + move.name + ' to Universal'" (click)="deleteMove(move.semanticKey)">
+                Revert to Universal
+              </button>
+            </div>
+          </details>
         } @else {
-          <div class="move-entry" data-testid="move-entry">
-            <span class="move-identity">
+          <details class="move-entry" data-testid="move-entry">
+            <summary class="move-identity">
               <strong>{{ move.name }}</strong>
               <small>{{ move.semanticKey }}</small>
-            </span>
-            <button
-              matButton
-              type="button"
-              [attr.aria-label]="'Promote ' + move.name + ' to Universal'"
-              (click)="promoteMove(move.semanticKey)"
-            >
-              Promote to Universal
-            </button>
-            <button
-              matButton
-              type="button"
-              [attr.aria-label]="'Delete Move ' + move.name"
-              (click)="deleteMove(move.semanticKey)"
-            >
-              Delete
-            </button>
-          </div>
+            </summary>
+            <div class="entity-entry-details">
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" />
+              <span>
+                <button matButton type="button" [attr.aria-label]="'Promote ' + move.name + ' to Universal'" (click)="promoteMove(move.semanticKey)">
+                  Promote to Universal
+                </button>
+                <button matButton type="button" [attr.aria-label]="'Delete Move ' + move.name" (click)="deleteMove(move.semanticKey)">
+                  Delete Move
+                </button>
+              </span>
+            </div>
+          </details>
         }
       } @empty {
         @if (universalMoves().length === 0) {

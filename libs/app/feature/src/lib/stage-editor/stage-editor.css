@@ -109,11 +109,26 @@ h2 {
 }
 
 .stage-entry {
+  border: 1px solid #d8e2dc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stage-entry summary {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.stage-entry .entity-entry-details {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 7px 8px 7px 14px;
+  border-top: 1px solid #d8e2dc;
+  padding: 10px 14px;
 }
 
 .stage-entry span {

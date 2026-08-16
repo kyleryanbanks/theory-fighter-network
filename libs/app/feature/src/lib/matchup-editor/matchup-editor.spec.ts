@@ -233,57 +233,6 @@ describe('MatchupEditor', () => {
     });
   });
 
-  it('shows Notes for a Matchup once selected', () => {
-    guide.set(
-      buildGuide(
-        [
-          { name: 'Ryu', semanticKey: 'char-ryu' },
-          { name: 'Ken', semanticKey: 'char-ken' },
-        ],
-        [],
-        [
-          {
-            semanticKey: 'matchup-1',
-            attackerKey: 'char-ryu',
-            defenderKey: 'char-ken',
-            notes: [
-              { id: 'note-1', text: 'Got hit by something weird' },
-            ],
-          },
-        ]
-      )
-    );
-    fixture.detectChanges();
-
-    fixture.componentInstance.toggleNotes('matchup-1');
-    fixture.detectChanges();
-
-    const noteItem = fixture.nativeElement.querySelector(
-      '[data-testid="note-item"]'
-    );
-    expect(noteItem.textContent).toContain('Got hit by something weird');
-  });
-
-  it('adds a note to a Matchup', async () => {
-    await fixture.componentInstance.addNote('matchup-1', 'New note text');
-
-    expect(mockStore.addEntityNote).toHaveBeenCalledWith({
-      entityType: 'matchup',
-      entityKey: 'matchup-1',
-      text: 'New note text',
-    });
-  });
-
-  it('removes a note from a Matchup', async () => {
-    await fixture.componentInstance.removeNote('matchup-1', 'note-1');
-
-    expect(mockStore.removeEntityNote).toHaveBeenCalledWith({
-      entityType: 'matchup',
-      entityKey: 'matchup-1',
-      noteId: 'note-1',
-    });
-  });
-
   it('promoting a note opens the Scenario draft prefilled with the note text', () => {
     const note = {
       id: 'note-1',

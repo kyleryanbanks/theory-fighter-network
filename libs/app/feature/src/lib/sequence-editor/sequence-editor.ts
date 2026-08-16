@@ -7,12 +7,13 @@ import {
   resolveEffectiveMove,
   type Step,
 } from '@theory-fighter-network/data';
+import { EntityNotes } from '../entity-notes/entity-notes';
 
 const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, EntityNotes],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })

@@ -45,6 +45,7 @@ describe('NotesList', () => {
   });
 
   it('shows a Promote action for a note without a promotedToKey', () => {
+    fixture.componentRef.setInput('canPromote', true);
     fixture.componentRef.setInput('notes', [buildNote()]);
     fixture.detectChanges();
 
@@ -96,6 +97,7 @@ describe('NotesList', () => {
   it('emits promote with the full note entry', () => {
     const promoteSpy = vi.fn();
     fixture.componentInstance.promote.subscribe(promoteSpy);
+    fixture.componentRef.setInput('canPromote', true);
     const note = buildNote({ id: 'note-1' });
     fixture.componentRef.setInput('notes', [note]);
     fixture.detectChanges();

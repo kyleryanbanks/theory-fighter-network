@@ -58,28 +58,32 @@ h2 {
   overflow: hidden;
 }
 
-.matchup-entry {
+.matchup-summary {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
   padding: 10px 14px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.matchup-summary small {
+  color: #617168;
+}
+
+.matchup-details {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #d8e2dc;
+  padding: 14px;
+  background: #f9faf8;
 }
 
 .matchup-actions {
   display: flex;
   gap: 8px;
   flex-shrink: 0;
-}
-
-.matchup-entry small {
-  color: #617168;
-}
-
-.notes-panel {
-  border-top: 1px solid #d8e2dc;
-  padding: 14px;
-  background: #f9faf8;
 }
 
 .scenario-panel {

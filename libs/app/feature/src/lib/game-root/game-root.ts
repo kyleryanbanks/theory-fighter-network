@@ -16,6 +16,7 @@ import {
   type Inputs,
   LocalGuideFacadeStore,
 } from '@theory-fighter-network/data';
+import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface GameFormModel {
   name: string;
@@ -39,6 +40,7 @@ interface InputDraftModel {
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
+    EntityNotes,
   ],
   templateUrl: './game-root.html',
   styleUrl: './game-root.css',

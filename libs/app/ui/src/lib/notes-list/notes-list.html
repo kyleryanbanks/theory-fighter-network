@@ -8,7 +8,7 @@
             <span class="note-promoted" data-testid="promoted-indicator">
               Promoted
             </span>
-          } @else {
+          } @else if (canPromote()) {
             <button
               matButton
               type="button"

@@ -6,9 +6,9 @@ import { MatSelectModule } from '@angular/material/select';
 import {
   createMatchupScenarioSemanticKey,
   LocalGuideFacadeStore,
-  type NoteEntry,
 } from '@theory-fighter-network/data';
-import { NotesList } from '@theory-fighter-network/ui';
+import type { NoteEntry } from '@theory-fighter-network/data';
+import { EntityNotes } from '../entity-notes/entity-notes';
 
 const UNSCOPED_STAGE = '';
 
@@ -19,7 +19,7 @@ const UNSCOPED_STAGE = '';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    NotesList,
+    EntityNotes,
   ],
   templateUrl: './matchup-editor.html',
   styleUrl: './matchup-editor.css',
@@ -44,14 +44,13 @@ export class MatchupEditor {
   readonly sequences = computed(
     () => this.facade.guide()?.entities.sequences ?? []
   );
+  readonly expandedMatchupKey = signal<string | null>(null);
   readonly selectedMatchupKey = signal<string | null>(null);
   readonly draftOpponentOptionKey = signal('');
   readonly draftScenarioName = signal('');
   readonly draftScenarioStageKey = signal(UNSCOPED_STAGE);
   readonly scenarioError = signal('');
 
-  readonly notesMatchupKey = signal<string | null>(null);
-  readonly notesError = signal('');
   // Tracks a note mid-promotion so the Scenario it's prefilling can be
   // linked back to it once the Scenario is actually created.
   private readonly promotingNote = signal<{
@@ -131,7 +130,15 @@ export class MatchupEditor {
     this.matchupError.set('');
   }
 
+  toggleMatchup(matchupKey: string): void {
+    const isExpanded = this.expandedMatchupKey() === matchupKey;
+    this.expandedMatchupKey.set(isExpanded ? null : matchupKey);
+    this.selectedMatchupKey.set(isExpanded ? null : matchupKey);
+    this.scenarioError.set('');
+  }
+
   toggleScenarios(matchupKey: string): void {
+    this.expandedMatchupKey.set(matchupKey);
     this.selectedMatchupKey.set(
       this.selectedMatchupKey() === matchupKey ? null : matchupKey
     );
@@ -194,43 +201,6 @@ export class MatchupEditor {
     }
 
     this.scenarioError.set('');
-  }
-
-  toggleNotes(matchupKey: string): void {
-    this.notesMatchupKey.set(
-      this.notesMatchupKey() === matchupKey ? null : matchupKey
-    );
-    this.notesError.set('');
-  }
-
-  async addNote(matchupKey: string, text: string): Promise<void> {
-    const result = await this.facade.addEntityNote({
-      entityType: 'matchup',
-      entityKey: matchupKey,
-      text,
-    });
-
-    if (result.status === 'error') {
-      this.notesError.set(getErrorMessage(result.error));
-      return;
-    }
-
-    this.notesError.set('');
-  }
-
-  async removeNote(matchupKey: string, noteId: string): Promise<void> {
-    const result = await this.facade.removeEntityNote({
-      entityType: 'matchup',
-      entityKey: matchupKey,
-      noteId,
-    });
-
-    if (result.status === 'error') {
-      this.notesError.set(getErrorMessage(result.error));
-      return;
-    }
-
-    this.notesError.set('');
   }
 
   // Opens the Scenario draft for this Matchup, prefilled with the note's

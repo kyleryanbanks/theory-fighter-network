@@ -1,10 +1,11 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, EntityNotes],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })

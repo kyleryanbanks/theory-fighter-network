@@ -12,6 +12,7 @@ import type { NoteEntry } from '@theory-fighter-network/data';
 })
 export class NotesList {
   readonly notes = input<NoteEntry[]>([]);
+  readonly canPromote = input(false);
   readonly add = output<string>();
   readonly remove = output<string>();
   readonly promote = output<NoteEntry>();

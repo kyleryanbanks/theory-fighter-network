@@ -1,0 +1,25 @@
+:host {
+  display: block;
+}
+
+.entity-notes-toggle {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #276749;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.entity-notes-toggle:hover {
+  text-decoration: underline;
+}
+
+
+.entity-notes-error {
+  margin: 8px 0;
+  color: #8c1d18;
+  font-size: 0.8125rem;
+}

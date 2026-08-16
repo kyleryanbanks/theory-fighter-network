@@ -64,6 +64,11 @@
             <strong>{{ zone.name }}</strong>
             <small>{{ zone.semanticKey }}</small>
           </span>
+          <tfn-entity-notes
+            entityType="stageZone"
+            [entityKey]="zone.semanticKey"
+            [notes]="zone.meta && zone.meta.notes || []"
+          />
           <button
             matButton
             type="button"
@@ -82,21 +87,22 @@
 
   <div class="stage-list">
     @for (stage of stages(); track stage.semanticKey) {
-      <div class="stage-entry" data-testid="stage-entry">
-        <span>
+      <details class="stage-entry" data-testid="stage-entry">
+        <summary>
           <strong>{{ stage.name }}</strong>
           <small>{{ stage.semanticKey }}</small>
-        </span>
-        <button
-          matButton
-          type="button"
-          [attr.aria-label]="'Delete Stage ' + stage.name"
-          (click)="deleteStage(stage.semanticKey)"
-        >
-          Delete
-        </button>
-      </div>
-      <div class="zone-list" data-testid="stage-zone-list">
+        </summary>
+        <div class="entity-entry-details">
+          <tfn-entity-notes
+            entityType="stage"
+            [entityKey]="stage.semanticKey"
+            [notes]="stage.meta && stage.meta.notes || []"
+          />
+          <button matButton type="button" [attr.aria-label]="'Delete Stage ' + stage.name" (click)="deleteStage(stage.semanticKey)">
+            Delete Stage
+          </button>
+        </div>
+        <div class="zone-list" data-testid="stage-zone-list">
         @for (universalZone of universalZones(); track universalZone.semanticKey) {
           @if (isOverridden(stage.semanticKey, universalZone.semanticKey)) {
             @for (
@@ -109,6 +115,11 @@
                     <strong>{{ override.name }}</strong>
                     <small>Overrides {{ universalZone.semanticKey }}</small>
                   </span>
+                  <tfn-entity-notes
+                    entityType="stageZone"
+                    [entityKey]="override.semanticKey"
+                    [notes]="override.meta && override.meta.notes || []"
+                  />
                   <button
                     matButton
                     type="button"
@@ -149,6 +160,11 @@
                 <strong>{{ zone.name }}</strong>
                 <small>{{ zone.semanticKey }}</small>
               </span>
+              <tfn-entity-notes
+                entityType="stageZone"
+                [entityKey]="zone.semanticKey"
+                [notes]="zone.meta && zone.meta.notes || []"
+              />
               <button
                 matButton
                 type="button"
@@ -168,7 +184,8 @@
             </div>
           }
         }
-      </div>
+        </div>
+      </details>
     } @empty {
       <p class="empty-state">No Stages added.</p>
     }

@@ -59,24 +59,26 @@
 
   <div class="team-list">
     @for (team of teams(); track team.semanticKey) {
-      <div class="team-entry" data-testid="team-entry">
-        <span>
+      <details class="team-entry" data-testid="team-entry">
+        <summary>
           <strong>
             @for (characterKey of team.orderedCharacterKeys; track $index) {
               {{ characterName(characterKey) }}{{ $last ? '' : ' + ' }}
             }
           </strong>
           <small>{{ team.semanticKey }}</small>
-        </span>
-        <button
-          matButton
-          type="button"
-          [attr.aria-label]="'Delete Team ' + team.semanticKey"
-          (click)="deleteTeam(team.semanticKey)"
-        >
-          Delete
-        </button>
-      </div>
+        </summary>
+        <div class="entity-entry-details">
+          <tfn-entity-notes
+            entityType="team"
+            [entityKey]="team.semanticKey"
+            [notes]="team.meta && team.meta.notes || []"
+          />
+          <button matButton type="button" [attr.aria-label]="'Delete Team ' + team.semanticKey" (click)="deleteTeam(team.semanticKey)">
+            Delete Team
+          </button>
+        </div>
+      </details>
     } @empty {
       <p class="empty-state">No Teams added.</p>
     }
