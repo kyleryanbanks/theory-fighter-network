@@ -54,7 +54,6 @@ h2 {
 .sequence-draft {
   display: grid;
   gap: 10px;
-  max-width: 640px;
 }
 
 .movelist-hint {

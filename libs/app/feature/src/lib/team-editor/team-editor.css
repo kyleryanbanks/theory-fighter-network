@@ -48,7 +48,6 @@ h2 {
 .roster-select {
   display: grid;
   gap: 12px;
-  max-width: 640px;
 }
 
 .roster-hint {
