@@ -262,3 +262,36 @@ export const createScenarioResponse = (
   outcome: 0,
   ...overrides,
 });
+
+export interface CreateScenarioResponseInput {
+  scenarioKey: string;
+  playerOptionKey: string;
+  notes?: string;
+  outcome?: -1 | 0 | 1;
+}
+
+export function createScenarioResponseEntry(
+  input: CreateScenarioResponseInput
+): ScenarioResponse {
+  const playerOptionKey = input.playerOptionKey.trim();
+  if (!playerOptionKey) {
+    throw new Error('playerOptionKey is required.');
+  }
+
+  return createScenarioResponse({
+    semanticKey: createScenarioResponseSemanticKey(
+      input.scenarioKey,
+      playerOptionKey
+    ),
+    playerOptionKey,
+    notes: input.notes?.trim() || undefined,
+    outcome: input.outcome ?? 0,
+  });
+}
+
+export function createScenarioResponseSemanticKey(
+  scenarioKey: string,
+  playerOptionKey: string
+): string {
+  return `response-${fnv1a(`${scenarioKey.trim()}:${playerOptionKey.trim()}`)}`;
+}

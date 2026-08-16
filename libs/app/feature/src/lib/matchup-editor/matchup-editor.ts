@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -53,7 +53,15 @@ export class MatchupEditor {
   readonly draftOpponentOptionKey = signal('');
   readonly draftScenarioName = signal('');
   readonly draftScenarioStageKey = signal(UNSCOPED_STAGE);
+  readonly draftResponseOptionKey = signal('');
+  readonly draftResponseOutcome = signal<-1 | 0 | 1>(0);
+  readonly editingResponseKey = signal<string | null>(null);
   readonly scenarioError = signal('');
+
+  @HostListener('document:click')
+  closeResponseMenu(): void {
+    this.editingResponseKey.set(null);
+  }
 
   // Tracks a note mid-promotion so the Scenario it's prefilling can be
   // linked back to it once the Scenario is actually created.
@@ -99,6 +107,22 @@ export class MatchupEditor {
     }
 
     return optionKey;
+  }
+
+  responseMoves(matchup: { attackerKey: string }) {
+    return this.moves().filter(
+      (move) =>
+        !move.characterKey ||
+        (move.characterKey === matchup.attackerKey && Boolean(move.parentKey))
+    );
+  }
+
+  responseSequences(matchup: { attackerKey: string }) {
+    return this.sequences().filter(
+      (sequence) =>
+        (!sequence.characterKey && !sequence.teamKey) ||
+        sequence.characterKey === matchup.attackerKey
+    );
   }
 
   async createMatchup(): Promise<void> {
@@ -149,6 +173,8 @@ export class MatchupEditor {
     this.draftOpponentOptionKey.set('');
     this.draftScenarioName.set('');
     this.draftScenarioStageKey.set(UNSCOPED_STAGE);
+    this.draftResponseOptionKey.set('');
+    this.draftResponseOutcome.set(0);
     this.scenarioError.set('');
   }
 
@@ -205,6 +231,124 @@ export class MatchupEditor {
     }
 
     this.scenarioError.set('');
+  }
+
+  async addResponse(matchupKey: string, scenarioKey: string): Promise<void> {
+    const playerOptionKey = this.draftResponseOptionKey();
+    if (!playerOptionKey) {
+      this.scenarioError.set('Select a response Move or Sequence.');
+      return;
+    }
+    const result = await this.facade.addScenarioResponse({
+      matchupKey,
+      scenarioKey,
+      playerOptionKey,
+      outcome: this.draftResponseOutcome(),
+    });
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+    this.draftResponseOptionKey.set('');
+    this.draftResponseOutcome.set(0);
+    this.scenarioError.set('');
+  }
+
+  async removeResponse(
+    matchupKey: string,
+    scenarioKey: string,
+    responseKey: string
+  ): Promise<void> {
+    const result = await this.facade.removeScenarioResponse({
+      matchupKey,
+      scenarioKey,
+      responseKey,
+    });
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+    this.scenarioError.set('');
+  }
+
+  toggleResponseMenu(responseKey: string): void {
+    this.editingResponseKey.set(
+      this.editingResponseKey() === responseKey ? null : responseKey
+    );
+  }
+
+  async updateResponseOutcome(
+    matchupKey: string,
+    scenarioKey: string,
+    responseKey: string,
+    outcome: -1 | 0 | 1
+  ): Promise<void> {
+    const result = await this.facade.updateScenarioResponse({
+      matchupKey,
+      scenarioKey,
+      responseKey,
+      outcome,
+    });
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+    this.editingResponseKey.set(null);
+    this.scenarioError.set('');
+  }
+
+  async resetResponse(
+    matchupKey: string,
+    scenarioKey: string,
+    responseKey: string
+  ): Promise<void> {
+    const result = await this.facade.removeScenarioResponse({
+      matchupKey,
+      scenarioKey,
+      responseKey,
+    });
+    if (result.status === 'error') {
+      this.scenarioError.set(getErrorMessage(result.error));
+      return;
+    }
+    this.editingResponseKey.set(null);
+    this.scenarioError.set('');
+  }
+
+  responseOutcomeClass(outcome: -1 | 0 | 1): string {
+    return outcome === 1 ? 'win' : outcome === -1 ? 'loss' : 'trade';
+  }
+
+  responseOutcomeLabel(outcome: -1 | 0 | 1): string {
+    return outcome === 1 ? 'Win' : outcome === -1 ? 'Loss' : 'Trade';
+  }
+
+  responseFor(scenario: { responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> }, optionKey: string) {
+    return scenario.responses?.find((response) => response.playerOptionKey === optionKey);
+  }
+
+  responseTileKey(scenarioKey: string, optionKey: string): string {
+    return `${scenarioKey}:${optionKey}`;
+  }
+
+  async chooseResponseOutcome(
+    matchupKey: string,
+    scenarioKey: string,
+    optionKey: string,
+    outcome: -1 | 0 | 1
+  ): Promise<void> {
+    const scenario = this.matchups()
+      .flatMap((matchup) => matchup.scenarios)
+      .find((candidate) => candidate.semanticKey === scenarioKey);
+    const existing = scenario ? this.responseFor(scenario, optionKey) : undefined;
+    if (existing) {
+      await this.updateResponseOutcome(matchupKey, scenarioKey, existing.semanticKey, outcome);
+    } else {
+      this.draftResponseOptionKey.set(optionKey);
+      this.draftResponseOutcome.set(outcome);
+      await this.addResponse(matchupKey, scenarioKey);
+    }
+    this.editingResponseKey.set(null);
   }
 
   // Opens the Scenario draft for this Matchup, prefilled with the note's

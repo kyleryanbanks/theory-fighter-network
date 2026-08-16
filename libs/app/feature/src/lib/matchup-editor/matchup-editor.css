@@ -75,9 +75,8 @@ h2 {
 .matchup-details {
   display: grid;
   gap: 14px;
-  border-top: 1px solid #d8e2dc;
-  padding: 14px;
-  background: #f9faf8;
+  padding: 0;
+  background: transparent;
 }
 
 .matchup-actions {
@@ -87,9 +86,8 @@ h2 {
 }
 
 .scenario-panel {
-  border-top: 1px solid #d8e2dc;
-  padding: 14px;
-  background: #f9faf8;
+  padding: 0;
+  background: transparent;
 }
 
 .scenario-draft {
@@ -103,18 +101,106 @@ h2 {
 .scenario-list {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.response-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 8px;
 }
 
-.scenario-entry {
+.response-tile-wrap {
+  position: relative;
+}
+
+.response-tile {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 8px;
+  border: 2px solid #9bb3a5;
+  border-radius: 4px;
+  background: #f3f7f4;
+  color: #244b38;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.response-tile--untested {
+  background: #f3f7f4;
+}
+
+.response-tile--win {
+  border-color: #2f855a;
+  background: #e6f4eb;
+}
+
+.response-tile--trade {
+  border-color: #b7791f;
+  background: #fff8e5;
+}
+
+.response-tile--loss {
+  border-color: #c53030;
+  background: #fff0f0;
+}
+
+.response-outcome-pill {
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.response-outcome-pill--win {
+  background: #b7e4c7;
+  color: #14532d;
+}
+
+.response-outcome-pill--trade {
+  background: #f6d98b;
+  color: #713f12;
+}
+
+.response-outcome-pill--loss {
+  background: #f5b5b5;
+  color: #7f1d1d;
+}
+
+.response-outcome-menu {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 1;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid #e2e8e4;
+  gap: 4px;
+  border: 1px solid #b7cbbd;
   border-radius: 6px;
+  padding: 4px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(26, 48, 39, 0.18);
+}
+
+.response-outcome-menu button {
+  border: 0;
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.75rem;
+}
+
+.response-outcome-menu button:hover {
+  background: #eef4f0;
 }
 
 .empty-state {

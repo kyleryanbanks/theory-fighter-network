@@ -147,6 +147,43 @@ describe('MatchupEditor', () => {
     });
   });
 
+  it('limits response options to universal and attacker-scoped Moves and Sequences', () => {
+    const matchup = {
+      attackerKey: 'char-ryu',
+      defenderKey: 'char-ken',
+    };
+    guide.set(
+      buildGuide(
+        [
+          { name: 'Ryu', semanticKey: 'char-ryu' },
+          { name: 'Ken', semanticKey: 'char-ken' },
+        ],
+        [],
+        [],
+        [
+          { name: 'Universal', semanticKey: 'move-universal' },
+          { name: 'Ryu Move', semanticKey: 'move-ryu', characterKey: 'char-ryu', parentKey: 'move-universal' } as never,
+          { name: 'Ken Move', semanticKey: 'move-ken', characterKey: 'char-ken' } as never,
+        ],
+        [
+          { semanticKey: 'sequence-universal' },
+          { semanticKey: 'sequence-ryu', characterKey: 'char-ryu' } as never,
+          { semanticKey: 'sequence-ken', characterKey: 'char-ken' } as never,
+        ]
+      )
+    );
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.responseMoves(matchup).map((move) => move.semanticKey)).toEqual([
+      'move-universal',
+      'move-ryu',
+    ]);
+    expect(fixture.componentInstance.responseSequences(matchup).map((sequence) => sequence.semanticKey)).toEqual([
+      'sequence-universal',
+      'sequence-ryu',
+    ]);
+  });
+
   it('shows Scenarios for a Matchup once selected, resolving the opponent option name', () => {
     guide.set(
       buildGuide(

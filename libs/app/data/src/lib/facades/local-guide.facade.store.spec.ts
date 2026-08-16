@@ -1011,6 +1011,66 @@ describe('LocalGuideFacadeStore', () => {
     expect(removed.status).toBe('error');
   });
 
+  it('adds and removes Scenario Responses', async () => {
+    await store.createGuide({
+      name: 'Response Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createCharacter({ name: 'Ryu' });
+    await store.createCharacter({ name: 'Ken' });
+    const [ryu, ken] = store.value()?.entities.characters ?? [];
+    await store.createMove({ name: 'Fireball' });
+    await store.createMove({ name: 'Backdash' });
+    const [fireball, backdash] = store.value()?.entities.moves ?? [];
+    await store.createMatchup({
+      attackerKey: ryu.semanticKey,
+      defenderKey: ken.semanticKey,
+    });
+    const matchup = store.value()?.entities.matchups[0];
+    await store.addMatchupScenario({
+      matchupKey: matchup?.semanticKey ?? '',
+      opponentOptionKey: fireball.semanticKey,
+    });
+    const scenario = store.value()?.entities.matchups[0].scenarios[0];
+
+    const added = await store.addScenarioResponse({
+      matchupKey: matchup?.semanticKey ?? '',
+      scenarioKey: scenario?.semanticKey ?? '',
+      playerOptionKey: backdash.semanticKey,
+      outcome: 1,
+      notes: 'Escapes cleanly',
+    });
+    const response = store.value()?.entities.matchups[0].scenarios[0].responses[0];
+
+    expect(added.status).toBe('success');
+    expect(response?.playerOptionKey).toBe(backdash.semanticKey);
+    expect(response?.outcome).toBe(1);
+
+    const removed = await store.removeScenarioResponse({
+      matchupKey: matchup?.semanticKey ?? '',
+      scenarioKey: scenario?.semanticKey ?? '',
+      responseKey: response?.semanticKey ?? '',
+    });
+
+    expect(removed.status).toBe('success');
+    expect(store.value()?.entities.matchups[0].scenarios[0].responses).toEqual([]);
+  });
+
+  it('rejects a Response with a missing player option', async () => {
+    await store.createGuide({
+      name: 'Response Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const added = await store.addScenarioResponse({
+      matchupKey: 'matchup-missing',
+      scenarioKey: 'scenario-missing',
+      playerOptionKey: 'move-missing',
+    });
+
+    expect(added.status).toBe('error');
+  });
+
   it('adds and removes a note on any entity type generically', async () => {
     await store.createGuide({
       name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
