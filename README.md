@@ -1,5 +1,7 @@
 # TheoryFighterNetwork
 
+![First Screenshot!](image.png)
+
 ## TODO
 
 - Monitor Angular 22-compatible stable releases for `@ngrx/signals` and `@angular-architects/ngrx-toolkit`.
