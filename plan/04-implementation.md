@@ -144,13 +144,15 @@ These phases establish the offline foundation. All features are local-only; no n
 ---
 
 ### Phase 1.5: Character Branch (Characters, Moves)
-**Status: Complete (2026-08-16).** Character creation/deletion mutations derive a semantic key from game + normalized name, reject duplicates, block deletion while moves/sequences/projectiles reference the character, and mark the guide unsaved. Move creation/deletion supports both universal (game-level, `characterKey` omitted) and character-scoped moves, deriving a semantic key from game + optional character + normalized name, rejecting duplicates within a scope, and maintaining bidirectional linkage (`Character.hierarchy.moveKeys` or `Game.universal.moveKeys`). Material/Signal Forms Character and Move editors are wired into the feature shell. Move phase/effect/precondition editing and input-sequence parsing remain for Phase 3.1.
+**Status: Complete for local Move/phase/DataValue authoring (2026-08-16).** Character creation/deletion mutations derive a semantic key from game + normalized name, reject duplicates, block deletion while moves/sequences/projectiles reference the character, and mark the guide unsaved. Move creation/deletion supports both universal (game-level, `characterKey` omitted) and character-scoped moves, deriving a semantic key from game + optional character + normalized name, rejecting duplicates within a scope, and maintaining bidirectional linkage (`Character.hierarchy.moveKeys` or `Game.universal.moveKeys`). Material/Signal Forms Character and Move editors are wired into the feature shell. Move detail now supports ordered phase add/remove CRUD, inherited phase editing, Startup/Active/Recovery DataValues, and Hit stop/Stun DataValues across all modeled outcomes. Full Move connectivity, collision boxes, effect state patches, preconditions, cancel rules, and input-sequence parsing remain for Phase 3.1.
 **Scope**: Build character entity hierarchy: character creation, character-scoped moves.
 
 **Deliverables**:
 - CharacterDocument creation: Initialize with gameKey, name, archetypes, states (inherit from game)
 - Character-scoped moves: MoveDocument with gameKey + characterKey; inherit game-level moves
 - Move CRUD: Create, edit, delete moves; validate preconditions and phases
+- Move phase CRUD: Add/remove ordered phases and edit frame-stage DataValues locally
+- DataValue authoring: Capture exact and relative values with a compact Material editor while preserving both representations
 - Move input parsing: Convert button/direction sequences to canonical input representation
 - Inheritance chains: Show parent game moves; highlight character-scoped overrides
 
@@ -234,10 +236,10 @@ These phases establish the offline foundation. All features are local-only; no n
 ## Priority 3: Included Local Authoring/Analysis Features
 
 ### Phase 3.1: Move Connectivity Editor
-**Scope**: Build comprehensive move effects and connectivity UI.
+**Scope**: Build the remaining comprehensive move effects and connectivity UI after the local phase/DataValue foundation.
 
 **Deliverables**:
-- Move phase editor: Create/edit/delete phases with duration, startup, active, recovery FrameStages
+- Move phase editor: Extend the existing phase editor with complete phase fields and richer editing beyond duration DataValues
 - Collision box editor: Visual/numeric editor for hitBoxes, hurtBoxes, collisionBoxes, throwBoxes (Region objects)
 - Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, resources, positional)
 - Resource effect UI: Select resource → choose modification mode (delta/multiply/exact/amount) → set value
