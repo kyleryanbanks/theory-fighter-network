@@ -25,11 +25,13 @@ Commit history confirms:
 - **Phase 1.7 CRUD is ~90% complete (2026-08-16).** Matchup creation/deletion, Scenario CRUD (with Move/Sequence references, optional Stage scoping, parent-scenario links), and Response CRUD (Win/Trade/Loss outcomes, keyboard-accessible UI, color-coded indicators) are all working. Material `MatchupEditor` at `/matchups`. Move and Sequence detail routing implemented. **Deferred (intentionally for Phase 5.1 pre-work)**: Scenario → Response-tree navigation UI, counter-scenario parent-link validation/cycle prevention, complete note-to-Scenario/note-to-Response workflows.
 - **Phase 1.7 Foundational Gaps (CRITICAL - discovered 2026-08-17):** Phase 1.7 workflows cannot function without UI to edit three critical fields:
   1. ✅ **Sequence Step.frames** (FIXED 2026-08-17, commit 40dc2da) — Users can now edit frame delays between combo moves
-  2. ⏳ **Move Preconditions** (NEXT) — Users need UI to define when moves are valid (required/forbidden player/opponent states, follow-up/cancel rules)
-  3. ⏳ **Move Outcome Effects** (PENDING) — Users need UI to define damage, hitstun, state changes (hitStop, stun, source/target/game patches)
-  4. ⏳ **Game State Management** (PENDING) — Users need UI to create/edit available game states that preconditions and effects reference
-  - Estimated time to unblock all gaps: 12-24 hours (3-4 features × 4-6 hours each)
-  - Recommendation: Fix gaps before proceeding to Phase 2.1+ analysis features
+  2. ✅ **Move Outcome Effects Infrastructure** (FIXED 2026-08-17, commits 36f8a2c, d93b910, b0fa4a0) — Model refactored to nest cancels within outcomes. Mutation added. move-detail component extended with outcomeCancels/updateOutcomeCancels methods. Next: build cancel rules UI (PhaseCancelRule array editor)
+  3. ⏳ **Move Preconditions** (NEXT) — Users need UI to define when moves are valid (required/forbidden player/opponent states, follow-up/cancel rules). Tightly coupled with Game State Management (gap 4).
+  4. ⏳ **Game State Management** (NEXT) — Users need UI to create/edit available game states that preconditions and effects reference. Will unblock Move Preconditions (gap 3).
+  - Completed this session: model refactoring + facade mutation + component methods + unit tests (3 new test cases)
+  - Pending: Move Outcome Effects UI template, Move Preconditions UI, Game State Management UI
+  - Estimated time to unblock remaining gaps: 8-16 hours
+  - Recommendation: Complete Move Outcome Effects UI before Game State Management
 - **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
 
 ### Completed Supporting Work Not Previously Captured Here
