@@ -1,0 +1,93 @@
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.tile-wrapper {
+  position: relative;
+}
+
+.tile-grid-button {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-secondary);
+  color: var(--color-text);
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    background: var(--color-background-tertiary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+
+  &.tile-grid-button--selected {
+    background: var(--color-success);
+    color: var(--color-success-text);
+    border-color: var(--color-success-border);
+    font-weight: 600;
+  }
+
+  &.tile-grid-button--menu-open {
+    background: var(--color-background-tertiary);
+    border-color: var(--color-focus);
+  }
+}
+
+.tile-choice-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 0.25rem;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+.tile-choice-button {
+  padding: 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--color-background-tertiary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+
+  &.tile-choice-button--success {
+    color: var(--color-success);
+    font-weight: 600;
+  }
+
+  &.tile-choice-button--warning {
+    color: var(--color-warning);
+    font-weight: 600;
+  }
+
+  &.tile-choice-button--danger {
+    color: var(--color-danger);
+    font-weight: 600;
+  }
+}

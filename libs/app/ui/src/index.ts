@@ -8,3 +8,4 @@ export * from './lib/link/link';
 export * from './lib/entity-detail-shell/entity-detail-shell';
 export * from './lib/data-value-editor/data-value-editor';
 export * from './lib/comparison-axis/comparison-axis';
+export * from './lib/tile-grid/tile-grid';

@@ -1,0 +1,34 @@
+<div class="tile-grid">
+  @for (tile of tiles; track tile.key) {
+    <div class="tile-wrapper">
+      <button
+        type="button"
+        class="tile-grid-button"
+        [ngClass]="{
+          'tile-grid-button--selected': tile.selected,
+          'tile-grid-button--menu-open': isMenuOpen(tile.key)
+        }"
+        (click)="onTileClick(tile)"
+        [attr.aria-haspopup]="tile.choices ? 'menu' : null"
+        [attr.aria-expanded]="isMenuOpen(tile.key)"
+      >
+        {{ tile.label }}
+      </button>
+      @if (tile.choices && isMenuOpen(tile.key)) {
+        <div class="tile-choice-menu" role="menu">
+          @for (entry of getChoiceEntries(tile); track entry[0]) {
+            <button
+              type="button"
+              class="tile-choice-button"
+              [ngClass]="entry[1].color ? 'tile-choice-button--' + entry[1].color : ''"
+              (click)="onChoiceSelected(tile, entry[0])"
+              role="menuitem"
+            >
+              {{ entry[1].label }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
