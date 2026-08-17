@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { JsonPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -11,7 +10,6 @@ import { EntityNotes } from '../entity-notes/entity-notes';
 @Component({
   selector: 'tfn-sequence-detail',
   imports: [
-    JsonPipe,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
@@ -53,8 +51,9 @@ export class SequenceDetail {
     if (isNaN(frames) || frames < 0) return;
     const draft = this.draftSequence();
     if (draft) {
-      draft[index].frames = frames;
-      this.draftSequence.set([...draft]);
+      const updated = [...draft];
+      updated[index] = { ...updated[index], frames };
+      this.draftSequence.set(updated);
     }
   }
 

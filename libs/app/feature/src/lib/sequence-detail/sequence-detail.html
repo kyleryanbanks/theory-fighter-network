@@ -9,57 +9,61 @@
     <tfn-entity-notes detail-notes entityType="sequence" [entityKey]="currentSequence.semanticKey" [notes]="currentSequence.meta && currentSequence.meta.notes || []" [notAddressable]="true" />
     <tfn-expansion-panel header="Sequence steps" subheader="Edit move timing">
       @if (!draftSequence()) {
-        <button matButton (click)="startEdit()" data-testid="edit-sequence-button">
-          Edit Sequence
-        </button>
-        <ol class="sequence-steps-view">
-          @for (step of currentSequence.sequence; track $index) {
-            <li>
-              <span class="step-move">{{ moveName(step.moveKey) }}</span>
-              <span class="step-frames">{{ step.frames ?? 1 }} frames</span>
-            </li>
-          }
-        </ol>
-      } @else {
-        <div class="sequence-editor">
-          <ol class="sequence-steps-edit">
-            @for (step of draftSequence(); track $index) {
-              <li class="step-editor">
+        <ng-container>
+          <button matButton (click)="startEdit()" data-testid="edit-sequence-button">
+            Edit Sequence
+          </button>
+          <ol class="sequence-steps-view">
+            @for (step of currentSequence.sequence; track $index) {
+              <li>
                 <span class="step-move">{{ moveName(step.moveKey) }}</span>
-                <mat-form-field appearance="outline" class="frames-input">
-                  <mat-label>Frames delay</mat-label>
-                  <input
-                    matInput
-                    type="number"
-                    min="0"
-                    [value]="step.frames ?? 1"
-                    (change)="updateStepFrames($index, $event.target.value)"
-                    data-testid="step-frames-input"
-                  />
-                </mat-form-field>
+                <span class="step-frames">{{ step.frames ?? 1 }} frames</span>
               </li>
             }
           </ol>
-          @if (editError()) {
-            <p class="error-message" role="alert">{{ editError() }}</p>
-          }
-          <div class="button-group">
-            <button
-              matButton
-              (click)="saveSequence()"
-              data-testid="save-sequence-button"
-            >
-              Save Changes
-            </button>
-            <button
-              matButton
-              (click)="cancelEdit()"
-              data-testid="cancel-edit-button"
-            >
-              Cancel
-            </button>
+        </ng-container>
+      } @else {
+        <ng-container>
+          <div class="sequence-editor">
+            <ol class="sequence-steps-edit">
+              @for (step of draftSequence(); track $index) {
+                <li class="step-editor">
+                  <span class="step-move">{{ moveName(step.moveKey) }}</span>
+                  <mat-form-field appearance="outline" class="frames-input">
+                    <mat-label>Frames delay</mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      min="0"
+                      [value]="step.frames ?? 1"
+                      (change)="updateStepFrames($index, $event.target.value)"
+                      data-testid="step-frames-input"
+                    />
+                  </mat-form-field>
+                </li>
+              }
+            </ol>
+            @if (editError()) {
+              <p class="error-message" role="alert">{{ editError() }}</p>
+            }
+            <div class="button-group">
+              <button
+                matButton
+                (click)="saveSequence()"
+                data-testid="save-sequence-button"
+              >
+                Save Changes
+              </button>
+              <button
+                matButton
+                (click)="cancelEdit()"
+                data-testid="cancel-edit-button"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
-        </div>
+        </ng-container>
       }
     </tfn-expansion-panel>
   </tfn-entity-detail-shell>
