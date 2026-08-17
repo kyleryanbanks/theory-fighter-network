@@ -207,14 +207,6 @@ export interface MovePhase {
     onSecondaryTrigger?: MoveOutcomeEffect;
   };
 
-  cancelOptions?: {
-    onHit?: PhaseCancelRule[];
-    onBlock?: PhaseCancelRule[];
-    onCounterHit?: PhaseCancelRule[];
-    onWhiff?: PhaseCancelRule[];
-    onSecondaryTrigger?: PhaseCancelRule[];
-  };
-
   /**
    * Projectile spawned on the first active frame of this phase.
    * References a ProjectileDocument by its semanticKey.
@@ -237,6 +229,8 @@ export interface MoveOutcomeEffect<
 > {
   hitStop?: DataValue;  // Brief visual pause when move connects (defaults to frames)
   stun?: DataValue;     // Number of frames until target can act again (after hitStop)
+
+  cancels?: PhaseCancelRule[]; // Cancel windows available from this outcome
 
   source?: RuntimeStatePatch<TStateModel>;
   target?: RuntimeStatePatch<TStateModel>;
