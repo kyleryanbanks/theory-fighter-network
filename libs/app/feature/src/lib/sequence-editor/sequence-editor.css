@@ -118,6 +118,26 @@ h2 {
   gap: 8px;
 }
 
+.draft-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.step-move {
+  flex: 1;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.frames-input-compact {
+  width: 100px;
+}
+
+.frames-input-compact ::ng-deep .mat-mdc-form-field-outline {
+  color: #e0e0e0;
+}
+
 .sequence-alert {
   margin: 14px 0 0;
   border-left: 3px solid #b42318;

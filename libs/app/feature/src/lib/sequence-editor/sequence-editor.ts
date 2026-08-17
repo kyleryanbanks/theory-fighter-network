@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import {
   LocalGuideFacadeStore,
@@ -15,7 +16,7 @@ const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })
@@ -74,7 +75,7 @@ export class SequenceEditor {
     }
     return allSequences.filter((sequence) => sequence.characterKey === scope);
   });
-  readonly draftMoveKeys = signal<string[]>([]);
+  readonly draftSteps = signal<Step[]>([]);
   readonly sequenceError = signal('');
 
   moveName(moveKey: string | undefined): string {
@@ -116,34 +117,48 @@ export class SequenceEditor {
 
   setScope(scopeKey: string): void {
     this.scopeKey.set(scopeKey);
-    this.draftMoveKeys.set([]);
+    this.draftSteps.set([]);
     this.sequenceError.set('');
   }
 
   addDraftMove(moveKey: string): void {
-    this.draftMoveKeys.update((keys) => [...keys, moveKey]);
+    this.draftSteps.update((steps) => [
+      ...steps,
+      {
+        directions: [],
+        buttons: [],
+        moveKey,
+        frames: 1,
+      },
+    ]);
   }
 
   removeDraftMove(index: number): void {
-    this.draftMoveKeys.update((keys) => keys.filter((_, i) => i !== index));
+    this.draftSteps.update((steps) => steps.filter((_, i) => i !== index));
+  }
+
+  updateDraftMoveFrames(index: number, value: string): void {
+    const frames = parseInt(value, 10);
+    if (isNaN(frames) || frames < 0) return;
+    this.draftSteps.update((steps) => {
+      const updated = [...steps];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], frames };
+      }
+      return updated;
+    });
   }
 
   async createSequence(): Promise<void> {
-    const moveKeys = this.draftMoveKeys();
-    if (moveKeys.length === 0) {
+    const draftSteps = this.draftSteps();
+    if (draftSteps.length === 0) {
       this.sequenceError.set('Add at least one Move to the Sequence.');
       return;
     }
 
     const scope = this.scopeKey();
-    const sequence: Step[] = moveKeys.map((moveKey) => ({
-      directions: [],
-      buttons: [],
-      moveKey,
-    }));
-
     const result = await this.facade.createSequence({
-      sequence,
+      sequence: draftSteps,
       ...(scope === UNIVERSAL_SCOPE
         ? {}
         : this.team()
@@ -156,7 +171,7 @@ export class SequenceEditor {
       return;
     }
 
-    this.draftMoveKeys.set([]);
+    this.draftSteps.set([]);
     this.sequenceError.set('');
   }
 

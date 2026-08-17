@@ -50,11 +50,22 @@
       }
     </div>
 
-    @if (draftMoveKeys().length > 0) {
+    @if (draftSteps().length > 0) {
       <ol class="draft-steps" data-testid="draft-steps">
-        @for (moveKey of draftMoveKeys(); track $index) {
-          <li>
-            {{ moveName(moveKey) }}
+        @for (step of draftSteps(); track $index) {
+          <li class="draft-step">
+            <span class="step-move">{{ moveName(step.moveKey) }}</span>
+            <mat-form-field appearance="outline" class="frames-input-compact">
+              <mat-label>Frames</mat-label>
+              <input
+                matInput
+                type="number"
+                min="0"
+                [value]="step.frames ?? 1"
+                (change)="updateDraftMoveFrames($index, $event.target.value)"
+                data-testid="draft-step-frames"
+              />
+            </mat-form-field>
             <button
               matButton
               type="button"

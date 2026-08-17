@@ -89,9 +89,9 @@ describe('SequenceEditor', () => {
     await fixture.whenStable();
 
     expect(mockStore.createSequence).toHaveBeenCalledWith({
-      sequence: [{ directions: [], buttons: [], moveKey: 'move-parry' }],
+      sequence: [{ directions: [], buttons: [], moveKey: 'move-parry', frames: 1 }],
     });
-    expect(fixture.componentInstance.draftMoveKeys()).toEqual([]);
+    expect(fixture.componentInstance.draftSteps()).toEqual([]);
   });
 
   it('appends a Move to the draft each time its tile is tapped, allowing repeats', () => {
@@ -110,9 +110,9 @@ describe('SequenceEditor', () => {
     tile.click();
     fixture.detectChanges();
 
-    expect(fixture.componentInstance.draftMoveKeys()).toEqual([
-      'move-jab',
-      'move-jab',
+    expect(fixture.componentInstance.draftSteps()).toEqual([
+      { directions: [], buttons: [], moveKey: 'move-jab', frames: 1 },
+      { directions: [], buttons: [], moveKey: 'move-jab', frames: 1 },
     ]);
   });
 
@@ -281,7 +281,7 @@ describe('SequenceEditor', () => {
     await fixture.whenStable();
 
     expect(mockStore.createSequence).toHaveBeenCalledWith({
-      sequence: [{ directions: [], buttons: [], moveKey: 'move-hadoken' }],
+      sequence: [{ directions: [], buttons: [], moveKey: 'move-hadoken', frames: 1 }],
       characterKey: 'character-ryu',
     });
   });
@@ -331,7 +331,7 @@ describe('SequenceEditor', () => {
     await fixture.whenStable();
 
     expect(mockStore.createSequence).toHaveBeenCalledWith({
-      sequence: [{ directions: [], buttons: [], moveKey: 'move-hadoken' }],
+      sequence: [{ directions: [], buttons: [], moveKey: 'move-hadoken', frames: 1 }],
       teamKey: 'team-ryu',
     });
   });
