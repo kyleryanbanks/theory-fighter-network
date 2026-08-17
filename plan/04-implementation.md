@@ -10,15 +10,20 @@ This roadmap restructures development around agreed priority order. The work is 
 
 ---
 
-## Current Implementation Status (2026-08-15)
+## Current Implementation Status (2026-08-17)
 
-Commit history since this roadmap was last updated confirms the following:
+**Phase 1 is ~95% complete as of 2026-08-17.** All core entity hierarchies (Game → Stage → Character → Move → Sequence → Team → Matchup) are implemented with full CRUD, validation, and Material/Signal Forms editors. A few deferred workflows in Phase 1.7 remain for Phase 5.1 (Firestore pre-work).
+
+Commit history confirms:
 
 - **Phase 1.1 is complete.** The local Guide metadata model, schema-version validation, unsaved/synced tracking, and Guide lifecycle UI are implemented. The app opens to a centered empty state where users create a Guide or load an existing `.tfn`; active Guides expose load, save, and close actions in the header toolbar.
-- **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File`. Supported browsers prompt for destination and filename; other browsers use a standard download.
 - **Phase 1.2 is complete.** Game creation, validation, semantic identity, metadata editing, and one-at-a-time input vocabulary authoring are implemented with Angular Material and Signal Forms.
-- **Phase 1.4 is partially complete.** Stage identity, validation, Guide-level create/delete mutations, duplicate protection, unsaved tracking, `.tfn` round-trip, and a Material/Signal Forms Stage editor are implemented. Universal Stage Zones, inheritance, and universal sequences remain.
-- **Phases 1.5-1.6 are complete; Phase 1.7 has Matchup, Scenario, and Response CRUD (2026-08-16).** Matchup creation/deletion validates both Characters exist in-game, permits mirror matches, derives identity from game + attacker + defender only, rejects duplicate attacker/defender identity, and maintains bidirectional `Game.hierarchy.matchupKeys` linkage. Scenarios can be added or removed under a Matchup, reference an existing Move or Sequence, optionally scope to a Stage, and support parent-scenario links. Responses support universal and attacker-scoped options, square Win/Trade/Loss tiles, Reset, click-away menu dismissal, color-coded state pills/backgrounds, and persisted add/update/remove mutations. The routed Material `MatchupEditor` is at `/matchups`. Counter-scenario tree validation/navigation and note-to-Scenario completion remain.
+- **Phase 1.3 is complete.** The v1 JSON `.tfn` format is specified and validated, timestamps round-trip exactly, verified legacy archives migrate forward, newer formats require a client upgrade, and browser exports build a complete validated `File`. Supported browsers prompt for destination and filename; other browsers use a standard download.
+- **Phase 1.4 & 1.4.1 are complete.** Stage identity, validation, create/delete mutations, bidirectional linkage, and Material editor are implemented. Universal Stage Zones (game-level), stage-scoped zones, zone inheritance/override, lock indicators, and override/revert actions are all working.
+- **Phase 1.5 & 1.5.1 are complete.** Character and Move CRUD (universal and character-scoped) with full phase/DataValue editing for Startup/Active/Recovery/Hit-stop/Stun. Sequence creation/deletion (universal, character-scoped, team-scoped) with canonical semantic keys and bidirectional linkage.
+- **Phase 1.6 is complete.** Team creation/deletion with ordered Character references, semantic key derivation from character order, Team Size validation, and bidirectional `Game.hierarchy.teamKeys` linkage. Material Team editor with character selection. **Deferred**: Team member reordering (edit vs. delete+recreate) and assist/loadout scoping (needs schema design).
+- **Phase 1.7 is ~90% complete (2026-08-16).** Matchup creation/deletion, Scenario CRUD (with Move/Sequence references, optional Stage scoping, parent-scenario links), and Response CRUD (Win/Trade/Loss outcomes, keyboard-accessible UI, color-coded indicators) are all working. Material `MatchupEditor` at `/matchups`. Move and Sequence detail routing implemented. **Deferred (intentionally for Phase 5.1 pre-work)**: Scenario → Response-tree navigation UI, counter-scenario parent-link validation/cycle prevention, complete note-to-Scenario/note-to-Response workflows.
+- **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
 
 ### Completed Supporting Work Not Previously Captured Here
 
@@ -215,9 +220,47 @@ These phases establish the offline foundation. All features are local-only; no n
 
 ---
 
+## Phase 1 Summary: Core Entity Hierarchy Complete
+
+**Phase 1 is ~95% complete (2026-08-17).** All entity hierarchies (Game → Stage → Character → Move → Sequence → Team → Matchup) are fully implemented with CRUD, validation, and Material/Signal Forms editors.
+
+### Phase 1 Completion Checklist
+- ✅ Phase 1.1: Guide Foundation (create, load, save, close)
+- ✅ Phase 1.2: Game Creation (CRUD, validation, semantic keys)
+- ✅ Phase 1.3: .tfn Save/Load (format, migration, export)
+- ✅ Phase 1.4 & 1.4.1: Stages & Zones (CRUD, inheritance, override UI)
+- ✅ Phase 1.5 & 1.5.1: Characters, Moves & Sequences (full CRUD, phase/duration editing)
+- ✅ Phase 1.6: Teams (CRUD, character ordering, team size validation)
+- ✅ Phase 1.7 Core: Matchups, Scenarios, Responses (CRUD, win/trade/loss outcomes)
+
+### Phase 1.7 Deferred Workflows (for Phase 5.1 pre-work)
+The following workflows are **intentionally deferred until immediately before Firestore/community-sync work** to ensure the local authoring graph is stable before becoming shareable:
+- Scenario → Response-tree navigation UI
+- Counter-scenario parent-link validation/cycle prevention
+- Complete note-to-Scenario/note-to-Response workflows
+
+**Rationale**: Users can currently create, edit, and delete all entities and track outcomes. The deferred workflows enhance navigation/validation but are not required for users to gather and organize match data locally.
+
+### Deferred but Not Critical
+- Phase 1.6: Team member reordering (edit vs. delete+recreate), assist/loadout scoping (needs schema design)
+- Phase 1.5.1: Promote-to-inherited workflow (deferred to Phase 3.3)
+
+---
+
+## Next Phase: Priority 2 — Advanced Features
+
+### Ready to Start
+- **Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine** — Foundation already laid (2026-08-17). Move-comparison component now supports generic field selection (startup/active/recovery) with extensible infrastructure for future range/damage comparisons.
+- **Phase 3.1: Move Connectivity Editor** — Depends on Phase 1.5 (complete). Can begin collision box editor, move outcome effects, resource effects, and cancel windows.
+- **Phase 3.2: Full-Screen Multi-Move Range Comparison** — Depends on Phase 3.1 and Phase 2.1 foundation (Phase 2.1 foundation ready; Phase 3.1 needed).
+
+---
+
 ## Priority 2: Highest-Priority Advanced Feature
 
 ### Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine
+**Status: Foundation Complete — Comparison Type System (2026-08-17).** The move-comparison component has been refactored to support a generic, extensible `ComparisonType` system. Users can now select which phase property to compare (startup/active/recovery) via UI buttons; the component's `extractDataValue()` method generically pulls the correct `DataValue` from any phase, and `updatePosition()` persists changes to the appropriate phase. The infrastructure is ready for future expansion to range, damage, and other multi-field comparisons without changes to the core `ComparisonAxis` component. Full Phase 2.1 scope (inferred-bound engine, damage scaling discovery, scaling curve visualization) remains.
+
 **Scope**: Build the data analysis engine for property ordering and bound inference.
 
 **Deliverables**:
