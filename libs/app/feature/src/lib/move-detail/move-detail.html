@@ -30,6 +30,20 @@
                     <strong>Stun</strong>
                     <tfn-data-value-editor [value]="outcomeDataValue(phaseIndex, outcome, 'stun')" (valueChange)="updateOutcomeDataValue(phaseIndex, outcome, 'stun', $event)" />
                   </div>
+                  <div>
+                    <strong>Cancel rules</strong>
+                    <div class="cancel-rules">
+                      @for (cancel of outcomeCancels(phaseIndex, outcome); track $index) {
+                        <div class="cancel-rule">
+                          <input type="number" [ngModel]="cancel.startFrame" (change)="cancel.startFrame = +$event.target.value; updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" placeholder="Start frame" class="cancel-input" />
+                          <input type="number" [ngModel]="cancel.endFrame" (change)="cancel.endFrame = +$event.target.value; updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" placeholder="End frame" class="cancel-input" />
+                          <input type="text" [ngModel]="formatMoveKeysForDisplay(cancel.allowedMoveKeys)" (change)="cancel.allowedMoveKeys = parseMoveKeysString($event.target.value); updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" placeholder="Allowed moves (comma-separated)" class="cancel-input" />
+                          <tfn-delete-button [ariaLabel]="'Remove cancel rule'" (delete)="removeOutcomeCancel(phaseIndex, outcome, $index)" />
+                        </div>
+                      }
+                      <button matButton="outlined" type="button" (click)="addOutcomeCancel(phaseIndex, outcome, { startFrame: 0, endFrame: 0, allowedMoveKeys: [] })">Add cancel rule</button>
+                    </div>
+                  </div>
                 </div>
               </tfn-expansion-panel>
             }

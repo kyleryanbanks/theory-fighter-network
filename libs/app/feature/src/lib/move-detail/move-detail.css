@@ -38,3 +38,35 @@ pre {
   color: #244b38;
   font: 0.8125rem/1.5 monospace;
 }
+
+.cancel-rules {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.cancel-rule {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr auto;
+  gap: 8px;
+  align-items: end;
+  padding: 8px;
+  background: #f5f7f6;
+  border-radius: 4px;
+  border-left: 3px solid #3f6654;
+}
+
+.cancel-input {
+  padding: 6px 8px;
+  border: 1px solid #b8c4bf;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.cancel-input:focus {
+  outline: none;
+  border-color: #3f6654;
+  box-shadow: 0 0 0 2px rgba(63, 102, 84, 0.1);
+}
+

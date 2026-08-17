@@ -56,6 +56,15 @@ describe('MoveDetail', () => {
     expect(fixture.nativeElement.textContent).toContain('On Secondary Trigger');
   });
 
+  it('renders "Cancel rules" section header for each outcome', () => {
+    expect(fixture.nativeElement.textContent).toContain('Cancel rules');
+  });
+
+  it('renders add cancel rule button for each outcome', () => {
+    // Check that at least one "Add cancel rule" button text is present
+    expect(fixture.nativeElement.textContent).toContain('Add cancel rule');
+  });
+
   it('returns empty array when outcome cancels do not exist', () => {
     const component = fixture.componentInstance;
     const cancels = component.outcomeCancels(0, 'onHit');
@@ -132,5 +141,64 @@ describe('MoveDetail with outcome cancels', () => {
     const cancels = component.outcomeCancels(0, 'onHit');
     expect(cancels).toHaveLength(1);
     expect(cancels[0]).toEqual({ startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken'] });
+  });
+
+  it('adds a new cancel rule to outcome', async () => {
+    const component = fixture.componentInstance;
+    const updateMoveOutcomeCancels = TestBed.inject(LocalGuideFacadeStore).updateMoveOutcomeCancels as ReturnType<typeof vi.fn>;
+    
+    const newCancel = { startFrame: 7, endFrame: 10, allowedMoveKeys: ['shoryuken'] } as PhaseCancelRule;
+    await component.addOutcomeCancel(0, 'onHit', newCancel);
+    
+    expect(updateMoveOutcomeCancels).toHaveBeenCalledWith({
+      moveKey: 'move-jab',
+      phaseIndex: 0,
+      outcome: 'onHit',
+      cancels: [
+        { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken'] },
+        { startFrame: 7, endFrame: 10, allowedMoveKeys: ['shoryuken'] },
+      ],
+    });
+  });
+
+  it('removes a cancel rule from outcome', async () => {
+    const component = fixture.componentInstance;
+    const updateMoveOutcomeCancels = TestBed.inject(LocalGuideFacadeStore).updateMoveOutcomeCancels as ReturnType<typeof vi.fn>;
+    
+    await component.removeOutcomeCancel(0, 'onHit', 0);
+    
+    expect(updateMoveOutcomeCancels).toHaveBeenCalledWith({
+      moveKey: 'move-jab',
+      phaseIndex: 0,
+      outcome: 'onHit',
+      cancels: [],
+    });
+  });
+
+  it('updates a cancel rule in outcome', async () => {
+    const component = fixture.componentInstance;
+    const updateMoveOutcomeCancels = TestBed.inject(LocalGuideFacadeStore).updateMoveOutcomeCancels as ReturnType<typeof vi.fn>;
+    
+    const updatedCancel = { startFrame: 3, endFrame: 6, allowedMoveKeys: ['hadoken', 'ryu-punch'] } as PhaseCancelRule;
+    await component.updateOutcomeCancel(0, 'onHit', 0, updatedCancel);
+    
+    expect(updateMoveOutcomeCancels).toHaveBeenCalledWith({
+      moveKey: 'move-jab',
+      phaseIndex: 0,
+      outcome: 'onHit',
+      cancels: [updatedCancel],
+    });
+  });
+
+  it('renders existing cancel rules for outcomes', () => {
+    fixture.detectChanges();
+    const cancelInputs = fixture.nativeElement.querySelectorAll('input[placeholder="Start frame"]');
+    expect(cancelInputs.length).toBeGreaterThan(0);
+  });
+
+  it('renders delete button for each cancel rule', () => {
+    fixture.detectChanges();
+    const deleteButtons = fixture.nativeElement.querySelectorAll('tfn-delete-button');
+    expect(deleteButtons.length).toBeGreaterThan(0);
   });
 });

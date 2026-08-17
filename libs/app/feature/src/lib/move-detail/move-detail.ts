@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
-import { JsonPipe, TitleCasePipe } from '@angular/common';
+import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
 import type { DataValue, PhaseCancelRule } from '@theory-fighter-network/data';
@@ -9,7 +10,7 @@ import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes],
+  imports: [CommonModule, FormsModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
@@ -102,6 +103,47 @@ export class MoveDetail {
         cancels,
       });
     }
+  }
+
+  async addOutcomeCancel(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancel: PhaseCancelRule
+  ): Promise<void> {
+    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
+    await this.updateOutcomeCancels(phaseIndex, outcome, [...currentCancels, cancel]);
+  }
+
+  async removeOutcomeCancel(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancelIndex: number
+  ): Promise<void> {
+    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
+    const updated = currentCancels.filter((_, index) => index !== cancelIndex);
+    await this.updateOutcomeCancels(phaseIndex, outcome, updated);
+  }
+
+  async updateOutcomeCancel(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancelIndex: number,
+    cancel: PhaseCancelRule
+  ): Promise<void> {
+    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
+    const updated = currentCancels.map((c, index) => (index === cancelIndex ? cancel : c));
+    await this.updateOutcomeCancels(phaseIndex, outcome, updated);
+  }
+
+  parseMoveKeysString(movesStr: string): string[] {
+    return movesStr
+      .split(',')
+      .map(k => k.trim())
+      .filter(k => k);
+  }
+
+  formatMoveKeysForDisplay(moves: string[] | undefined): string {
+    return moves?.join(', ') ?? '';
   }
 
   async addPhase(): Promise<void> {
