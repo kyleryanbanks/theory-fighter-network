@@ -12,8 +12,12 @@ export class DeleteButton {
   readonly testId = input<string>();
   readonly delete = output<void>();
   readonly confirm = input(true, { transform: booleanAttribute });
+  readonly disabled = input(false, { transform: booleanAttribute });
 
   requestDelete(): void {
+    if (this.disabled()) {
+      return;
+    }
     const targetLabel = this.ariaLabel() ?? 'Delete';
     if (
       this.confirm() &&

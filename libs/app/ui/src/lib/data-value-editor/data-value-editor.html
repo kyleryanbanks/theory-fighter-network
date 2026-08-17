@@ -1,21 +1,11 @@
 <section class="data-value-editor" [attr.aria-label]="modeLabel() + ' value'">
   <div class="data-value-editor__header">
     <strong>{{ modeLabel() }}</strong>
-    <button
-      matIconButton
-      type="button"
-      data-testid="swap-mode"
-      [attr.aria-label]="switchLabel()"
-      [attr.title]="switchLabel()"
-      (click)="toggleMode()"
-    >
-      <span aria-hidden="true">&#8646;</span>
-    </button>
   </div>
 
   @if (mode() === 'relative') {
     <div class="data-value-editor__relative">
-      <mat-form-field appearance="outline" class="data-value-editor__relative-value">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic" class="data-value-editor__relative-value">
         <input
           matInput
           data-testid="relative-value"
@@ -37,11 +27,31 @@
           (input)="updateRelative($event)"
         />
       </mat-slider>
+      <button
+        matIconButton
+        type="button"
+        data-testid="swap-mode"
+        [attr.aria-label]="switchLabel()"
+        [attr.title]="switchLabel()"
+        (click)="toggleMode()"
+      >
+        <span aria-hidden="true">&#8646;</span>
+      </button>
     </div>
   } @else {
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic" class="data-value-editor__exact-value">
       <mat-label>Exact value</mat-label>
       <input matInput type="number" [value]="exactValue()" (input)="updateExact($event)" />
     </mat-form-field>
+    <button
+      matIconButton
+      type="button"
+      data-testid="swap-mode"
+      [attr.aria-label]="switchLabel()"
+      [attr.title]="switchLabel()"
+      (click)="toggleMode()"
+    >
+      <span aria-hidden="true">&#8646;</span>
+    </button>
   }
 </section>

@@ -5,6 +5,7 @@
   [attr.data-testid]="testId()"
   [attr.aria-label]="ariaLabel() ?? 'Delete'"
   [attr.title]="ariaLabel() ?? 'Delete'"
+  [disabled]="disabled()"
   (click)="requestDelete()"
 >
   Delete

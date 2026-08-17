@@ -10,9 +10,6 @@
     <tfn-expansion-panel header="Move phases" subheader="Frame data and on-hit values">
       @for (phaseIndex of phaseIndices(); track phaseIndex) {
         <tfn-expansion-panel subsection secondary [header]="'Phase ' + (phaseIndex + 1)">
-          <div class="phase-panel-actions">
-            <button matButton type="button" (click)="removePhase(phaseIndex)" [disabled]="phaseIndices().length === 1">Remove phase</button>
-          </div>
           <tfn-expansion-panel subsection header="Frame stages">
             @for (phase of phaseNames; track phase) {
               <div class="phase-duration">
@@ -37,6 +34,15 @@
               </tfn-expansion-panel>
             }
           </tfn-expansion-panel>
+          @if (phaseIndices().length > 1) {
+            <div class="phase-panel-actions">
+              <tfn-delete-button
+                [ariaLabel]="'Remove Phase ' + (phaseIndex + 1)"
+                [confirm]="true"
+                (delete)="removePhase(phaseIndex)"
+              />
+            </div>
+          }
         </tfn-expansion-panel>
       }
       <button matButton="outlined" type="button" (click)="addPhase()">Add phase</button>

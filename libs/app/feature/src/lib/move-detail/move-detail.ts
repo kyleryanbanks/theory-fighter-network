@@ -4,12 +4,12 @@ import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
 import type { DataValue } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
-import { ExpansionPanel, EntityDetailShell, DataValueEditor } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, ExpansionPanel, EntityDetailShell, EntityNotes],
+  imports: [JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
