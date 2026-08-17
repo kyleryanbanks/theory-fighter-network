@@ -1691,6 +1691,47 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    updateSequence: rxMutation({
+      operation: (input: {
+        sequenceKey: string;
+        sequence: Step[];
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const sequence = localGuide.entities.sequences.find(
+              (s) => s.semanticKey === input.sequenceKey
+            );
+            if (!sequence) {
+              throw new Error(`Sequence "${input.sequenceKey}" does not exist.`);
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'sequence',
+              entityKey: input.sequenceKey,
+            });
+
+            const updatedSequence = {
+              ...sequence,
+              sequence: input.sequence,
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                sequences: localGuide.entities.sequences.map((s) =>
+                  s.semanticKey === input.sequenceKey ? updatedSequence : s
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     createTeam: rxMutation({
       operation: (input: { characterKeys: string[] }) =>
         from(

@@ -1281,4 +1281,38 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(persistence.buildArchiveFile).toHaveBeenCalledTimes(1);
   });
+
+  it('updates Sequence steps including frame delays', async () => {
+    await store.createGuide({
+     name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
+     is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    await store.createSequence({
+     sequence: [
+       { directions: ['5'], buttons: ['lp'], frames: 1 },
+       { directions: ['6'], buttons: ['mp'], frames: 1 },
+     ],
+    });
+
+    const originalSequence = store.value()?.entities.sequences[0];
+    expect(originalSequence?.sequence[0]?.frames).toBe(1);
+    expect(originalSequence?.sequence[1]?.frames).toBe(1);
+
+    // Update frames for second step
+    const updated = await store.updateSequence({
+     sequenceKey: originalSequence?.semanticKey ?? '',
+     sequence: [
+       { directions: ['5'], buttons: ['lp'], frames: 1 },
+       { directions: ['6'], buttons: ['mp'], frames: 8 },
+     ],
+    });
+
+    expect(updated.status).toBe('success');
+    const updatedSequence = store.value()?.entities.sequences[0];
+    expect(updatedSequence?.sequence[1]?.frames).toBe(8);
+    expect(store.value()?.guide.localChanges).toContain(
+     `sequence:${originalSequence?.semanticKey}`
+    );
+  });
 });
