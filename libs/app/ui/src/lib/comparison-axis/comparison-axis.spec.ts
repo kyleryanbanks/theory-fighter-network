@@ -35,6 +35,26 @@ describe('ComparisonAxis', () => {
     expect(pins[0].getAttribute('aria-label')).toContain('Move A');
   });
 
+  it('connects range values to the correct tile edge above and below the line', () => {
+    fixture.componentInstance.pins.set([
+      { key: 'move-a', label: 'Move A', relative: 25, visualY: 70 },
+      { key: 'move-b', label: 'Move B', relative: 70, visualY: 138 },
+    ]);
+    fixture.detectChanges();
+
+    const aboveConnector = fixture.nativeElement.querySelector(
+      '[data-testid="axis-connector-move-a"]'
+    ) as HTMLElement;
+    const belowConnector = fixture.nativeElement.querySelector(
+      '[data-testid="axis-connector-move-b"]'
+    ) as HTMLElement;
+
+    expect(aboveConnector.style.top).toBe('102px');
+    expect(aboveConnector.style.height).toBe('4px');
+    expect(belowConnector.style.top).toBe('134px');
+    expect(belowConnector.style.height).toBe('4px');
+  });
+
   it('moves a pin with keyboard controls', () => {
     const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]');
 
@@ -68,6 +88,23 @@ describe('ComparisonAxis', () => {
     track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60 }));
 
     expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
+  });
+
+  it('moves a pin from its range value without changing the tile vertical position', () => {
+    fixture.componentInstance.changes = [];
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]') as HTMLElement;
+    const marker = fixture.nativeElement.querySelector('[data-testid="axis-marker-move-a"]') as HTMLElement;
+
+    marker.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 25 }));
+    track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 150 }));
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
+    expect(pin.style.top).toBe('12px');
   });
 
   it('aligns a pin bottom with the pointer when dragged above the buffer', () => {

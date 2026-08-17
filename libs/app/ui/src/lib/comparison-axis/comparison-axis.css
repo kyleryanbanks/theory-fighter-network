@@ -33,6 +33,15 @@
   background: #b7cbbd;
 }
 
+.comparison-axis__connector {
+  position: absolute;
+  z-index: 0;
+  width: 1px;
+  transform: translateX(-50%);
+  background: rgba(63, 102, 84, 0.35);
+  pointer-events: none;
+}
+
 .comparison-axis__marker {
   position: absolute;
   top: 106px;
@@ -41,11 +50,14 @@
   place-items: center;
   width: 32px;
   height: 28px;
+  padding: 0;
   transform: translateX(-50%);
   border: 1px solid #3f6654;
   border-radius: 4px;
   background: #ffffff;
   color: #244b38;
+  cursor: grab;
+  font: inherit;
   font-size: 0.6875rem;
   font-weight: 700;
   line-height: 1;
@@ -56,6 +68,15 @@
   border-color: #245d43;
   background: #d7e4dc;
   box-shadow: 0 0 0 2px rgba(36, 93, 67, 0.2);
+}
+
+.comparison-axis__marker:active {
+  cursor: grabbing;
+}
+
+.comparison-axis__marker:focus-visible {
+  outline: 3px solid #245d43;
+  outline-offset: 2px;
 }
 
 .comparison-axis__pin {

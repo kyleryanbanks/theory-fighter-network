@@ -11,6 +11,9 @@ export interface ComparisonPin {
 const RANGE_LINE_BUFFER = 16;
 const DEFAULT_PIN_HEIGHT = 32;
 const DEFAULT_LINE_HEIGHT = 4;
+const RANGE_LINE_TOP = 118;
+const RANGE_VALUE_TOP = 106;
+const RANGE_VALUE_HEIGHT = 28;
 
 function normalize(value: number | undefined): number {
   return clamp(Math.round(value ?? 50));
@@ -40,15 +43,32 @@ export class ComparisonAxis {
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
   private readonly line = viewChild.required<ElementRef<HTMLElement>>('line');
   private readonly draggingKey = signal<string | null>(null);
+  private readonly preservingVerticalPosition = signal(false);
   private readonly draggingPinHeight = signal(DEFAULT_PIN_HEIGHT);
   readonly activeKey = signal<string | null>(null);
   private readonly visualPositions = signal<Record<string, number>>({});
 
   startDrag(event: PointerEvent, key: string, pin: HTMLElement): void {
+    this.beginDrag(event, key, pin, false);
+  }
+
+  startRangeDrag(event: PointerEvent, key: string, marker: HTMLElement): void {
+    this.beginDrag(event, key, marker, true);
+  }
+
+  private beginDrag(
+    event: PointerEvent,
+    key: string,
+    dragElement: HTMLElement,
+    preserveVerticalPosition: boolean
+  ): void {
     event.preventDefault();
     this.activeKey.set(key);
-    pin.setPointerCapture?.(event.pointerId);
-    this.draggingPinHeight.set(pin.getBoundingClientRect().height || DEFAULT_PIN_HEIGHT);
+    dragElement.setPointerCapture?.(event.pointerId);
+    this.preservingVerticalPosition.set(preserveVerticalPosition);
+    this.draggingPinHeight.set(
+      dragElement.getBoundingClientRect().height || DEFAULT_PIN_HEIGHT
+    );
     this.draggingKey.set(key);
   }
 
@@ -71,15 +91,18 @@ export class ComparisonAxis {
       : pointerY < lineTop
         ? pointerY - this.draggingPinHeight()
         : pointerY;
-    this.visualPositions.update(positions => ({
-      ...positions,
-      [key]: clampPixel(visualY, bounds.height),
-    }));
+    if (!this.preservingVerticalPosition()) {
+      this.visualPositions.update(positions => ({
+        ...positions,
+        [key]: clampPixel(visualY, bounds.height),
+      }));
+    }
     this.positionChange.emit({ key, relative });
   }
 
   endDrag(): void {
     this.draggingKey.set(null);
+    this.preservingVerticalPosition.set(false);
     this.activeKey.set(null);
   }
 
@@ -106,7 +129,10 @@ export class ComparisonAxis {
 
   clearActiveOnOutsidePointer(event: PointerEvent): void {
     const target = event.target;
-    if (target instanceof Element && target.closest('.comparison-axis__pin')) {
+    if (
+      target instanceof Element &&
+      target.closest('.comparison-axis__pin, .comparison-axis__marker')
+    ) {
       return;
     }
     this.activeKey.set(null);
@@ -114,5 +140,24 @@ export class ComparisonAxis {
 
   pinTop(pin: ComparisonPin): number {
     return this.visualPositions()[pin.key] ?? pin.visualY ?? 12;
+  }
+
+  connectorTop(pin: ComparisonPin): number {
+    return this.isAboveRangeLine(pin)
+      ? this.pinTop(pin) + DEFAULT_PIN_HEIGHT
+      : RANGE_VALUE_TOP + RANGE_VALUE_HEIGHT;
+  }
+
+  connectorHeight(pin: ComparisonPin): number {
+    return Math.max(
+      this.isAboveRangeLine(pin)
+        ? RANGE_VALUE_TOP - this.connectorTop(pin)
+        : this.pinTop(pin) - this.connectorTop(pin),
+      0
+    );
+  }
+
+  private isAboveRangeLine(pin: ComparisonPin): boolean {
+    return this.pinTop(pin) < RANGE_LINE_TOP;
   }
 }

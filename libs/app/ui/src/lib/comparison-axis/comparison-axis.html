@@ -7,13 +7,27 @@
     <div #line class="comparison-axis__line"></div>
     @for (pin of pins(); track pin.key) {
       <span
-        class="comparison-axis__marker"
-        [class.comparison-axis__marker--active]="activeKey() === pin.key"
+        class="comparison-axis__connector"
+        [attr.data-testid]="'axis-connector-' + pin.key"
         aria-hidden="true"
         [style.left.%]="pin.relative ?? 50"
+        [style.top.px]="connectorTop(pin)"
+        [style.height.px]="connectorHeight(pin)"
+      ></span>
+      <button
+        #markerElement
+        class="comparison-axis__marker"
+        [class.comparison-axis__marker--active]="activeKey() === pin.key"
+        [attr.data-testid]="'axis-marker-' + pin.key"
+        type="button"
+        [style.left.%]="pin.relative ?? 50"
+        [attr.aria-label]="pin.label + ' range value'"
+        (pointerdown)="startRangeDrag($event, pin.key, markerElement)"
+        (focus)="activate(pin.key)"
+        (keydown)="moveWithKeyboard($event, pin)"
       >
         {{ pin.relative ?? 50 }}
-      </span>
+      </button>
       <button
         #pinElement
         class="comparison-axis__pin"
