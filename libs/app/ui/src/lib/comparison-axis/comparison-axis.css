@@ -31,6 +31,7 @@
   height: 4px;
   border-radius: 2px;
   background: #b7cbbd;
+  z-index: 0;
 }
 
 .comparison-axis__connector {
@@ -98,6 +99,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   text-align: center;
+  z-index: 2;
 }
 
 .comparison-axis__pin--active {

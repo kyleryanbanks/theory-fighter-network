@@ -144,7 +144,7 @@ export class ComparisonAxis {
 
   connectorTop(pin: ComparisonPin): number {
     return this.isAboveRangeLine(pin)
-      ? this.pinTop(pin) + DEFAULT_PIN_HEIGHT
+      ? this.pinTop(pin) + DEFAULT_PIN_HEIGHT - 4
       : RANGE_VALUE_TOP + RANGE_VALUE_HEIGHT;
   }
 
