@@ -1,0 +1,38 @@
+<div class="comparison-axis" (pointermove)="moveDrag($event)" (pointerup)="endDrag()" (pointercancel)="endDrag()">
+  <div class="comparison-axis__labels" aria-hidden="true">
+    <span>Lower</span>
+    <span>Higher</span>
+  </div>
+  <div class="comparison-axis__track">
+    <div class="comparison-axis__line"></div>
+    @for (pin of pins(); track pin.key) {
+      <span
+        class="comparison-axis__marker"
+        [class.comparison-axis__marker--active]="activeKey() === pin.key"
+        aria-hidden="true"
+        [style.left.%]="pin.relative ?? 50"
+      >
+        {{ pin.relative ?? 50 }}
+      </span>
+      <button
+        class="comparison-axis__pin"
+        [class.comparison-axis__pin--active]="activeKey() === pin.key"
+        [attr.data-testid]="'axis-pin-' + pin.key"
+        type="button"
+        role="slider"
+        [style.left.%]="pin.relative ?? 50"
+        [style.top.px]="pinTop(pin)"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
+        [attr.aria-valuenow]="pin.relative ?? 50"
+        [attr.aria-valuetext]="pin.label + ', ' + (pin.relative ?? 50) + ' percent relative'"
+        [attr.aria-label]="pin.label + ' relative position'"
+        (pointerdown)="startDrag($event, pin.key)"
+        (focus)="activate(pin.key)"
+        (keydown)="moveWithKeyboard($event, pin)"
+      >
+        <span class="comparison-axis__pin-label">{{ pin.label }}</span>
+      </button>
+    }
+  </div>
+</div>

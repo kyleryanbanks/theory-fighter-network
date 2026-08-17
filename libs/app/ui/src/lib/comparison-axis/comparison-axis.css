@@ -1,0 +1,102 @@
+:host {
+  display: block;
+}
+
+.comparison-axis {
+  display: grid;
+  gap: 8px;
+  padding: 14px 8px 18px;
+}
+
+.comparison-axis__labels {
+  display: flex;
+  justify-content: space-between;
+  color: #617168;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.comparison-axis__track {
+  position: relative;
+  height: 240px;
+  margin: 0 14px;
+}
+
+.comparison-axis__line {
+  position: absolute;
+  top: 118px;
+  right: 0;
+  left: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: #b7cbbd;
+}
+
+.comparison-axis__marker {
+  position: absolute;
+  top: 106px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 28px;
+  transform: translateX(-50%);
+  border: 1px solid #3f6654;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #244b38;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.comparison-axis__marker--active {
+  z-index: 5;
+  border-color: #245d43;
+  background: #d7e4dc;
+  box-shadow: 0 0 0 2px rgba(36, 93, 67, 0.2);
+}
+
+.comparison-axis__pin {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  width: max-content;
+  min-width: 44px;
+  min-height: 18px;
+  transform: translateX(-50%);
+  border: 2px solid #3f6654;
+  border-radius: 5px;
+  padding: 5px 7px;
+  background: #e8efeb;
+  color: #244b38;
+  cursor: grab;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.comparison-axis__pin--active {
+  z-index: 4;
+  border-color: #245d43;
+  background: #d7e4dc;
+  box-shadow: 0 4px 12px rgba(36, 93, 67, 0.22);
+}
+
+.comparison-axis__pin:active {
+  cursor: grabbing;
+}
+
+.comparison-axis__pin:focus-visible {
+  outline: 3px solid #245d43;
+  outline-offset: 2px;
+}
+
+.comparison-axis__pin small {
+  color: #617168;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}

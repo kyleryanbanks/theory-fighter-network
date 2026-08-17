@@ -1,0 +1,57 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+section {
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 24px 28px 28px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.comparison-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #617168;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h3 {
+  margin: 0 0 6px;
+}
+
+.comparison-header p:last-child {
+  margin-top: 0;
+  color: #617168;
+}
+
+.move-picker {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.move-picker h4 {
+  margin: 0;
+}
+
+.move-picker__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  cursor: pointer;
+}
+
+.empty-state {
+  color: #617168;
+}

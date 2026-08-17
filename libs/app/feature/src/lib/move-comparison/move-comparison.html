@@ -1,0 +1,28 @@
+<section aria-labelledby="move-comparison-heading">
+  <div class="comparison-header">
+    <div>
+      <p class="eyebrow">Move analysis</p>
+      <h3 id="move-comparison-heading">Startup comparison</h3>
+      <p>Select Moves to place their startup values on one relative axis.</p>
+    </div>
+    <tfn-link appearance="text" [routerLink]="['/moves']">Back to Move list</tfn-link>
+  </div>
+
+  <div class="move-picker" aria-labelledby="move-picker-heading">
+    <h4 id="move-picker-heading">Moves shown</h4>
+    @for (move of moves(); track move.semanticKey) {
+      <label class="move-picker__item">
+        <input type="checkbox" [checked]="isSelected(move.semanticKey)" (change)="toggleMove(move.semanticKey)" />
+        <span>{{ move.name }}</span>
+      </label>
+    } @empty {
+      <p>No Moves added.</p>
+    }
+  </div>
+
+  @if (pins().length) {
+    <tfn-comparison-axis [pins]="pins()" (positionChange)="updatePosition($event)" />
+  } @else {
+    <p class="empty-state">Choose at least one Move to begin comparing.</p>
+  }
+</section>

@@ -28,9 +28,10 @@ const NAV_ITEMS: GuideNavItem[] = [
   { path: 'stages', label: 'Stages', icon: '🗺️' },
   { path: 'characters', label: 'Characters', icon: '🥋' },
   { path: 'moves', label: 'Moves', icon: '👊' },
-  { path: 'sequences', label: 'Sequences', icon: '🔗' },
+  { path: 'move-comparison', label: 'Move Comparison', icon: '📌' },
+  { path: 'sequences', label: 'Sequences', icon: '💫' },
   { path: 'teams', label: 'Teams', icon: '👥' },
-  { path: 'matchups', label: 'Matchups', icon: '⚔️' },
+  { path: 'matchups', label: 'Matchups', icon: '🆚' },
 ];
 
 @Component({

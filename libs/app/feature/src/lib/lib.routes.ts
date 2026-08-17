@@ -10,6 +10,7 @@ import { MatchupEditor } from './matchup-editor/matchup-editor';
 import { MoveDetail } from './move-detail/move-detail';
 import { SequenceDetail } from './sequence-detail/sequence-detail';
 import { EntityDetail } from './entity-detail/entity-detail';
+import { MoveComparison } from './move-comparison/move-comparison';
 
 export const featureRoutes: Route[] = [
   {
@@ -25,6 +26,7 @@ export const featureRoutes: Route[] = [
       { path: 'characters', component: CharacterEditor },
       { path: 'characters/:entityKey', component: EntityDetail, data: { entityType: 'character' } },
       { path: 'moves', component: MoveEditor },
+      { path: 'move-comparison', component: MoveComparison },
       { path: 'moves/:moveKey', component: MoveDetail },
       { path: 'sequences', component: SequenceEditor },
       { path: 'sequences/:sequenceKey', component: SequenceDetail },
