@@ -3,8 +3,8 @@
     <span>Lower</span>
     <span>Higher</span>
   </div>
-  <div class="comparison-axis__track">
-    <div class="comparison-axis__line"></div>
+  <div #track class="comparison-axis__track">
+    <div #line class="comparison-axis__line"></div>
     @for (pin of pins(); track pin.key) {
       <span
         class="comparison-axis__marker"
@@ -15,6 +15,7 @@
         {{ pin.relative ?? 50 }}
       </span>
       <button
+        #pinElement
         class="comparison-axis__pin"
         [class.comparison-axis__pin--active]="activeKey() === pin.key"
         [attr.data-testid]="'axis-pin-' + pin.key"
@@ -27,7 +28,7 @@
         [attr.aria-valuenow]="pin.relative ?? 50"
         [attr.aria-valuetext]="pin.label + ', ' + (pin.relative ?? 50) + ' percent relative'"
         [attr.aria-label]="pin.label + ' relative position'"
-        (pointerdown)="startDrag($event, pin.key)"
+        (pointerdown)="startDrag($event, pin.key, pinElement)"
         (focus)="activate(pin.key)"
         (keydown)="moveWithKeyboard($event, pin)"
       >

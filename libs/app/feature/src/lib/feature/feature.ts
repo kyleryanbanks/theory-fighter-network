@@ -5,7 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import {
   LocalGuideFacadeStore,
@@ -29,6 +29,7 @@ export class Feature implements OnInit {
   private static readonly LOADING_DELAY_MS = 200;
   private static readonly LOADING_MINIMUM_MS = 400;
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly document = inject(DOCUMENT);
   readonly facade = inject(LocalGuideFacadeStore);
   readonly recentGuides = inject(RecentGuidesService);
   readonly isCreatingGuide = signal(false);
@@ -223,14 +224,13 @@ export class Feature implements OnInit {
 
     if (
       typeof URL === 'undefined' ||
-      typeof URL.createObjectURL !== 'function' ||
-      typeof document === 'undefined'
+      typeof URL.createObjectURL !== 'function'
     ) {
       return;
     }
 
     const objectUrl = URL.createObjectURL(result.value);
-    const anchor = document.createElement('a');
+    const anchor = this.document.createElement('a');
     anchor.href = objectUrl;
     anchor.download = result.value.name;
     anchor.click();
