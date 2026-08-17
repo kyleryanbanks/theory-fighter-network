@@ -70,7 +70,7 @@ describe('ComparisonAxis', () => {
     expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
   });
 
-  it('keeps a pin at its pointer position when dragged above the buffer', () => {
+  it('aligns a pin bottom with the pointer when dragged above the buffer', () => {
     const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
     Object.defineProperty(track, 'getBoundingClientRect', {
       value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
@@ -81,7 +81,7 @@ describe('ComparisonAxis', () => {
     track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 90 }));
     fixture.detectChanges();
 
-    expect(pin.style.top).toBe('90px');
+    expect(pin.style.top).toBe('58px');
   });
 
   it('places a pin above the 16px range-line buffer when dragged inside it', () => {

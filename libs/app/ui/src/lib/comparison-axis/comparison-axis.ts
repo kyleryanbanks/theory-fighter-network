@@ -49,7 +49,9 @@ export class ComparisonAxis {
       ? pointerY < lineTop + lineHeight / 2
         ? lineTop - RANGE_LINE_BUFFER - this.draggingPinHeight()
         : lineTop + lineHeight + RANGE_LINE_BUFFER
-      : pointerY;
+      : pointerY < lineTop
+        ? pointerY - this.draggingPinHeight()
+        : pointerY;
     this.visualPositions.update(positions => ({
       ...positions,
       [key]: clampPixel(visualY, bounds.height),
