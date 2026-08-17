@@ -29,7 +29,7 @@ import {
 import { createStage, createStageZone } from '../models/stage';
 import { createCharacter } from '../models/character';
 import { createMove, resolveEffectiveMove } from '../models/move';
-import type { MovePhase } from '../models/move';
+import type { MovePhase, PhaseCancelRule } from '../models/move';
 import { createSequence } from '../models/sequence';
 import { createTeam } from '../models/team';
 import {
@@ -1045,6 +1045,52 @@ export const LocalGuideFacadeStore = signalStore(
             const effects = { ...(currentPhase.effects ?? {}) };
             const outcomeEffect = { ...(effects[input.outcome] ?? {}) };
             effects[input.outcome] = { ...outcomeEffect, [input.field]: input.value };
+            phases[phaseIndex] = { ...currentPhase, effects };
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: input.moveKey });
+            const updatedMove = {
+              ...move,
+              phases,
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === input.moveKey ? updatedMove : candidate
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    updateMoveOutcomeCancels: rxMutation({
+      operation: (input: {
+        moveKey: string;
+        outcome: 'onHit' | 'onBlock' | 'onCounterHit' | 'onWhiff' | 'onSecondaryTrigger';
+        cancels: PhaseCancelRule[];
+        phaseIndex?: number;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === input.moveKey
+            );
+            if (!move) throw new Error(`Move "${input.moveKey}" does not exist.`);
+            const effectiveMove = resolveEffectiveMove(move, localGuide.entities.moves);
+            const phaseIndex = input.phaseIndex ?? 0;
+            const phases = [...(effectiveMove.phases ?? [])];
+            while (phases.length <= phaseIndex) phases.push({});
+            const currentPhase = phases[phaseIndex] as MovePhase;
+            const effects = { ...(currentPhase.effects ?? {}) };
+            const outcomeEffect = { ...(effects[input.outcome] ?? {}) };
+            effects[input.outcome] = { ...outcomeEffect, cancels: input.cancels };
             phases[phaseIndex] = { ...currentPhase, effects };
 
             const guide = cloneGuideMetadata(localGuide);

@@ -431,6 +431,22 @@ describe('LocalGuideFacadeStore', () => {
     });
   });
 
+  it('updates move outcome cancels independently per outcome', async () => {
+    await store.createGuide({
+      name: 'Cancel Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+    await store.createMove({ name: 'Jab' });
+    const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
+
+    const cancels = [
+      { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken', 'shoryuken'] },
+    ];
+    await store.updateMoveOutcomeCancels({ moveKey, outcome: 'onHit', cancels });
+
+    expect(store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit?.cancels).toEqual(cancels);
+  });
+
   it('creates a universal Move scoped to the Game when no character is given', async () => {
     await store.createGuide({
       name: 'Move Fighter', version: '1.0.0', frameRate: 60,

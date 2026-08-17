@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { JsonPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
-import type { DataValue } from '@theory-fighter-network/data';
+import type { DataValue, PhaseCancelRule } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
 import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
@@ -77,6 +77,29 @@ export class MoveDetail {
         outcome,
         field,
         value,
+      });
+    }
+  }
+
+  outcomeCancels(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number]
+  ): PhaseCancelRule[] {
+    return this.move()?.phases?.[phaseIndex]?.effects?.[outcome]?.cancels ?? [];
+  }
+
+  async updateOutcomeCancels(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancels: PhaseCancelRule[]
+  ): Promise<void> {
+    const moveKey = this.move()?.semanticKey;
+    if (moveKey) {
+      await this.facade.updateMoveOutcomeCancels({
+        moveKey,
+        phaseIndex,
+        outcome,
+        cancels,
       });
     }
   }
