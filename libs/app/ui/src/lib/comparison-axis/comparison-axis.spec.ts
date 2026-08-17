@@ -70,6 +70,62 @@ describe('ComparisonAxis', () => {
     expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
   });
 
+  it('keeps a pin at its pointer position when dragged above the buffer', () => {
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]') as HTMLElement;
+
+    pin.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 25 }));
+    track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 90 }));
+    fixture.detectChanges();
+
+    expect(pin.style.top).toBe('90px');
+  });
+
+  it('places a pin above the 16px range-line buffer when dragged inside it', () => {
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]') as HTMLElement;
+
+    pin.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 25 }));
+    track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 110 }));
+    fixture.detectChanges();
+
+    expect(pin.style.top).toBe('70px');
+  });
+
+  it('places a pin below the 16px range-line buffer when dragged below the line', () => {
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]') as HTMLElement;
+
+    pin.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 25 }));
+    track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 130 }));
+    fixture.detectChanges();
+
+    expect(pin.style.top).toBe('138px');
+  });
+
+  it('keeps a pin at its pointer position when dragged below the buffer', () => {
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, width: 100, height: 240 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]') as HTMLElement;
+
+    pin.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, pointerId: 1, clientX: 25 }));
+    track.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: 60, clientY: 150 }));
+    fixture.detectChanges();
+
+    expect(pin.style.top).toBe('150px');
+  });
+
   it('raises the active pin and its axis marker together', () => {
     const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]');
     pin.dispatchEvent(new FocusEvent('focus'));

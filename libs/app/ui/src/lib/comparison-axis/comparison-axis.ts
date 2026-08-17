@@ -18,13 +18,16 @@ export class ComparisonAxis {
   readonly positionChange = output<{ key: string; relative: number }>();
   private readonly elementRef = inject(ElementRef<HTMLElement>);
   private readonly draggingKey = signal<string | null>(null);
+  private readonly draggingPinHeight = signal(DEFAULT_PIN_HEIGHT);
   readonly activeKey = signal<string | null>(null);
   private readonly visualPositions = signal<Record<string, number>>({});
 
   startDrag(event: PointerEvent, key: string): void {
     event.preventDefault();
     this.activeKey.set(key);
-    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    const pin = event.currentTarget as HTMLElement;
+    pin.setPointerCapture?.(event.pointerId);
+    this.draggingPinHeight.set(pin.getBoundingClientRect().height || DEFAULT_PIN_HEIGHT);
     this.draggingKey.set(key);
   }
 
@@ -35,8 +38,22 @@ export class ComparisonAxis {
     if (!axis) return;
     const bounds = axis.getBoundingClientRect();
     const relative = clamp(Math.round(((event.clientX - bounds.left) / bounds.width) * 100));
-    const visualY = clampPixel(event.clientY - bounds.top, bounds.height);
-    this.visualPositions.update(positions => ({ ...positions, [key]: visualY }));
+    const line = axis.querySelector('.comparison-axis__line');
+    const lineBounds = line?.getBoundingClientRect();
+    const lineTop = lineBounds?.height ? lineBounds.top - bounds.top : bounds.height / 2 - 2;
+    const lineHeight = lineBounds?.height || DEFAULT_LINE_HEIGHT;
+    const pointerY = event.clientY - bounds.top;
+    const withinRangeLineBuffer = pointerY >= lineTop - RANGE_LINE_BUFFER
+      && pointerY <= lineTop + lineHeight + RANGE_LINE_BUFFER;
+    const visualY = withinRangeLineBuffer
+      ? pointerY < lineTop + lineHeight / 2
+        ? lineTop - RANGE_LINE_BUFFER - this.draggingPinHeight()
+        : lineTop + lineHeight + RANGE_LINE_BUFFER
+      : pointerY;
+    this.visualPositions.update(positions => ({
+      ...positions,
+      [key]: clampPixel(visualY, bounds.height),
+    }));
     this.positionChange.emit({ key, relative });
   }
 
@@ -88,6 +105,10 @@ function normalize(value: number | undefined): number {
 function clamp(value: number): number {
   return Math.min(100, Math.max(0, value));
 }
+
+const RANGE_LINE_BUFFER = 16;
+const DEFAULT_PIN_HEIGHT = 32;
+const DEFAULT_LINE_HEIGHT = 4;
 
 function clampPixel(value: number, height: number): number {
   return Math.min(Math.max(value, 0), Math.max(height - 44, 0));
