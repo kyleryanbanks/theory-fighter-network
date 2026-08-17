@@ -969,20 +969,22 @@ const hadoken: MoveDocument = {
 **Concept**: Cancels have two independent constraints: timing window and state preconditions.
 
 **How it works:**
-- Cancel **timing**: `PhaseCancelRule.windowStartFrame/windowEndFrame` (WHEN cancel is available)
+- Cancel **timing**: `PhaseCancelRule.startFrame/endFrame` in `MoveOutcomeEffect.cancels` (WHEN cancel is available)
 - Cancel **restrictions**: Determined by target move's `preconditions` (IF move can be used)
-- No duplication: state is always checked on target move
+- No duplication: Cancels are now nested within each outcome effect (onHit cancels ≠ onBlock cancels)
 
 **Example: Ryu Jab → Hadoken cancel**
 ```typescript
 const jab: MoveDocument = {
   phases: [{
-    cancelOptions: {
-      onHit: [{
-        windowStartFrame: 2,               // Cancel available frames 2-5
-        windowEndFrame: 5,
-        allowedMoveKeys: ["hadoken", "shoryuken"]
-      }]
+    effects: {
+      onHit: {
+        cancels: [{
+          startFrame: 2,               // Cancel available frames 2-5
+          endFrame: 5,
+          allowedMoveKeys: ["hadoken", "shoryuken"]
+        }]
+      }
     }
   }]
 }
@@ -1002,7 +1004,7 @@ const hadoken: MoveDocument = {
 - SF3: Complex per-version differences
 - SF4/5: Different cancel timer per move type
 
-Users document via `PhaseCancelRule` + target move `preconditions`.
+Users document via `MoveOutcomeEffect.cancels` (PhaseCancelRule[]) + target move `preconditions`.
 
 ---
 
