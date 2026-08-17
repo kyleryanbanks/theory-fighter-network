@@ -20,6 +20,33 @@
     }
   </div>
 
+  <div class="comparison-controls" aria-labelledby="comparison-type-heading">
+    <h4 id="comparison-type-heading">Comparison type</h4>
+    <div class="phase-buttons">
+      <button
+        class="phase-button"
+        [class.phase-button--active]="comparisonType().phase === 'startup'"
+        (click)="setComparisonType({ phase: 'startup', phaseIndex: 0 })"
+      >
+        Startup
+      </button>
+      <button
+        class="phase-button"
+        [class.phase-button--active]="comparisonType().phase === 'active'"
+        (click)="setComparisonType({ phase: 'active', phaseIndex: 0 })"
+      >
+        Active
+      </button>
+      <button
+        class="phase-button"
+        [class.phase-button--active]="comparisonType().phase === 'recovery'"
+        (click)="setComparisonType({ phase: 'recovery', phaseIndex: 0 })"
+      >
+        Recovery
+      </button>
+    </div>
+  </div>
+
   @if (pins().length) {
     <tfn-comparison-axis [pins]="pins()" (positionChange)="updatePosition($event)" />
   } @else {
