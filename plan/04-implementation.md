@@ -290,6 +290,14 @@ The following workflows are **intentionally deferred until immediately before Fi
 
 ## Next Phase: Priority 2 — Advanced Features
 
+### In Progress (2026-08-18)
+
+**TileGrid migration** — Replacing custom button/grid UI patterns across the app with `TileGridComponent` for consistency, dark theme, and tag/badge support:
+
+- ⏳ **Teams > Character Grid** (`team-editor`) — Custom `.character-grid` with `.character-tile` buttons → `TileGridComponent` in selection mode (`maxSelections=teamSize()`). Position badges handled via tile grid's selection counting.
+- ⏳ **Matchup > Response Tiles** (`matchup-editor`) — Custom `.response-option-grid` with inline win/trade/loss choice menus → `TileGridComponent` in choice mode (choices: Win/Trade/Loss with colors, value = current outcome).
+- ⏳ **Move > Phase > Cancel Rule Editor** (`move-detail`) — Raw number inputs + `<select multiple>` for groups + bare tile-grid → `CancelGroupsEditorComponent` (phase move mode, per cancel rule instance). Wires `universalGroups`, `characterGroups`, `moveList`, `overrides` and `(save)`.
+
 ### Ready to Start
 - **Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine** — Foundation already laid (2026-08-17). Move-comparison component now supports generic field selection (startup/active/recovery) with extensible infrastructure for future range/damage comparisons.
 - **Phase 3.1: Move Connectivity Editor** — Depends on Phase 1.5 (complete). Can begin collision box editor, move outcome effects, resource effects, and cancel windows.

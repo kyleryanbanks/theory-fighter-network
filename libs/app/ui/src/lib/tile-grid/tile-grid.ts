@@ -86,17 +86,16 @@ export class TileGridComponent {
    */
   onTileClick(tile: Tile): void {
     if (this.maxSelections !== undefined) {
-      // Selection mode with maxSelections limit
-      if (this.selections.length < this.maxSelections) {
-        // Can add more selections
-        this.selections = [...this.selections, tile];
-        this.update.emit(this.selections);
-      } else if (this.isSelected(tile)) {
-        // At max, but tile is selected - can remove it
+      if (this.isSelected(tile)) {
+        // Tile already selected — remove it
         this.selections = this.selections.filter(s => s.key !== tile.key);
         this.update.emit(this.selections);
+      } else if (this.selections.length < this.maxSelections) {
+        // Below limit and not selected — add it
+        this.selections = [...this.selections, tile];
+        this.update.emit(this.selections);
       }
-      // else: at max and tile not selected - do nothing, no emit
+      // else: at limit and not selected — do nothing
     } else {
       // Normal tile interaction mode
       if (tile.choices) {
@@ -126,6 +125,15 @@ export class TileGridComponent {
   /** Checks if the choice menu for a given tile is currently open */
   isMenuOpen(tileKey: string): boolean {
     return this.openMenuKey() === tileKey;
+  }
+
+  /**
+   * Returns the 1-based selection position for a tile (selection mode).
+   * Returns null if the tile is not selected.
+   */
+  selectionPosition(tile: Tile): number | null {
+    const index = this.selections.findIndex(s => s.key === tile.key);
+    return index === -1 ? null : index + 1;
   }
 
   /** Returns array of [key, TileChoice] entries from tile.choices for template iteration */
