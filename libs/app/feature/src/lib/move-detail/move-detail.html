@@ -35,30 +35,15 @@
                     <div class="cancel-rules">
                       @for (cancel of outcomeCancels(phaseIndex, outcome); track $index) {
                         <div class="cancel-rule">
-                          <input type="number" [ngModel]="cancel.startFrame" (change)="cancel.startFrame = +$event.target.value; updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" placeholder="Start frame" class="cancel-input" />
-                          <input type="number" [ngModel]="cancel.endFrame" (change)="cancel.endFrame = +$event.target.value; updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" placeholder="End frame" class="cancel-input" />
-                          <div class="cancel-groups-section">
-                            <label>Cancel groups:</label>
-                            @if (availableCancelGroups().length > 0) {
-                              <select [ngModel]="(cancel.universalCancelGroupNames ?? []).join(',')" (change)="onCancelGroupsChange(phaseIndex, outcome, $index, $event)" multiple class="cancel-group-select">
-                                @for (group of availableCancelGroups(); track group.name) {
-                                  <option [value]="group.name" [selected]="(cancel.universalCancelGroupNames ?? []).includes(group.name)">{{ group.name }}</option>
-                                }
-                              </select>
-                            }
-                          </div>
-                          <div class="custom-moves-section">
-                            @let cancelRuleId = 'rule-' + phaseIndex + '-' + $index;
-                            <div class="custom-moves-header">
-                              <label>Custom moves:</label>
-                              <button matButton="outlined" type="button" [class.active]="editingCustomMovesKey() === cancelRuleId" (click)="editingCustomMovesKey.set(editingCustomMovesKey() === cancelRuleId ? null : cancelRuleId)">
-                                {{ editingCustomMovesKey() === cancelRuleId ? 'Hide' : 'Edit' }}
-                              </button>
-                            </div>
-                            @if (editingCustomMovesKey() === cancelRuleId) {
-                              <tfn-tile-grid [tiles]="customMovesTiles(cancel)" (update)="onCustomMoveTileUpdate(cancel, $event); updateOutcomeCancel(phaseIndex, outcome, $index, cancel)" />
-                            }
-                          </div>
+                          <tfn-cancel-groups-editor
+                            [universalGroups]="universalGroups()"
+                            [characterGroups]="characterGroups()"
+                            [moveList]="cancelMoveList()"
+                            [overrides]="cancelOverrides(cancel)"
+                            [overrideUniversalGroups]="cancelUniversalGroupSelections(cancel)"
+                            [header]="'Cancel Rule ' + ($index + 1)"
+                            (save)="onCancelRuleSave(phaseIndex, outcome, $index, $event)"
+                          />
                           <tfn-delete-button [ariaLabel]="'Remove cancel rule'" (delete)="removeOutcomeCancel(phaseIndex, outcome, $index)" />
                         </div>
                       }

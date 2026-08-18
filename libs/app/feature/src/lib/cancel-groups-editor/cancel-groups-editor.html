@@ -1,19 +1,19 @@
 <tfn-expansion-panel [header]="header()" [subheader]="subheader()">
-  <div class="cancel-groups-editor">
-    <!-- Parent group mode: name field only -->
-    @if (isParentGroupMode()) {
-      <div class="name-field-section">
-        <label for="group-name">Cancel Group Name</label>
-        <input
-          id="group-name"
-          type="text"
-          class="name-input"
-          [(ngModel)]="groupName"
-          placeholder="Enter group name"
-        />
-      </div>
-    } @else {
-      <!-- Phase move mode: cancel window only -->
+  <!-- Parent group mode: name field only -->
+  @if (isParentGroupMode()) {
+    <div class="name-field-section">
+      <label for="group-name">Cancel Group Name</label>
+      <input
+        id="group-name"
+        type="text"
+        class="name-input"
+        [(ngModel)]="groupName"
+        placeholder="Enter group name"
+      />
+    </div>
+  } @else {
+    <!-- Phase move mode: cancel window -->
+    <ng-container>
       <div class="frame-inputs-section">
         <div class="frame-field">
           <label for="cancel-start">Cancel Window Start</label>
@@ -37,59 +37,59 @@
         </div>
       </div>
       <p class="frame-note">These frame counts start from the beginning of the current phase (frame: {{ phaseStartFrame() }})</p>
-    }
+    </ng-container>
+  }
 
-    <!-- Universal/Game Cancel Groups subsection -->
-    @if (hasGameGroups()) {
-      <tfn-expansion-panel
-        [header]="'Cancel Groups'"
-        [subheader]="'Game-level'"
-        subsection
-      >
-        <div class="groups-list">
-          @for (groupName of gameGroupNames(); track groupName) {
-            <label class="group-checkbox">
-              <input
-                type="checkbox"
-                [checked]="selectedUniversalGroups().has(groupName)"
-                (change)="onUniversalGroupChange(groupName, $event.target.checked)"
-              />
-              <span>{{ groupName }}</span>
-            </label>
-          }
-        </div>
-      </tfn-expansion-panel>
-    }
+  <!-- Universal/Game Cancel Groups subsection -->
+  @if (hasGameGroups()) {
+    <tfn-expansion-panel
+      [header]="'Cancel Groups'"
+      [subheader]="'Game-level'"
+      subsection
+    >
+      <div class="groups-list">
+        @for (groupName of gameGroupNames(); track groupName) {
+          <label class="group-checkbox">
+            <input
+              type="checkbox"
+              [checked]="selectedUniversalGroups().has(groupName)"
+              (change)="onUniversalGroupChange(groupName, $event.target.checked)"
+            />
+            <span>{{ groupName }}</span>
+          </label>
+        }
+      </div>
+    </tfn-expansion-panel>
+  }
 
-    <!-- Character Cancel Groups subsection -->
-    @if (hasCharacterGroups()) {
-      <tfn-expansion-panel
-        [header]="characterName() + ' Cancel Groups'"
-        [subheader]="'Character-level'"
-        subsection
-      >
-        <div class="groups-list">
-          @for (groupName of characterGroupNames(); track groupName) {
-            <label class="group-checkbox">
-              <input
-                type="checkbox"
-                [checked]="selectedCharacterGroups().has(groupName)"
-                (change)="onCharacterGroupChange(groupName, $event.target.checked)"
-              />
-              <span>{{ groupName }}</span>
-            </label>
-          }
-        </div>
-      </tfn-expansion-panel>
-    }
+  <!-- Character Cancel Groups subsection -->
+  @if (hasCharacterGroups()) {
+    <tfn-expansion-panel
+      [header]="characterName() + ' Cancel Groups'"
+      [subheader]="'Character-level'"
+      subsection
+    >
+      <div class="groups-list">
+        @for (groupName of characterGroupNames(); track groupName) {
+          <label class="group-checkbox">
+            <input
+              type="checkbox"
+              [checked]="selectedCharacterGroups().has(groupName)"
+              (change)="onCharacterGroupChange(groupName, $event.target.checked)"
+            />
+            <span>{{ groupName }}</span>
+          </label>
+        }
+      </div>
+    </tfn-expansion-panel>
+  }
 
-    <!-- Move list grid -->
-    <div class="move-list-section">
-      <tfn-tile-grid [tiles]="activeMoveList()" (update)="onTileUpdate($event)" />
-    </div>
-
-    <footer class="editor-actions">
-      <button matButton="filled" type="button" (click)="onSave()">Save</button>
-    </footer>
+  <!-- Move list grid -->
+  <div class="move-list-section">
+    <tfn-tile-grid [tiles]="activeMoveList()" (update)="onTileUpdate($event)" />
   </div>
+
+  <footer class="editor-actions">
+    <button matButton="filled" type="button" (click)="onSave()">Save</button>
+  </footer>
 </tfn-expansion-panel>

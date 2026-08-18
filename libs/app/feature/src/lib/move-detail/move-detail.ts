@@ -1,16 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
 import type { DataValue, PhaseCancelRule } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, TileGridComponent, Tile } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
+import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [CommonModule, FormsModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, TileGridComponent],
+  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
@@ -31,56 +31,51 @@ export class MoveDetail {
     return Array.from({ length: Math.max(1, count) }, (_, index) => index);
   });
 
-  readonly universalCancelGroups = computed(() => {
-    const game = this.facade.guide()?.entities.game;
-    return Object.entries(game?.universal.cancelGroups ?? {}).map(([name, moveKeys]) => ({
-      name,
-      moveKeys,
-    }));
-  });
+  readonly universalGroups = computed((): Record<string, string[]> =>
+    this.facade.guide()?.entities.game?.universal.cancelGroups ?? {}
+  );
 
-  readonly characterCancelGroups = computed(() => {
+  readonly characterGroups = computed((): Record<string, string[]> => {
     const move = this.move();
-    if (!move?.characterKey) return [];
+    if (!move?.characterKey) return {};
     const character = this.facade.guide()?.entities.characters.find(
       (c) => c.semanticKey === move.characterKey
     );
-    return Object.entries(character?.cancelGroups ?? {}).map(([name, moveKeys]) => ({
-      name,
-      moveKeys,
-    }));
+    return character?.cancelGroups ?? {};
   });
 
-  readonly availableCancelGroups = computed(() => [
-    ...this.universalCancelGroups(),
-    ...this.characterCancelGroups(),
-  ]);
+  readonly cancelMoveList = computed((): Tile[] =>
+    (this.facade.guide()?.entities.moves ?? []).map((m) => ({
+      key: m.semanticKey,
+      label: m.name,
+    }))
+  );
 
-  readonly editingCustomMovesKey = signal<string | null>(null);
-
-  readonly availableMoves = computed(() => {
-    return this.facade.guide()?.entities.moves ?? [];
-  });
-
-  customMovesTiles(cancel: PhaseCancelRule): Tile[] {
-    return this.availableMoves().map((move) => ({
-      key: move.semanticKey,
-      label: move.name,
-      value: (cancel.userOverrideMoves ?? {})[move.semanticKey] === true,
-    }));
+  cancelOverrides(cancel: PhaseCancelRule): Record<string, boolean> {
+    return cancel.userOverrideMoves ?? {};
   }
 
-  onCustomMoveTileUpdate(cancel: PhaseCancelRule, tile: Tile | Tile[]): void {
-    if (Array.isArray(tile)) {
-      return;
-    }
-    const overrides = { ...(cancel.userOverrideMoves ?? {}) };
-    if (tile.value === true) {
-      overrides[tile.key] = true;
-    } else {
-      delete overrides[tile.key];
-    }
-    cancel.userOverrideMoves = overrides;
+  cancelUniversalGroupSelections(cancel: PhaseCancelRule): Set<string> {
+    return new Set(cancel.universalCancelGroupNames ?? []);
+  }
+
+  async onCancelRuleSave(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancelIndex: number,
+    event: { universalGroups: string[]; overrides: Record<string, boolean>; cancelWindowStart?: number | null; cancelWindowEnd?: number | null }
+  ): Promise<void> {
+    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
+    const cancel = currentCancels[cancelIndex];
+    if (!cancel) return;
+    const updated = {
+      ...cancel,
+      universalCancelGroupNames: event.universalGroups,
+      userOverrideMoves: event.overrides,
+      startFrame: event.cancelWindowStart ?? cancel.startFrame,
+      endFrame: event.cancelWindowEnd ?? cancel.endFrame,
+    };
+    await this.updateOutcomeCancel(phaseIndex, outcome, cancelIndex, updated);
   }
 
   phaseDuration(phaseIndex: number, phase: 'startup' | 'active' | 'recovery'): DataValue {
@@ -185,46 +180,6 @@ export class MoveDetail {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
     const updated = currentCancels.map((c, index) => (index === cancelIndex ? cancel : c));
     await this.updateOutcomeCancels(phaseIndex, outcome, updated);
-  }
-
-  onCancelGroupsChange(
-    phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    cancelIndex: number,
-    event: Event
-  ): void {
-    const target = event.target as HTMLSelectElement;
-    const groupValues = target.value ? target.value.split(',') : undefined;
-    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
-    const cancel = currentCancels[cancelIndex];
-    if (cancel) {
-      cancel.universalCancelGroupNames = groupValues;
-      void this.updateOutcomeCancel(phaseIndex, outcome, cancelIndex, cancel);
-    }
-  }
-
-  parseMoveKeysString(movesStr: string): string[] {
-    return movesStr
-      .split(',')
-      .map(k => k.trim())
-      .filter(k => k);
-  }
-
-  formatMoveKeysForDisplay(moves: string[] | undefined): string {
-    return moves?.join(', ') ?? '';
-  }
-
-  mergedMoveKeysFromGroups(groupNames: string[] | undefined): string[] {
-    if (!groupNames || groupNames.length === 0) return [];
-    const allGroups = this.availableCancelGroups();
-    const merged = new Set<string>();
-    for (const groupName of groupNames) {
-      const group = allGroups.find((g) => g.name === groupName);
-      if (group) {
-        group.moveKeys.forEach((key) => merged.add(key));
-      }
-    }
-    return Array.from(merged);
   }
 
   async addPhase(): Promise<void> {

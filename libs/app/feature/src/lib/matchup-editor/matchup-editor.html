@@ -65,42 +65,10 @@
             @for (scenario of matchup.scenarios; track scenario.semanticKey) {
               <tfn-expansion-panel class="scenario-entry" data-testid="scenario-entry" [header]="optionLabel(scenario.opponentOptionKey)" [subheader]="scenario.name || scenario.semanticKey">
                 <tfn-expansion-panel subsection header="Responses">
-                  <div class="response-option-grid">
-                    @for (move of responseMoves(matchup); track move.semanticKey) {
-                      @let response = responseFor(scenario, move.semanticKey);
-                      <div class="response-tile-wrap">
-                        <button type="button" class="response-tile" [class]="response ? 'response-tile response-tile--' + responseOutcomeClass(response.outcome) : 'response-tile response-tile--untested'" (click)="$event.stopPropagation(); editingResponseKey.set(response ? response.semanticKey : responseTileKey(scenario.semanticKey, move.semanticKey))">
-                          {{ move.name }}
-                          @if (response) { <span class="response-outcome-pill" [class]="'response-outcome-pill--' + responseOutcomeClass(response.outcome)">{{ responseOutcomeLabel(response.outcome) }}</span> }
-                        </button>
-                        @if (editingResponseKey() === (response?.semanticKey ?? responseTileKey(scenario.semanticKey, move.semanticKey))) {
-                          <div class="response-outcome-menu">
-                            <button class="response-action--win" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 1)">Win</button>
-                            <button class="response-action--trade" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, 0)">Trade</button>
-                            <button class="response-action--reset" type="button" (click)="$event.stopPropagation(); response ? resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey) : closeResponseMenu()">Reset</button>
-                            <button class="response-action--loss" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, move.semanticKey, -1)">Loss</button>
-                          </div>
-                        }
-                      </div>
-                    }
-                    @for (sequence of responseSequences(matchup); track sequence.semanticKey) {
-                      @let response = responseFor(scenario, sequence.semanticKey);
-                      <div class="response-tile-wrap">
-                        <button type="button" class="response-tile" [class]="response ? 'response-tile response-tile--' + responseOutcomeClass(response.outcome) : 'response-tile response-tile--untested'" (click)="$event.stopPropagation(); editingResponseKey.set(response ? response.semanticKey : responseTileKey(scenario.semanticKey, sequence.semanticKey))">
-                          {{ optionLabel(sequence.semanticKey) }}
-                          @if (response) { <span class="response-outcome-pill" [class]="'response-outcome-pill--' + responseOutcomeClass(response.outcome)">{{ responseOutcomeLabel(response.outcome) }}</span> }
-                        </button>
-                        @if (editingResponseKey() === (response?.semanticKey ?? responseTileKey(scenario.semanticKey, sequence.semanticKey))) {
-                          <div class="response-outcome-menu">
-                            <button class="response-action--win" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 1)">Win</button>
-                            <button class="response-action--trade" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, 0)">Trade</button>
-                            <button class="response-action--reset" type="button" (click)="$event.stopPropagation(); response ? resetResponse(matchup.semanticKey, scenario.semanticKey, response.semanticKey) : closeResponseMenu()">Reset</button>
-                            <button class="response-action--loss" type="button" (click)="$event.stopPropagation(); chooseResponseOutcome(matchup.semanticKey, scenario.semanticKey, sequence.semanticKey, -1)">Loss</button>
-                          </div>
-                        }
-                      </div>
-                    }
-                  </div>
+                  <tfn-tile-grid
+                    [tiles]="responseTiles(matchup, scenario)"
+                    (update)="onResponseTileUpdate(matchup.semanticKey, scenario.semanticKey, $event)"
+                  />
                 </tfn-expansion-panel>
                 <tfn-expansion-panel subsection header="Metadata">
                   @if (scenario.stageKey; as stageKey) { <p class="scenario-stage">Stage: {{ stageName(stageKey) }}</p> }

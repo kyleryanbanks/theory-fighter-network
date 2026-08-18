@@ -1,8 +1,4 @@
-.cancel-groups-editor {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
+
 
 .name-field-section {
   display: flex;

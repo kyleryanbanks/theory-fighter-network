@@ -3,12 +3,12 @@ import { Router } from '@angular/router';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
+  imports: [MatButtonModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink, TileGridComponent],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })
@@ -27,14 +27,23 @@ export class TeamEditor {
   readonly atTeamSizeLimit = computed(
     () => this.draftCharacterKeys().length >= this.teamSize()
   );
-  // Persistent status explaining why tiles are greyed out; disabled tiles
-  // never emit a click, so a transient error message can't reach the user.
+
+  /** Characters as Tiles for TileGridComponent selection mode. */
+  readonly characterTiles = computed((): Tile[] =>
+    this.characters().map((c) => ({ key: c.semanticKey, label: c.name }))
+  );
+
+  /** Currently selected character Tiles (drives tile-grid [selections]). */
+  readonly selectedCharacterTiles = computed((): Tile[] =>
+    this.draftCharacterKeys().map((key) => ({
+      key,
+      label: this.characterName(key),
+    }))
+  );
+  // Persistent status explaining team size requirement.
   readonly rosterStatus = computed(() => {
     if (this.teamSize() <= 1) {
       return 'Set the Game Team Size above 1 to build Teams.';
-    }
-    if (this.atTeamSizeLimit()) {
-      return `Roster full (${this.draftCharacterKeys().length}/${this.teamSize()}). Tap a picked Character to swap them out.`;
     }
     return '';
   });
@@ -51,27 +60,11 @@ export class TeamEditor {
     return characterKeys.map((key) => this.characterName(key)).join(' + ');
   }
 
-  // Position badge (1-based) for a Character already on the roster, or
-  // undefined when it hasn't been picked yet.
-  rosterPosition(characterKey: string): number | undefined {
-    const index = this.draftCharacterKeys().indexOf(characterKey);
-    return index === -1 ? undefined : index + 1;
-  }
-
-  toggleCharacterTile(characterKey: string): void {
-    if (this.draftCharacterKeys().includes(characterKey)) {
-      this.draftCharacterKeys.update((keys) =>
-        keys.filter((key) => key !== characterKey)
-      );
+  onCharacterTileUpdate(tileOrTiles: Tile | Tile[]): void {
+    if (Array.isArray(tileOrTiles)) {
+      this.draftCharacterKeys.set(tileOrTiles.map((t) => t.key));
       this.teamError.set('');
-      return;
     }
-
-    if (this.teamSize() <= 1 || this.atTeamSizeLimit()) {
-      return;
-    }
-    this.draftCharacterKeys.update((keys) => [...keys, characterKey]);
-    this.teamError.set('');
   }
 
   async createTeam(): Promise<void> {

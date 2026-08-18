@@ -10,7 +10,7 @@ import {
 } from '@theory-fighter-network/data';
 import type { NoteEntry } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@theory-fighter-network/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -27,6 +27,7 @@ const UNSCOPED_STAGE = '';
     ExpansionPanel,
     EntityMetadataView,
     DeleteButton,
+    TileGridComponent,
   ],
   templateUrl: './matchup-editor.html',
   styleUrl: './matchup-editor.css',
@@ -332,6 +333,69 @@ export class MatchupEditor {
 
   responseTileKey(scenarioKey: string, optionKey: string): string {
     return `${scenarioKey}:${optionKey}`;
+  }
+
+  /** Shared outcome choices for all response tiles. */
+  readonly responseChoices: Record<string, TileChoice> = {
+    win:   { label: 'Win',   value: 1,  color: '#4caf50' },
+    trade: { label: 'Trade', value: 0,  color: '#ff9800' },
+    reset: { label: 'Reset', value: undefined },
+    lose:  { label: 'Lose',  value: -1, color: '#e53935' },
+  };
+
+  /** Build a Tile for one response option within a scenario. */
+  responseTile(
+    scenario: { semanticKey: string; responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> },
+    optionKey: string,
+    label: string
+  ): Tile {
+    const response = this.responseFor(scenario, optionKey);
+    const outcomeToChoice: Record<number, TileChoice> = {
+      1: this.responseChoices['win'],
+      0: this.responseChoices['trade'],
+      [-1]: this.responseChoices['lose'],
+    };
+    return {
+      key: optionKey,
+      label,
+      choices: this.responseChoices,
+      value: response ? outcomeToChoice[response.outcome] : undefined,
+    };
+  }
+
+  /** Build the full tile list for a scenario's response grid. */
+  responseTiles(
+    matchup: { attackerKey: string },
+    scenario: { semanticKey: string; responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> }
+  ): Tile[] {
+    return [
+      ...this.responseMoves(matchup).map((m) => this.responseTile(scenario, m.semanticKey, m.name)),
+      ...this.responseSequences(matchup).map((s) => this.responseTile(scenario, s.semanticKey, this.optionLabel(s.semanticKey))),
+    ];
+  }
+
+  async onResponseTileUpdate(
+    matchupKey: string,
+    scenarioKey: string,
+    tileOrTiles: Tile | Tile[]
+  ): Promise<void> {
+    if (Array.isArray(tileOrTiles)) return;
+    const tile = tileOrTiles;
+    if (typeof tile.value === 'boolean') return;
+
+    if (!tile.value || tile.value.value === undefined) {
+      // Reset — remove existing response if present
+      const scenario = this.matchups()
+        .flatMap((m) => m.scenarios)
+        .find((s) => s.semanticKey === scenarioKey);
+      const existing = scenario ? this.responseFor(scenario, tile.key) : undefined;
+      if (existing) {
+        await this.resetResponse(matchupKey, scenarioKey, existing.semanticKey);
+      }
+      return;
+    }
+
+    await this.chooseResponseOutcome(matchupKey, scenarioKey, tile.key, tile.value.value as -1 | 0 | 1);
   }
 
   async chooseResponseOutcome(
