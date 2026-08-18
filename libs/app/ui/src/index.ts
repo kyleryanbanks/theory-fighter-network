@@ -9,3 +9,4 @@ export * from './lib/entity-detail-shell/entity-detail-shell';
 export * from './lib/data-value-editor/data-value-editor';
 export * from './lib/comparison-axis/comparison-axis';
 export * from './lib/tile-grid/tile-grid';
+export * from './lib/tile-grid/tile-grid.models';

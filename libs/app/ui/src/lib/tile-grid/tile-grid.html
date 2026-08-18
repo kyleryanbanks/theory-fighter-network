@@ -5,14 +5,30 @@
         type="button"
         class="tile-grid-button"
         [ngClass]="{
-          'tile-grid-button--selected': tile.selected,
-          'tile-grid-button--menu-open': isMenuOpen(tile.key)
+          'tile-grid-button--selected': maxSelections ? isSelected(tile) : tile.value === true,
+          'tile-grid-button--menu-open': isMenuOpen(tile.key),
+          'tile-grid-button--disabled': isDisabled(tile)
         }"
         (click)="onTileClick(tile)"
+        [disabled]="isDisabled(tile)"
         [attr.aria-haspopup]="tile.choices ? 'menu' : null"
         [attr.aria-expanded]="isMenuOpen(tile.key)"
       >
-        {{ tile.label }}
+        <span class="tile-label">{{ tile.label }}</span>
+        @if (getSelectedChoiceLabel(tile)) {
+          <span class="tile-tag" [ngClass]="getChoiceColor(tile) ? 'tile-tag--' + getChoiceColor(tile) : ''">
+            {{ getSelectedChoiceLabel(tile) }}
+          </span>
+        }
+        @if (tile.tags && tile.tags.length > 0) {
+          <div class="tile-tags">
+            @for (tag of tile.tags; track $index) {
+              <span class="tile-tag-badge" [ngClass]="tag.color ? 'tile-tag-badge--' + tag.color : ''">
+                {{ tag.label }}
+              </span>
+            }
+          </div>
+        }
       </button>
       @if (tile.choices && isMenuOpen(tile.key)) {
         <div class="tile-choice-menu" role="menu">
