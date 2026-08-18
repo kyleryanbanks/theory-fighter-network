@@ -27,10 +27,11 @@ export interface GameDocument {
     inputs: Inputs;
     /**
      * Semantic state keys that should run before other registered state behavior.
+     * Keys are in the format "CategoryName.stateKey" (e.g., "Environment.gravity", "Sequence.hitstun").
      * Remaining behavior runs in first-registration order.
      * Keys without registered frame behavior are ignored.
      * 
-     * Example: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
+     * Example: ["Environment.gravity", "Movement", "Resource.health", "Sequence.hitstun"]
      */
     stateExecutionOrder?: string[];
   };

@@ -82,6 +82,41 @@ The `&:focus` rule used `outline-offset: -2px`, drawing the 2px green focus ring
 
 **138 tests passing** (feature lib). 134 tests pre-existing + 4 new covering override/group interaction and `save` output gating.
 
+### StateModel Refactoring — Agnostic Categories (2026-08-18)
+
+`StateModel` was restructured from a predefined 10-category interface to a completely agnostic `Record<string, StateCollection>`, with suggested categories provided separately via `SUGGESTED_STATE_CATEGORIES` constant. This enables game designers to customize or ignore categories without schema constraints.
+
+**Changes made:**
+
+1. **StateModel type:** Changed from parametrized interface with 10 predefined category properties (`attacks`, `blocks`, `knockdowns`, etc.) to `type StateModel = Record<string, StateCollection>` — fully generic.
+
+2. **Suggested categories constant:** New `SUGGESTED_STATE_CATEGORIES` array lists 9 default category names for onboarding:
+   - `Character` — Character-specific modes, forms, mechanics
+   - `Attack` — Offensive properties (strike type, height, properties)
+   - `Defense` — Blocking/guard/stun/invuln (receiving-side states)
+   - `Movement` — Movement caps (double-jump count, dash count, wall-cling)
+   - `Resource` — Meter, health, assist cooldown, gauges
+   - `Environment` — Stage hazards, environmental mechanics
+   - `Sequence` — Combo tracking: damage scaling, hitstun scaling, style reset, lockdown prevention
+   - `Projectile` — Projectile properties (durability, priority, piercing)
+   - `Custom` — User-defined categories
+
+3. **Factory functions:** `createStateModel()` and `createRuntimeStateModel()` now use a private `createDefaultStateModel()` helper to initialize with suggested categories; users can still override any/all of them.
+
+4. **Documentation updates:**
+   - Data model (02-data-model.md) updated: all examples changed from `states.attacks` to `states.Attack`, `states.resources` to `states.Resource`, etc.
+   - Projectile model (projectile.ts) docs clarified to reference "state categories" generically instead of hardcoding "projectiles"
+   - Game model (game.ts) `stateExecutionOrder` example updated to show "Category.stateKey" format
+
+5. **Tests:** Updated `model-factories.spec.ts` to check for `Attack` and `Projectile` categories in new structure. All 131 data lib tests pass.
+
+**Why this design:**
+- ✅ **Game-agnostic:** Games only create/name categories they actually use
+- ✅ **Onboarding-friendly:** Suggested categories guide new users; they can keep, skip, or rename any
+- ✅ **Scalable:** No wasted properties in data model; UI shows only relevant categories
+- ✅ **Future-proof:** New game mechanics don't require schema changes — just add a custom category
+- ✅ **Type-safe:** RuntimeStateModel still infers types correctly for any StateModel shape
+
 ### Completed Supporting Work Not Previously Captured Here
 
 - Nx `data`, `feature`, and `ui` libraries were created, and the application now hosts the feature shell instead of the generated welcome screen.

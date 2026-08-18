@@ -57,6 +57,29 @@ export type RuntimeStateValues<
 }>;
 
 /**
+ * Completely agnostic state model — any number of user-defined categories.
+ * Categories are arbitrary strings; their names guide game designers but don't constrain schema.
+ */
+export type StateModel = Record<string, StateCollection>;
+
+/**
+ * Suggested category names for onboarding new guides.
+ * These are UI/UX scaffolding, not schema constraints.
+ * Users can remove unused categories, add custom ones, or ignore these entirely.
+ */
+export const SUGGESTED_STATE_CATEGORIES = [
+  'Character',      // Character-specific modes, forms, mechanics
+  'Attack',         // Offensive properties (strike type, height, properties)
+  'Defense',        // Blocking/guard/stun/invuln (receiving-side states)
+  'Movement',       // Movement caps (double-jump count, dash count, wall-cling)
+  'Resource',       // Meter, health, assist cooldown, gauges
+  'Environment',    // Stage hazards, environmental mechanics
+  'Sequence',       // Combo tracking: damage scaling, hitstun scaling, style reset, lockdown prevention
+  'Projectile',     // Projectile properties (durability, priority, piercing)
+  'Custom',         // User-defined categories
+] as const;
+
+/**
  * Map a StateModel to runtime values organized by category
  * Represents the full runtime state snapshot of a game moment
  */
@@ -64,17 +87,31 @@ export type RuntimeStateModel<TStateModel extends StateModel = StateModel> = {
   [K in keyof TStateModel]: RuntimeStateValues<TStateModel[K]>;
 };
 
-export const createRuntimeStateModel = (): RuntimeStateModel => ({
-  attacks: {},
-  blocks: {},
-  knockdowns: {},
-  juggles: {},
-  positions: {},
-  stageMechanics: {},
-  characters: {},
-  resources: {},
-  comboMechanics: {},
-  projectiles: {},
+export const createRuntimeStateModel = (
+  stateModel?: StateModel
+): RuntimeStateModel => {
+  // If no stateModel provided, use suggested categories as default
+  const modelToUse = stateModel ?? createDefaultStateModel();
+  const result: RuntimeStateModel = {};
+  for (const categoryKey in modelToUse) {
+    result[categoryKey] = {};
+  }
+  return result;
+};
+
+/**
+ * Create a StateModel with suggested default categories
+ */
+const createDefaultStateModel = (): StateModel => ({
+  Character: {},
+  Attack: {},
+  Defense: {},
+  Movement: {},
+  Resource: {},
+  Environment: {},
+  Sequence: {},
+  Projectile: {},
+  Custom: {},
 });
 
 /**
@@ -86,46 +123,13 @@ export type RuntimeStatePatch<TStateModel extends StateModel = StateModel> = Par
 }>;
 
 /**
- * Universal state model used identically at game and character level
- * Generic parametrization ensures type safety for runtime state matching
+ * Create a StateModel initialized with suggested categories.
+ * Users can customize: add/remove categories or provide custom structure entirely.
  */
-export interface StateModel<
-  A extends StateCollection = StateCollection,
-  B extends StateCollection = StateCollection,
-  K extends StateCollection = StateCollection,
-  J extends StateCollection = StateCollection,
-  P extends StateCollection = StateCollection,
-  S extends StateCollection = StateCollection,
-  C extends StateCollection = StateCollection,
-  R extends StateCollection = StateCollection,
-  CM extends StateCollection = StateCollection,
-  PR extends StateCollection = StateCollection
-> extends Record<string, StateCollection> {
-  attacks: A;
-  blocks: B;
-  knockdowns: K;
-  juggles: J;
-  positions: P;
-  stageMechanics: S;
-  characters: C;
-  resources: R;
-  comboMechanics: CM;
-  projectiles: PR;  // User-defined projectile properties (durability, priority, etc.)
-}
-
 export const createStateModel = (
   overrides: Partial<StateModel> = {}
 ): StateModel => ({
-  attacks: {},
-  blocks: {},
-  knockdowns: {},
-  juggles: {},
-  positions: {},
-  stageMechanics: {},
-  characters: {},
-  resources: {},
-  comboMechanics: {},
-  projectiles: {},
+  ...createDefaultStateModel(),
   ...overrides,
 });
 

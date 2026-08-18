@@ -1,0 +1,10 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "npm run build": true,
+        "npm run lint": true,
+        "/^npm run 2>&1 \\| grep -E \"test\\|build\\|lint\" \\| head -20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

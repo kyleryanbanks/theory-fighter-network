@@ -3,7 +3,7 @@
  * 
  * Projectiles are moves without input triggers.
  * They are spawned by moves and live as independent entities during simulation.
- * Users define projectile properties using the game's states.projectiles category.
+ * Users define projectile properties using the game's state categories (typically "Projectile").
  */
 
 import { MoveOutcomeEffect } from './move';
@@ -50,11 +50,11 @@ export interface ProjectileDocument<
   /**
    * Initial state values for this projectile template.
    * These are copied into ProjectileInstance.runtimeState when the projectile spawns.
-   * Users can set any state from game.states.projectiles here.
+   * Users can set any state from the game's state categories here.
    * 
-   * Example:
+   * Example (if "Projectile" category has durability and priority states):
    * state: {
-   *   projectiles: {
+   *   Projectile: {
    *     durability: 1,
    *     priority: 3
    *   }

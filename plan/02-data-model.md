@@ -74,7 +74,7 @@ Moves can be scoped as:
 
 ### Move Attack Classification via States
 
-Games define attack type classifications as states in `StateModel.attacks`, enabling flexible, customizable attack taxonomies:
+Games define attack type classifications as states in the `Attack` category, enabling flexible, customizable attack taxonomies:
 
 - **Custom definitions**: Each game defines its own attack classification states
 - **Examples**: `strike`, `throw`, `projectile`, `counter`, `special`, `super`, etc.
@@ -90,12 +90,12 @@ Games define attack type classifications as states in `StateModel.attacks`, enab
 
 ### Attack Height Taxonomies
 
-**Concept**: Different fighting games use completely different attack height classification systems. Rather than hardcoding a single taxonomy, heights are modeled as **configurable attack states** in `StateModel.attacks`.
+**Concept**: Different fighting games use completely different attack height classification systems. Rather than hardcoding a single taxonomy, heights are modeled as **configurable attack states** in the `Attack` category.
 
 **How it works:**
-1. Games define height taxonomy in `states.attacks` during guide creation
+1. Games define height taxonomy in the `Attack` state category during guide creation
 2. Moves reference height via attack state key in effects or preconditions
-3. Block states are keyed by height: `"sf6-blocks-low"`, `"sf6-blocks-mid"`, etc.
+3. Block states are keyed by height in the `Defense` category: `"sf6-blocks-low"`, `"sf6-blocks-mid"`, etc.
 4. UI provides **template defaults** but users can customize for their game
 
 **Common height taxonomies (as UX templates):**
@@ -113,7 +113,7 @@ Games define attack type classifications as states in `StateModel.attacks`, enab
 User creates new guide, selects "Street Fighter" template:
 ```typescript
 states: {
-  attacks: {
+  Attack: {
     "sf6-attacks-height-low": {
       name: "Low Attack",
       description: "Must be blocked crouching"
@@ -131,7 +131,7 @@ states: {
       description: "Unblockable while crouching"
     }
   },
-  blocks: {
+  Defense: {
     "sf6-blocks-low": { name: "Crouch Block", duration: 0 },
     "sf6-blocks-mid": { name: "Standing Block", duration: 0 },
     "sf6-blocks-high": { name: "Overhead Block", duration: 0 }
@@ -148,7 +148,7 @@ const hadoken: MoveDocument = {
         hitStop: { exact: 5 },
         stun: { exact: 20 },
         target: {
-          attacks: {
+          Attack: {
             "sf6-attacks-height-mid": true  // Mid-height projectile
           }
         }
@@ -157,7 +157,7 @@ const hadoken: MoveDocument = {
         hitStop: { exact: 3 },
         stun: { exact: 8 },
         target: {
-          blocks: {
+          Defense: {
             "sf6-blocks-mid": true  // Requires mid-block stance
           }
         }
@@ -200,15 +200,15 @@ During game guide creation, the UI should offer height template selection as par
 **CRITICAL: stateExecutionOrder for Determinism**
 
 `GameDocument.stateExecutionOrder` is **ESSENTIAL** for correct simulation:
-- Lists state semantic keys that must execute before other registered behavior.
+- Lists state semantic keys in the format "CategoryName.stateKey" that must execute before other registered behavior.
 - Passes the context returned by each registered `onFrameAdvance` callback to the next callback.
 - State keys without registered frame behavior are ignored.
 - Remaining behavior executes in first-registration order.
 - Prevents race conditions: if position updates before gravity runs, projectiles move wrong
-- Example: `["stageMechanics.gravity", "positions", "comboMechanics"]` ensures:
+- Example: `["Environment.gravity", "Movement", "Sequence.hitstun"]` ensures:
   1. Gravity updates velocity values
-  2. Positions calculated with new velocities
-  3. Combo state checked with final positions
+  2. Movement calculated with new velocities
+  3. Combo/sequence state checked with final positions
 - Without this, frame-to-frame behavior becomes non-deterministic
 
 **Storage and Scope**:
@@ -223,21 +223,21 @@ During game guide creation, the UI should offer height template selection as par
 
 Hitstun scaling by combo count (effect-driven onUpdate):
 ```typescript
-states.comboMechanics.hitstun = {
+states.Sequence.hitstun = {
   semanticKey: "sf6-combo-hitstun",
   name: "Hitstun",
   min: 0,
   max: 100,
   behavior: {
     onUpdate: `
-      const comboCount = context.runtimeState.comboMechanics.comboCount || 0;
+      const comboCount = context.runtimeState.Sequence.comboCount || 0;
       const scaleFactor = 0.95 ** comboCount;
       return {
         ...context,
         runtimeState: {
           ...context.runtimeState,
-          comboMechanics: {
-            ...context.runtimeState.comboMechanics,
+          Sequence: {
+            ...context.runtimeState.Sequence,
             hitstun: incomingValue * scaleFactor
           }
         }
@@ -246,17 +246,17 @@ states.comboMechanics.hitstun = {
   }
 };
 
-stateBehaviorRegistry.registerState(states.comboMechanics.hitstun);
+stateBehaviorRegistry.registerState(states.Sequence.hitstun);
 ```
 
 Gravity affecting motion (frame-driven onFrameAdvance):
 ```typescript
 stateBehaviorRegistry.register("sf6-stage-gravity", {
   onFrameAdvance: (context) => {
-    const g = context.runtimeState.stageMechanics.gravity;
+    const g = context.runtimeState.Environment.gravity;
     // Apply gravity to all character/projectile velocities
     // This runs FIRST per stateExecutionOrder, before position updates
-    const allEntities = context.runtimeState.characters;
+    const allEntities = context.runtimeState.Character;
     Object.values(allEntities).forEach(char => {
       if (char.velocity) char.velocity.y -= g;
     });
@@ -270,12 +270,12 @@ Health regeneration (frame-driven, conditional):
 stateBehaviorRegistry.register("sf6-resource-health", {
   onFrameAdvance: (context) => {
     // Only regen if not in hitstun and not blocking
-    const isInHitstun = context.runtimeState.comboMechanics.hitstun > 0;
-    const isBlocking = context.runtimeState.blocks.isBlocking;
+    const isInHitstun = context.runtimeState.Sequence.hitstun > 0;
+    const isBlocking = context.runtimeState.Defense.isBlocking;
     
     if (!isInHitstun && !isBlocking) {
-      context.runtimeState.resources.health = Math.min(
-        context.runtimeState.resources.health + 0.5,
+      context.runtimeState.Resource.health = Math.min(
+        context.runtimeState.Resource.health + 0.5,
         100
       );
     }
@@ -288,7 +288,7 @@ stateBehaviorRegistry.register("sf6-resource-health", {
 `GameDocument.stateExecutionOrder` seeds `StateBehaviorRegistry` with the user-preferred order. Behavior absent from that list is appended in first-registration order. This enables power users to manage dependencies (e.g., gravity before position calculation) without listing every state:
 
 ```typescript
-stateExecutionOrder: ["stageMechanics.gravity", "positions", "health", "comboMechanics"]
+stateExecutionOrder: ["Environment.gravity", "Movement", "Resource.health", "Sequence.hitstun"]
 ```
 
 **Storage:**
@@ -513,35 +513,35 @@ type DataValue = {
 **Concept**: Scaling systems (damage scaling, hitstun scaling, etc.) are game-configurable resources that modify state during combos.
 
 **How it works:**
-- Games define scaling resources in `StateModel.resources`:
+- Games define scaling resources in the `Resource` category:
   ```typescript
-  game.states.resources: {
+  game.states.Resource: {
     "damage-scaling": {
       name: "Damage Scaling",
-      bounds: { min: 25, max: 100 },
-      initialValue: 100
+      min: 25,
+      max: 100
     },
     "hitstun-scaling": {
       name: "Hitstun Scaling", 
-      bounds: { min: 50, max: 100 },
-      initialValue: 100
+      min: 50,
+      max: 100
     }
   }
   ```
 - Games without scaling don't define these resources (optional per-game)
 
 **Hitstun as a combo resource:**
-- Opening move grants `opponent.resources.hitstun` (e.g., 5 frames)
-- Each subsequent move costs startup frames: `opponent.resources.hitstun -= nextMove.startup`
+- Opening move grants `opponent.Resource.hitstun` (e.g., 5 frames)
+- Each subsequent move costs startup frames: `opponent.Resource.hitstun -= nextMove.startup`
 - If hitstun remaining < 0: combo ends, move whiffs
-- Scaling modifies hitstun pool: `opponent.resources.hitstun *= 0.9` per hit
-- Certain moves reset: apply `reset opponent.resources.hitstun to 100%` effect
+- Scaling modifies hitstun pool: `opponent.Resource.hitstun *= 0.9` per hit
+- Certain moves reset: apply `reset opponent.Resource.hitstun to 100%` effect
 - Corner/position effects modify bounds: `hitstun.max *= 1.2 (in corner)`
 
 **Combo feasibility with resources:**
-- Combo connects if: `opponent.resources.hitstun - nextMove.startup >= 0` (AND spacing valid)
+- Combo connects if: `opponent.Resource.hitstun - nextMove.startup >= 0` (AND spacing valid)
 - Scaling automatically tightens windows: less hitstun = fewer moves available
-- Move effects modify resources via RuntimeStatePatch: `target.resources: { damageScaling: 0.9 }`
+- Move effects modify resources via RuntimeStatePatch: `target.Resource: { damageScaling: 0.9 }`
 
 **Move effects on resources (via RuntimeStatePatch):**
 
@@ -557,7 +557,7 @@ const hadoken: MoveDocument = {
         
         // Direct state patch: target character's resources modified
         target: {
-          resources: {
+          Resource: {
             damageScaling: 0.9     // Reduce to 90% (equivalent to delta: -10%)
           }
         }
@@ -575,7 +575,7 @@ const meterBurn: MoveDocument = {
         
         // Reset scaling to 100%
         target: {
-          resources: {
+          Resource: {
             damageScaling: 1.0     // Full scaling (equivalent to exact: 100%)
           }
         }
@@ -594,14 +594,14 @@ const superMove: MoveDocument = {
         
         target: {
           // All target changes applied atomically
-          resources: {
+          Resource: {
             damageScaling: 1.0,    // Reset scaling
             health: 80             // Additional damage (stored directly)
           },
-          comboMechanics: {
+          Sequence: {
             hitstun: 30            // Extend hitstun
           },
-          attacks: {
+          Attack: {
             "sf6-counter-hit": true // Mark as counter hit
           }
         }
@@ -830,7 +830,7 @@ Different games classify attacks differently, requiring flexible state-based def
 - **Guilty Gear**: normal/special/super with different meter costs and clash interactions
 - **Marvel**: projectile systems with durability/priority interactions
 
-By defining attack classifications in `StateModel.attacks`, games can encode any taxonomy and enable mechanics that respond to attack types. Effects apply classifications via state tags in RuntimePatches, enabling all secondary mechanics (counters, clashes, etc.) to work through state-driven game logic.
+By defining attack classifications in the `Attack` state category, games can encode any taxonomy and enable mechanics that respond to attack types. Effects apply classifications via state tags in RuntimePatches, enabling all secondary mechanics (counters, clashes, etc.) to work through state-driven game logic.
 
 ### Inheritance Model for Characters
 
