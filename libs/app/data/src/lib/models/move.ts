@@ -247,7 +247,8 @@ export const createMoveOutcomeEffect = (
 export interface PhaseCancelRule {
   startFrame?: number;
   endFrame?: number;
-  allowedMoveKeys?: string[];
+  cancelGroupKeys?: string[];   // References to reusable cancel groups (game or character level)
+  allowedMoveKeys?: string[];   // Phase-level custom move additions (merged with all referenced groups)
 
   notes?: string;
 }

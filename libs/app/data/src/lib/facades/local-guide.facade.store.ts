@@ -2560,6 +2560,288 @@ export const LocalGuideFacadeStore = signalStore(
           })()
         ),
     }),
+
+    createCancelGroup: rxMutation({
+      operation: ({
+        scopeKey,
+        isGameLevel,
+        groupName,
+        moveKeys,
+      }: {
+        scopeKey: string;
+        isGameLevel: boolean;
+        groupName: string;
+        moveKeys: string[];
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+
+            if (isGameLevel) {
+              const game = localGuide.entities.game;
+              if (game.semanticKey !== scopeKey) {
+                throw new Error(`Game "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(game.universal.cancelGroups ?? {}) };
+              if (cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" already exists.`);
+              }
+              cancelGroups[groupName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'game', entityKey: game.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  game: { ...game, universal: { ...game.universal, cancelGroups } },
+                },
+              };
+            } else {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === scopeKey
+              );
+              if (!character) {
+                throw new Error(`Character "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(character.cancelGroups ?? {}) };
+              if (cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" already exists.`);
+              }
+              cancelGroups[groupName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'character', entityKey: character.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === scopeKey ? { ...c, cancelGroups } : c
+                  ),
+                },
+              };
+            }
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    renameCancelGroup: rxMutation({
+      operation: ({
+        scopeKey,
+        isGameLevel,
+        oldName,
+        newName,
+      }: {
+        scopeKey: string;
+        isGameLevel: boolean;
+        oldName: string;
+        newName: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+
+            if (isGameLevel) {
+              const game = localGuide.entities.game;
+              if (game.semanticKey !== scopeKey) {
+                throw new Error(`Game "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(game.universal.cancelGroups ?? {}) };
+              if (!cancelGroups[oldName]) {
+                throw new Error(`Cancel group "${oldName}" does not exist.`);
+              }
+              const moveKeys = cancelGroups[oldName];
+              delete cancelGroups[oldName];
+              cancelGroups[newName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'game', entityKey: game.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  game: { ...game, universal: { ...game.universal, cancelGroups } },
+                },
+              };
+            } else {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === scopeKey
+              );
+              if (!character) {
+                throw new Error(`Character "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(character.cancelGroups ?? {}) };
+              if (!cancelGroups[oldName]) {
+                throw new Error(`Cancel group "${oldName}" does not exist.`);
+              }
+              const moveKeys = cancelGroups[oldName];
+              delete cancelGroups[oldName];
+              cancelGroups[newName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'character', entityKey: character.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === scopeKey ? { ...c, cancelGroups } : c
+                  ),
+                },
+              };
+            }
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    updateCancelGroupMoveKeys: rxMutation({
+      operation: ({
+        scopeKey,
+        isGameLevel,
+        groupName,
+        moveKeys,
+      }: {
+        scopeKey: string;
+        isGameLevel: boolean;
+        groupName: string;
+        moveKeys: string[];
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+
+            if (isGameLevel) {
+              const game = localGuide.entities.game;
+              if (game.semanticKey !== scopeKey) {
+                throw new Error(`Game "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(game.universal.cancelGroups ?? {}) };
+              if (!cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" does not exist.`);
+              }
+              cancelGroups[groupName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'game', entityKey: game.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  game: { ...game, universal: { ...game.universal, cancelGroups } },
+                },
+              };
+            } else {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === scopeKey
+              );
+              if (!character) {
+                throw new Error(`Character "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(character.cancelGroups ?? {}) };
+              if (!cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" does not exist.`);
+              }
+              cancelGroups[groupName] = moveKeys;
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'character', entityKey: character.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === scopeKey ? { ...c, cancelGroups } : c
+                  ),
+                },
+              };
+            }
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteCancelGroup: rxMutation({
+      operation: ({
+        scopeKey,
+        isGameLevel,
+        groupName,
+      }: {
+        scopeKey: string;
+        isGameLevel: boolean;
+        groupName: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+
+            if (isGameLevel) {
+              const game = localGuide.entities.game;
+              if (game.semanticKey !== scopeKey) {
+                throw new Error(`Game "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(game.universal.cancelGroups ?? {}) };
+              if (!cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" does not exist.`);
+              }
+              delete cancelGroups[groupName];
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'game', entityKey: game.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  game: { ...game, universal: { ...game.universal, cancelGroups } },
+                },
+              };
+            } else {
+              const character = localGuide.entities.characters.find(
+                (c) => c.semanticKey === scopeKey
+              );
+              if (!character) {
+                throw new Error(`Character "${scopeKey}" does not exist.`);
+              }
+              const cancelGroups = { ...(character.cancelGroups ?? {}) };
+              if (!cancelGroups[groupName]) {
+                throw new Error(`Cancel group "${groupName}" does not exist.`);
+              }
+              delete cancelGroups[groupName];
+
+              const guide = cloneGuideMetadata(localGuide);
+              markEntityUnsaved(guide, { entityType: 'character', entityKey: character.semanticKey });
+
+              return {
+                ...localGuide,
+                guide,
+                entities: {
+                  ...localGuide.entities,
+                  characters: localGuide.entities.characters.map((c) =>
+                    c.semanticKey === scopeKey ? { ...c, cancelGroups } : c
+                  ),
+                },
+              };
+            }
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
   })),
   withMethods((store) => ({
     /**

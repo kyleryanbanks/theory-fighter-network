@@ -49,6 +49,7 @@ export interface GameDocument {
     moveKeys: string[];
     sequenceKeys: string[];
     projectileKeys: string[];
+    cancelGroups?: Record<string, string[]>;  // name -> move keys
   };
 
   // Runtime behavior
@@ -81,6 +82,7 @@ export const createGameDocument = (
     moveKeys: [],
     sequenceKeys: [],
     projectileKeys: [],
+    cancelGroups: {},
   },
   states: createStateModel(),
   community: createCommunityMetadata(),

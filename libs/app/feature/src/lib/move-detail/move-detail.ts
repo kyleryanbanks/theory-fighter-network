@@ -1,16 +1,16 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
 import type { DataValue, PhaseCancelRule } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, TileGridComponent, Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [CommonModule, FormsModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes],
+  imports: [CommonModule, FormsModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, TileGridComponent],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
@@ -30,6 +30,58 @@ export class MoveDetail {
     const count = this.move()?.phases?.length ?? 0;
     return Array.from({ length: Math.max(1, count) }, (_, index) => index);
   });
+
+  readonly universalCancelGroups = computed(() => {
+    const game = this.facade.guide()?.entities.game;
+    return Object.entries(game?.universal.cancelGroups ?? {}).map(([name, moveKeys]) => ({
+      name,
+      moveKeys,
+    }));
+  });
+
+  readonly characterCancelGroups = computed(() => {
+    const move = this.move();
+    if (!move?.characterKey) return [];
+    const character = this.facade.guide()?.entities.characters.find(
+      (c) => c.semanticKey === move.characterKey
+    );
+    return Object.entries(character?.cancelGroups ?? {}).map(([name, moveKeys]) => ({
+      name,
+      moveKeys,
+    }));
+  });
+
+  readonly availableCancelGroups = computed(() => [
+    ...this.universalCancelGroups(),
+    ...this.characterCancelGroups(),
+  ]);
+
+  readonly editingCustomMovesKey = signal<string | null>(null);
+
+  readonly availableMoves = computed(() => {
+    return this.facade.guide()?.entities.moves ?? [];
+  });
+
+  customMovesTiles(cancel: PhaseCancelRule): Tile[] {
+    return this.availableMoves().map((move) => ({
+      key: move.semanticKey,
+      label: move.name,
+      selected: (cancel.allowedMoveKeys ?? []).includes(move.semanticKey),
+    }));
+  }
+
+  onCustomMoveTileUpdate(cancel: PhaseCancelRule, tile: Tile | Tile[]): void {
+    if (Array.isArray(tile)) {
+      // selections array from maxSelections mode - not used here
+      return;
+    }
+    const currentKeys = cancel.allowedMoveKeys ?? [];
+    if (tile.value === true) {
+      cancel.allowedMoveKeys = [...currentKeys, tile.key];
+    } else if (tile.value === false) {
+      cancel.allowedMoveKeys = currentKeys.filter((k) => k !== tile.key);
+    }
+  }
 
   phaseDuration(phaseIndex: number, phase: 'startup' | 'active' | 'recovery'): DataValue {
     return this.move()?.phases?.[phaseIndex]?.[phase]?.duration ?? {};
@@ -135,6 +187,22 @@ export class MoveDetail {
     await this.updateOutcomeCancels(phaseIndex, outcome, updated);
   }
 
+  onCancelGroupsChange(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    cancelIndex: number,
+    event: Event
+  ): void {
+    const target = event.target as HTMLSelectElement;
+    const groupValues = target.value ? target.value.split(',') : undefined;
+    const currentCancels = this.outcomeCancels(phaseIndex, outcome);
+    const cancel = currentCancels[cancelIndex];
+    if (cancel) {
+      cancel.cancelGroupKeys = groupValues;
+      void this.updateOutcomeCancel(phaseIndex, outcome, cancelIndex, cancel);
+    }
+  }
+
   parseMoveKeysString(movesStr: string): string[] {
     return movesStr
       .split(',')
@@ -144,6 +212,19 @@ export class MoveDetail {
 
   formatMoveKeysForDisplay(moves: string[] | undefined): string {
     return moves?.join(', ') ?? '';
+  }
+
+  mergedMoveKeysFromGroups(groupNames: string[] | undefined): string[] {
+    if (!groupNames || groupNames.length === 0) return [];
+    const allGroups = this.availableCancelGroups();
+    const merged = new Set<string>();
+    for (const groupName of groupNames) {
+      const group = allGroups.find((g) => g.name === groupName);
+      if (group) {
+        group.moveKeys.forEach((key) => merged.add(key));
+      }
+    }
+    return Array.from(merged);
   }
 
   async addPhase(): Promise<void> {

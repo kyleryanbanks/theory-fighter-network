@@ -28,6 +28,9 @@ export interface CharacterDocument {
     projectileKeys: string[];
   };
 
+  // Character-scoped cancel groups
+  cancelGroups?: Record<string, string[]>;  // name -> move keys
+
   // Runtime behavior
   states: StateModel;
 
@@ -55,6 +58,7 @@ export const createCharacterDocument = (
     sequenceKeys: [],
     projectileKeys: [],
   },
+  cancelGroups: {},
   states: createStateModel(),
   neutralRegions: {},
   community: createCommunityMetadata(),

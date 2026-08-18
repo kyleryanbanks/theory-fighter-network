@@ -19,6 +19,7 @@ import {
 } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { TfnLink } from '@theory-fighter-network/ui';
+import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 interface GameFormModel {
   name: string;
@@ -45,6 +46,7 @@ interface InputDraftModel {
     RouterLink,
     TfnLink,
     EntityNotes,
+    CancelGroupsEditorComponent,
   ],
   templateUrl: './game-root.html',
   styleUrl: './game-root.css',
