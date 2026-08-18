@@ -1,142 +1,128 @@
 .cancel-groups-editor {
-  padding: 1rem;
-}
-
-.editor-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border);
-
-  h3 {
-    margin: 0;
-    font-size: 1.25rem;
-  }
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.create-form {
-  background: var(--color-background-secondary);
-  padding: 1rem;
-  border-radius: 0.25rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--color-border);
+.name-field-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-  .form-row {
-    margin-bottom: 1rem;
+.name-field-section label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
 
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid var(--color-border);
-      border-radius: 0.25rem;
-      font-size: 1rem;
+.name-input {
+  padding: 0.75rem;
+  font-size: 1rem;
+}
 
-      &:focus {
-        outline: 2px solid var(--color-focus);
-        outline-offset: -2px;
-      }
-    }
-  }
+.frame-inputs-section {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-  .form-actions {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: flex-end;
+.frame-field {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
 
-    button {
-      padding: 0.5rem 1rem;
-    }
-  }
+.frame-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.frame-input {
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.frame-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-style: italic;
 }
 
 .groups-list {
   display: flex;
   flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.group-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.group-checkbox input[type='checkbox'] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+
+.group-checkbox span {
+  user-select: none;
+  font-size: 0.9375rem;
+}
+
+.group-action {
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.group-action a {
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.move-list-section {
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
+  padding-top: 1rem;
+}
+
+.move-list-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
 }
 
 .empty-state {
+  margin: 0;
+  padding: 2rem 1rem;
   text-align: center;
-  padding: 2rem;
-  color: var(--color-text-secondary);
   font-style: italic;
 }
 
-.cancel-group-item {
-  border: 1px solid var(--color-border);
-  border-radius: 0.25rem;
-  background: var(--color-background-secondary);
-  overflow: hidden;
-}
-
-.group-header {
-  padding: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  .group-name {
-    font-weight: 600;
-    flex: 1;
-    min-width: 150px;
+/* Responsive */
+@media (max-width: 600px) {
+  .frame-inputs-section {
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .move-count {
-    font-size: 0.875rem;
-    color: var(--color-text-secondary);
-    padding: 0.25rem 0.5rem;
-    background: var(--color-background);
-    border-radius: 0.25rem;
+  .frame-field {
+    min-width: unset;
   }
 
-  button {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-  }
-}
-
-.rename-form {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex: 1;
-
-  input {
-    flex: 1;
-    min-width: 150px;
-    padding: 0.375rem 0.5rem;
-    border: 1px solid var(--color-border);
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
-
-    &:focus {
-      outline: 2px solid var(--color-focus);
-      outline-offset: -2px;
-    }
-  }
-
-  button {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.875rem;
-  }
-}
-
-.editor-content {
-  padding: 1rem;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-background);
-
-  .editor-actions {
-    display: flex;
+  .groups-list {
     gap: 0.5rem;
-    justify-content: flex-end;
-    margin-top: 1rem;
+  }
 
-    button {
-      padding: 0.5rem 1rem;
-    }
+  .group-checkbox {
+    padding: 0.375rem;
+    font-size: 0.875rem;
   }
 }

@@ -1,171 +1,142 @@
-import { Component, Input, computed, inject, signal } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, inject, input, linkedSignal, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { TileGridComponent, Tile } from '@theory-fighter-network/ui';
-import { DeleteButton } from '@theory-fighter-network/ui';
+import { LocalGuideFacadeStore, MoveDocument } from '@theory-fighter-network/data';
+import { TileGridComponent, Tile, ExpansionPanel } from '@theory-fighter-network/ui';
 
-interface CancelGroup {
-  name: string;
-  moveKeys: string[];
-}
-
+/**
+ * CancelGroupsEditor - Displays and edits cancel group selections at game, character, or phase level.
+ *
+ * Component is presentation-only; parent handles persistence via facade.
+ * Uses dual-track model: selectedGameGroups + selectedCharacterGroups + userOverrideMoves.
+ * When user checks a group, removes any force-ON overrides for moves that group provides.
+ */
 @Component({
   selector: 'tfn-cancel-groups-editor',
   templateUrl: './cancel-groups-editor.html',
   styleUrls: ['./cancel-groups-editor.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, TileGridComponent, DeleteButton],
+  imports: [CommonModule, FormsModule, RouterLink, MatButtonModule, TileGridComponent, ExpansionPanel],
 })
 export class CancelGroupsEditorComponent {
-  @Input() scope: 'game' | 'character' = 'game';
-  @Input() scopeKey: string = '';
 
-  private readonly facade = inject(LocalGuideFacadeStore);
+  // Inputs
+  readonly characterName = input<string>('');
+  readonly includeName = input(false, { transform: booleanAttribute });
+  readonly groupName = signal('');
 
-  readonly editingGroupName = signal<string | null>(null);
-  readonly renamingGroupName = signal<string | null>(null);
-  readonly newGroupName = signal('');
-  readonly isCreatingGroup = signal(false);
-  private readonly editedMoveKeys = signal<Set<string>>(new Set());
+  readonly phaseStartFrame = input<number | undefined>(undefined);
+  readonly cancelWindowStart = signal<number | null>(null);
+  readonly cancelWindowEnd = signal<number | null>(null);
 
-  readonly cancelGroups = computed(() => {
-    const guide = this.facade.guide();
-    if (!guide) return [];
+  readonly universalGroups = input<Record<string, string[]>>({});
+  readonly overrideUniversalGroups = input<Set<string>>(new Set());
+  readonly selectedUniversalGroups = linkedSignal(() => this.overrideUniversalGroups());
 
-    if (this.scope === 'game') {
-      return Object.entries(guide.entities.game.universal.cancelGroups ?? {}).map(
-        ([name, moveKeys]) => ({ name, moveKeys })
-      );
+  readonly characterGroups = input<Record<string, string[]>>({});
+  readonly overrideCharacterGroups = input<Set<string>>(new Set());
+  readonly selectedCharacterGroups = linkedSignal(() => this.overrideCharacterGroups());
+
+  readonly moveList = input<Tile[]>([]);
+  readonly overrides = input<Set<string>>(new Set()); // move keys that have been toggled on/off by the user
+
+  // Outputs
+  readonly cancelRuleChange = output<{
+    name?: string;
+    universalGroups?: string[];
+    characterGroups?: string[];
+    overrides: string[];
+  }>();
+
+  // Computed: Merged list of moves from selected groups with overrides applied
+  readonly activeMoveList = computed(() => {
+
+    const tileShouldBeSelected = (key: string): boolean => {
+      const fromGroup = this.selectedUniversalGroups().has(key) || this.selectedCharacterGroups().has(key);
+      const inOverrides = this.overrides().has(key);
+    
+      return fromGroup && !inOverrides || inOverrides;
+    };
+
+    this.moveList().map(tile => ({
+      ...tile,
+      value: tileShouldBeSelected(tile.key),
+      tags: [
+        this.selectedUniversalGroups().has(tile.key) ? { label: 'Universal', color: 'info' } : null,
+        this.selectedCharacterGroups().has(tile.key) ? { label: this.characterName(), color: 'primary' } : null,
+      ].filter(tag => tag !== null),
+    }));})
+
+
+  // Handle game group checkbox changes
+  onUniversalGroupChange(groupName: string, isChecked: boolean): void {
+    const updated = new Set(this.selectedUniversalGroups());
+
+    if  (isChecked) {
+      updated.add(groupName);
     } else {
-      const character = guide.entities.characters.find((c) => c.semanticKey === this.scopeKey);
-      return Object.entries(character?.cancelGroups ?? {}).map(([name, moveKeys]) => ({
-        name,
-        moveKeys,
-      }));
+      updated.delete(groupName);
     }
-  });
 
-  readonly availableMoves = computed(() => {
-    const guide = this.facade.guide();
-    return guide?.entities.moves ?? [];
-  });
+    this.selectedUniversalGroups.set(updated);
 
-  readonly moveTiles = computed(() => {
-    return this.availableMoves().map((move) => ({
-      key: move.semanticKey,
-      label: move.name,
-      value: this.editedMoveKeys().has(move.semanticKey),
-    }));
-  });
-
-  onEditGroup(groupName: string): void {
-    const group = this.cancelGroups().find((g) => g.name === groupName);
-    if (group) {
-      this.editingGroupName.set(groupName);
-      this.editedMoveKeys.set(new Set(group.moveKeys));
-    }
-  }
-
-  onCancelEdit(): void {
-    this.editingGroupName.set(null);
-    this.editedMoveKeys.set(new Set());
-  }
-
-  onSaveGroup(): void {
-    const groupName = this.editingGroupName();
-    if (groupName) {
-      this.facade.updateCancelGroupMoveKeys({
-        scopeKey: this.scope === 'character' ? this.scopeKey : '',
-        isGameLevel: this.scope === 'game',
-        groupName,
-        moveKeys: Array.from(this.editedMoveKeys()),
-      });
-      this.editingGroupName.set(null);
-      this.editedMoveKeys.set(new Set());
-    }
-  }
-
-  onStartRename(groupName: string): void {
-    this.renamingGroupName.set(groupName);
-    this.newGroupName.set(groupName);
-  }
-
-  onCancelRename(): void {
-    this.renamingGroupName.set(null);
-    this.newGroupName.set('');
-  }
-
-  async onConfirmRename(): Promise<void> {
-    const oldName = this.renamingGroupName();
-    const newName = this.newGroupName().trim();
-    if (oldName && newName && oldName !== newName) {
-      await this.facade.renameCancelGroup({
-        scopeKey: this.scope === 'character' ? this.scopeKey : '',
-        isGameLevel: this.scope === 'game',
-        oldName,
-        newName,
-      });
-      this.renamingGroupName.set(null);
-      this.newGroupName.set('');
-    }
-  }
-
-  async onDeleteGroup(groupName: string): Promise<void> {
-    await this.facade.deleteCancelGroup({
-      scopeKey: this.scope === 'character' ? this.scopeKey : '',
-      isGameLevel: this.scope === 'game',
-      groupName,
+    this.cancelRuleChange.emit({
+      name: this.groupName().trim() || undefined,
+      universalGroups: Array.from(updated),
+      characterGroups: Array.from(this.selectedCharacterGroups()),
+      overrides: Array.from(this.overrides()),
     });
   }
 
-  onStartCreate(): void {
-    this.isCreatingGroup.set(true);
-    this.newGroupName.set('');
-  }
+    // Handle game group checkbox changes
+  onCharacterGroupChange(groupName: string, isChecked: boolean): void {
+    const updated = new Set(this.selectedCharacterGroups());
 
-  onCancelCreate(): void {
-    this.isCreatingGroup.set(false);
-    this.newGroupName.set('');
-  }
-
-  async onConfirmCreate(): Promise<void> {
-    const name = this.newGroupName().trim();
-    if (name) {
-      await this.facade.createCancelGroup({
-        scopeKey: this.scope === 'character' ? this.scopeKey : '',
-        isGameLevel: this.scope === 'game',
-        groupName: name,
-        moveKeys: [],
-      });
-      this.isCreatingGroup.set(false);
-      this.newGroupName.set('');
+    if  (isChecked) {
+      updated.add(groupName);
+    } else {
+      updated.delete(groupName);
     }
+    
+    this.selectedCharacterGroups.set(updated);
+
+    this.cancelRuleChange.emit({
+      name: this.groupName().trim() || undefined,
+      universalGroups: Array.from(this.selectedUniversalGroups()),
+      characterGroups: Array.from(updated),
+      overrides: Array.from(this.overrides()),
+    });
   }
 
-  onTileUpdate(tile: Tile | Tile[]): void {
-    if (Array.isArray(tile)) {
-      // selections array from maxSelections mode - not used here
-      return;
-    }
-    if (tile.value === true) {
-      this.editedMoveKeys().add(tile.key);
-    } else if (tile.value === false) {
-      this.editedMoveKeys().delete(tile.key);
-    }
-    this.editedMoveKeys.set(new Set(this.editedMoveKeys()));
+  // Handle tile grid updates
+  onTileUpdate(tile: Tile): void {
+    this.overrides().has(tile.key) ? this.overrides().delete(tile.key) : this.overrides().add(tile.key);
+
+    this.cancelRuleChange.emit({
+      name: this.groupName().trim() || undefined,
+      universalGroups: Array.from(this.selectedUniversalGroups()),
+      characterGroups: Array.from(this.selectedCharacterGroups()),
+      overrides: Array.from(this.overrides()),
+    });
   }
 
-  isEditing(groupName: string): boolean {
-    return this.editingGroupName() === groupName;
-  }
+  // Computed: Check if any game groups are available
+  readonly hasGameGroups = computed(() => Object.keys(this.universalGroups()).length > 0);
 
-  isRenaming(groupName: string): boolean {
-    return this.renamingGroupName() === groupName;
-  }
+  // Computed: Check if any character groups are available
+  readonly hasCharacterGroups = computed(() => Object.keys(this.characterGroups()).length > 0);
 
-  isCreating(): boolean {
-    return this.isCreatingGroup();
-  }
+  // Helper: Get array of game group names
+  readonly gameGroupNames = computed(() => Object.keys(this.universalGroups()));
+
+  // Helper: Get array of character group names
+  readonly characterGroupNames = computed(() => Object.keys(this.characterGroups()));
+
+  /**
+   * True when editing a named parent cancel group (name input visible, cancel window hidden).
+   * False when editing phase-level cancel rules (cancel window visible, name input hidden).
+   */
+  readonly isParentGroupMode = computed(() => this.includeName());
 }
