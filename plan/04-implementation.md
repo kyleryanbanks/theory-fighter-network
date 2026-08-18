@@ -34,6 +34,22 @@ Commit history confirms:
   - Recommendation: Complete Move Outcome Effects UI before Game State Management
 - **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
 
+### TileGridComponent — Bug Fix (2026-08-18)
+
+`TileGridComponent` (`libs/app/ui/src/lib/tile-grid/`) supports four interaction modes: passive, toggle, choice menu, and selection (maxSelections). The selection mode displays numbered position badges and a yellow border on selected tiles.
+
+**Bug fixed — yellow border delayed until second click (maxSelections mode):**
+The `&:focus` rule used `outline-offset: -2px`, drawing the 2px green focus ring *inset* — sitting directly over the button's 2px `border-color`. When a tile is clicked it immediately receives focus, so the inset green outline visually masked `--selected-badged`'s `border-color: #ffcc33`. The border was applied correctly but hidden. Clicking a second tile caused the first to lose focus, the outline disappeared, and yellow became visible.
+
+**Fix:** Added `&.tile-grid-button--selected-badged { &:focus { outline-color: #ffcc33 } }` so the inset focus ring is yellow when a tile is badged, matching the border beneath it and making the yellow visible immediately on first click. `outline-offset` and layout are unchanged — no visual disruption to other states.
+
+**3 new unit tests added** to `tile-grid.spec.ts` covering the selection mode from a real host component that echoes the `update` event back as `[selections]` (matching the TeamEditor pattern):
+- `--selected-badged` class applied after clicking first tile
+- Badge `(.tile-selection-badge)` shows with correct number after first click
+- `--disabled` applied to remaining tiles when limit is reached
+
+**21 tests total in tile-grid.spec.ts** (3 pre-existing failures unrelated to selection mode — choice color CSS class assertions).
+
 ### Cancel Groups Editor — Complete (2026-08-18)
 
 `CancelGroupsEditorComponent` is fully implemented and wired into `game-root` for universal cancel group authoring. Key design decisions and behaviors:
@@ -292,11 +308,17 @@ The following workflows are **intentionally deferred until immediately before Fi
 
 ### In Progress (2026-08-18)
 
-**TileGrid migration** — Replacing custom button/grid UI patterns across the app with `TileGridComponent` for consistency, dark theme, and tag/badge support:
+**TileGrid migration — Complete (2026-08-18).** All three targets migrated:
 
-- ⏳ **Teams > Character Grid** (`team-editor`) — Custom `.character-grid` with `.character-tile` buttons → `TileGridComponent` in selection mode (`maxSelections=teamSize()`). Position badges handled via tile grid's selection counting.
-- ⏳ **Matchup > Response Tiles** (`matchup-editor`) — Custom `.response-option-grid` with inline win/trade/loss choice menus → `TileGridComponent` in choice mode (choices: Win/Trade/Loss with colors, value = current outcome).
-- ⏳ **Move > Phase > Cancel Rule Editor** (`move-detail`) — Raw number inputs + `<select multiple>` for groups + bare tile-grid → `CancelGroupsEditorComponent` (phase move mode, per cancel rule instance). Wires `universalGroups`, `characterGroups`, `moveList`, `overrides` and `(save)`.
+- ✅ **Teams > Character Grid** (`team-editor`) — `[maxSelections]="teamSize() > 1 ? teamSize() : undefined"`. Yellow border bug fixed (see TileGridComponent section above).
+- ✅ **Matchup > Response Tiles** (`matchup-editor`) — `TileGridComponent` in choice mode via `responseTiles(matchup, scenario)`. `(update)` wired to `onResponseTileUpdate`.
+- ✅ **Move > Phase > Cancel Rule Editor** (`move-detail`) — `CancelGroupsEditorComponent` wired per cancel rule instance with `[universalGroups]`, `[characterGroups]`, `[moveList]`, `[overrides]`, `[overrideUniversalGroups]`, `[header]`, and `(save)` bound to `onCancelRuleSave`. Delete button alongside each rule.
+
+**CancelGroupsEditor integration — Complete (2026-08-18).** Both integration points wired:
+
+- ✅ **Game > Universal Cancel Groups** (`game-root`) — `tfn-cancel-groups-editor` wired with universal group authoring.
+- ✅ **Move > Phase > Cancel Rules** (`move-detail`) — `tfn-cancel-groups-editor` in phase move mode, one instance per cancel rule, with full group + override binding.
+- ⏳ **Character > Character-Scoped Cancel Groups** (`character-editor`) — Not yet implemented. Characters can have their own cancel groups (distinct from universal game-level groups) that moves in that character's kit can reference. Needs a `CancelGroupsEditorComponent` instance in `character-editor` in parent group mode (`includeName`), analogous to how `game-root` handles universal groups.
 
 ### Ready to Start
 - **Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine** — Foundation already laid (2026-08-17). Move-comparison component now supports generic field selection (startup/active/recovery) with extensible infrastructure for future range/damage comparisons.
@@ -336,8 +358,8 @@ The following workflows are **intentionally deferred until immediately before Fi
 - Collision box editor: Visual/numeric editor for hitBoxes, hurtBoxes, collisionBoxes, throwBoxes (Region objects)
 - Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, resources, positional)
 - Resource effect UI: Select resource → choose modification mode (delta/multiply/exact/amount) → set value
-- ✅ **Cancel Groups editor** (complete 2026-08-18) — `CancelGroupsEditorComponent` with group checkboxes, per-move override tile grid, expansion panel UX, explicit Save, and toggle-model overrides. Wired into `game-root` for universal groups; reusable for character/phase level.
-- Cancel window UI: Wire `cancelWindowStart`/`cancelWindowEnd` from `CancelGroupsEditorComponent` phase move mode into `move-detail` / phase-level cancel rule saving (consumer not yet built).
+- ✅ **Cancel Groups editor** (complete 2026-08-18) — `CancelGroupsEditorComponent` with group checkboxes, per-move override tile grid, expansion panel UX, explicit Save, and toggle-model overrides. Wired into `game-root` for universal groups AND into `move-detail` per cancel rule instance (phase move mode with `cancelWindowStart`/`cancelWindowEnd`).
+- Cancel window UI: `cancelWindowStart`/`cancelWindowEnd` fields are wired from `CancelGroupsEditorComponent` into `move-detail` via `onCancelRuleSave`. ✅ Complete.
 - Precondition UI: Set required/forbidden player state, required opponent state, cancel/follow-up restrictions
 - Effect validation: Highlight resources defined in game config; warn on undefined resources
 
