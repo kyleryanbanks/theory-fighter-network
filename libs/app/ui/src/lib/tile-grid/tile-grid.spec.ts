@@ -225,41 +225,68 @@ describe('TileGridComponent', () => {
   });
 
   describe('selection mode (maxSelections)', () => {
-    it('should disable tiles when selection limit is reached', () => {
-      @Component({
-        selector: 'tfn-test-selection-host',
-        template: `
-          <tfn-tile-grid 
-            [tiles]="tiles()" 
-            [selections]="selections()"
-            [maxSelections]="maxSelections()"
-            (update)="onUpdate($event)" 
-          />
-        `,
-        standalone: true,
-        imports: [TileGridComponent],
-      })
-      class SelectionTestComponent {
-        maxSelections = signal<number | undefined>(1);
-        selections = signal<Tile[]>([{ key: 'move1', label: 'Jab' }]);
-        tiles = signal<Tile[]>([
-          { key: 'move1', label: 'Jab' },
-          { key: 'move2', label: 'Strong' },
-        ]);
-        lastUpdatedTiles: Tile[] | undefined;
+    @Component({
+      selector: 'tfn-test-selection-host',
+      template: `
+        <tfn-tile-grid 
+          [tiles]="tiles()" 
+          [selections]="selections()"
+          [maxSelections]="maxSelections()"
+          (update)="onUpdate($event)" 
+        />
+      `,
+      standalone: true,
+      imports: [TileGridComponent],
+    })
+    class SelectionTestComponent {
+      maxSelections = signal<number | undefined>(2);
+      selections = signal<Tile[]>([]);
+      tiles = signal<Tile[]>([
+        { key: 'move1', label: 'Jab' },
+        { key: 'move2', label: 'Strong' },
+      ]);
 
-        onUpdate(tiles: Tile | Tile[]) {
-          if (Array.isArray(tiles)) {
-            this.lastUpdatedTiles = tiles;
-          }
+      onUpdate(tiles: Tile | Tile[]) {
+        if (Array.isArray(tiles)) {
+          this.selections.set(tiles);
         }
       }
+    }
 
-      const selectionFixture = TestBed.createComponent(SelectionTestComponent);
+    let selectionFixture: ComponentFixture<SelectionTestComponent>;
+    let selectionHost: SelectionTestComponent;
+
+    beforeEach(() => {
+      selectionFixture = TestBed.createComponent(SelectionTestComponent);
+      selectionHost = selectionFixture.componentInstance;
+      selectionFixture.detectChanges();
+    });
+
+    it('should disable tiles when selection limit is reached', () => {
+      selectionHost.maxSelections.set(1);
+      selectionHost.selections.set([{ key: 'move1', label: 'Jab' }]);
       selectionFixture.detectChanges();
 
       const buttons = selectionFixture.nativeElement.querySelectorAll('button');
       expect(buttons[1].classList.contains('tile-grid-button--disabled')).toBe(true);
+    });
+
+    it('should show yellow border immediately after clicking the first tile', () => {
+      const buttons = selectionFixture.nativeElement.querySelectorAll('button');
+      buttons[0].click();
+      selectionFixture.detectChanges();
+
+      expect(buttons[0].classList.contains('tile-grid-button--selected-badged')).toBe(true);
+    });
+
+    it('should show badge immediately after clicking the first tile', () => {
+      const buttons = selectionFixture.nativeElement.querySelectorAll('button');
+      buttons[0].click();
+      selectionFixture.detectChanges();
+
+      const badge = selectionFixture.nativeElement.querySelector('.tile-selection-badge');
+      expect(badge).not.toBeNull();
+      expect(badge.textContent.trim()).toBe('1');
     });
   });
 
