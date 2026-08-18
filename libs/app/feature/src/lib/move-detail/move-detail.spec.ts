@@ -74,7 +74,7 @@ describe('MoveDetail', () => {
   it('calls updateMoveOutcomeCancels when updating outcome cancels', async () => {
     const component = fixture.componentInstance;
     const cancels = [
-      { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken', 'shoryuken'] },
+      { startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true, shoryuken: true } },
     ] as PhaseCancelRule[];
     
     await component.updateOutcomeCancels(0, 'onHit', cancels);
@@ -102,7 +102,7 @@ describe('MoveDetail with outcome cancels', () => {
         effects: {
           onHit: {
             cancels: [
-              { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken'] },
+              { startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true } },
             ] as PhaseCancelRule[],
           },
         },
@@ -140,14 +140,14 @@ describe('MoveDetail with outcome cancels', () => {
     const component = fixture.componentInstance;
     const cancels = component.outcomeCancels(0, 'onHit');
     expect(cancels).toHaveLength(1);
-    expect(cancels[0]).toEqual({ startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken'] });
+    expect(cancels[0]).toEqual({ startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true } });
   });
 
   it('adds a new cancel rule to outcome', async () => {
     const component = fixture.componentInstance;
     const updateMoveOutcomeCancels = TestBed.inject(LocalGuideFacadeStore).updateMoveOutcomeCancels as ReturnType<typeof vi.fn>;
     
-    const newCancel = { startFrame: 7, endFrame: 10, allowedMoveKeys: ['shoryuken'] } as PhaseCancelRule;
+    const newCancel = { startFrame: 7, endFrame: 10, userOverrideMoves: { shoryuken: true } } as PhaseCancelRule;
     await component.addOutcomeCancel(0, 'onHit', newCancel);
     
     expect(updateMoveOutcomeCancels).toHaveBeenCalledWith({
@@ -155,8 +155,8 @@ describe('MoveDetail with outcome cancels', () => {
       phaseIndex: 0,
       outcome: 'onHit',
       cancels: [
-        { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken'] },
-        { startFrame: 7, endFrame: 10, allowedMoveKeys: ['shoryuken'] },
+        { startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true } },
+        { startFrame: 7, endFrame: 10, userOverrideMoves: { shoryuken: true } },
       ],
     });
   });
@@ -179,7 +179,7 @@ describe('MoveDetail with outcome cancels', () => {
     const component = fixture.componentInstance;
     const updateMoveOutcomeCancels = TestBed.inject(LocalGuideFacadeStore).updateMoveOutcomeCancels as ReturnType<typeof vi.fn>;
     
-    const updatedCancel = { startFrame: 3, endFrame: 6, allowedMoveKeys: ['hadoken', 'ryu-punch'] } as PhaseCancelRule;
+    const updatedCancel = { startFrame: 3, endFrame: 6, userOverrideMoves: { hadoken: true, 'ryu-punch': true } } as PhaseCancelRule;
     await component.updateOutcomeCancel(0, 'onHit', 0, updatedCancel);
     
     expect(updateMoveOutcomeCancels).toHaveBeenCalledWith({

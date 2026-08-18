@@ -10,7 +10,7 @@ This roadmap restructures development around agreed priority order. The work is 
 
 ---
 
-## Current Implementation Status (2026-08-17)
+## Current Implementation Status (2026-08-18)
 
 **Phase 1 is ~95% complete as of 2026-08-17.** All core entity hierarchies (Game → Stage → Character → Move → Sequence → Team → Matchup) are implemented with full CRUD, validation, and Material/Signal Forms editors. Phase 1 CRUD is feature-complete but Phase 1.7 workflows are blocked by 3 critical foundational gaps in entity editing UIs.
 
@@ -33,6 +33,38 @@ Commit history confirms:
   - Estimated time to unblock remaining gaps: 8-16 hours
   - Recommendation: Complete Move Outcome Effects UI before Game State Management
 - **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
+
+### Cancel Groups Editor — Complete (2026-08-18)
+
+`CancelGroupsEditorComponent` is fully implemented and wired into `game-root` for universal cancel group authoring. Key design decisions and behaviors:
+
+**Component contract:**
+- `@Input() includeName` (boolean attribute) — switches between *parent group mode* (name field, no cancel window) and *phase move mode* (cancel window, no name field). Default: phase move mode.
+- `@Input() universalGroups: Record<string, string[]>` — existing saved groups passed back in; rendered as expansion panel subsections inside the editor.
+- `@Input() moveList: Tile[]` — full move pool for the tile grid.
+- `@Input() overrides: Record<string, boolean>` — initial per-move override state (toggle semantics, see below).
+- `@Output() save` — fires **only on explicit Save button press** (not on every interaction). Payload includes `name?`, `universalGroups`, `characterGroups`, `overrides`, `moveList`, `cancelWindowStart?`, `cancelWindowEnd?`.
+
+**Override semantics (toggle model):**
+- `overrides` is a *sparse toggle map*, not a force-to-state map. An absent key means "no opinion — use group membership."
+- `overrides[key] = true` → move is selected even if not in any group.
+- `overrides[key] = false` → move is excluded even if in a group.
+- **Checking a group is purely additive**: clears any existing `false` overrides on that group's moves so prior manual deselections don't block new group inclusion.
+- **Deselecting a group move after the group is checked** stores a `false` override — that specific exclusion is preserved.
+
+**`activeMoveList` priority order:**
+1. Override `false` → excluded (user explicitly removed from group)
+2. Group membership (universal or character) → included, tagged with source
+3. Override `true` → included (user added outside any group)
+4. No opinion → excluded
+
+**UX:**
+- Wrapped in `<tfn-expansion-panel>` with configurable `header`/`subheader` inputs.
+- Universal and character group checkboxes live in nested subsection expansion panels.
+- Save button rendered at bottom of the editor panel.
+- `game-root` passes saved `universalCancelGroups()` back as `[universalGroups]` — no separate display section needed.
+
+**138 tests passing** (feature lib). 134 tests pre-existing + 4 new covering override/group interaction and `save` output gating.
 
 ### Completed Supporting Work Not Previously Captured Here
 
@@ -296,7 +328,8 @@ The following workflows are **intentionally deferred until immediately before Fi
 - Collision box editor: Visual/numeric editor for hitBoxes, hurtBoxes, collisionBoxes, throwBoxes (Region objects)
 - Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, resources, positional)
 - Resource effect UI: Select resource → choose modification mode (delta/multiply/exact/amount) → set value
-- Cancel window UI: Define cancels from this move; set windowStartFrame/windowEndFrame on target moves
+- ✅ **Cancel Groups editor** (complete 2026-08-18) — `CancelGroupsEditorComponent` with group checkboxes, per-move override tile grid, expansion panel UX, explicit Save, and toggle-model overrides. Wired into `game-root` for universal groups; reusable for character/phase level.
+- Cancel window UI: Wire `cancelWindowStart`/`cancelWindowEnd` from `CancelGroupsEditorComponent` phase move mode into `move-detail` / phase-level cancel rule saving (consumer not yet built).
 - Precondition UI: Set required/forbidden player state, required opponent state, cancel/follow-up restrictions
 - Effect validation: Highlight resources defined in game config; warn on undefined resources
 

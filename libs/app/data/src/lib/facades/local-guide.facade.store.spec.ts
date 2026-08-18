@@ -440,7 +440,7 @@ describe('LocalGuideFacadeStore', () => {
     const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
 
     const cancels = [
-      { startFrame: 2, endFrame: 5, allowedMoveKeys: ['hadoken', 'shoryuken'] },
+      { startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true, shoryuken: true } },
     ];
     await store.updateMoveOutcomeCancels({ moveKey, outcome: 'onHit', cancels });
 

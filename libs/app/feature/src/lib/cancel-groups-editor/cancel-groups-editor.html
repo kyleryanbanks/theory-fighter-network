@@ -1,104 +1,95 @@
-<div class="cancel-groups-editor">
-  <!-- Parent group mode: name field only -->
-  @if (isParentGroupMode()) {
-    <div class="name-field-section">
-      <label for="group-name">Cancel Group Name</label>
-      <input
-        id="group-name"
-        type="text"
-        class="name-input"
-        [(ngModel)]="groupName"
-        placeholder="Enter group name"
-      />
-    </div>
-  } @else {
-    <!-- Phase move mode: cancel window only -->
-    <div class="frame-inputs-section">
-      <div class="frame-field">
-        <label for="cancel-start">Cancel Window Start</label>
+<tfn-expansion-panel [header]="header()" [subheader]="subheader()">
+  <div class="cancel-groups-editor">
+    <!-- Parent group mode: name field only -->
+    @if (isParentGroupMode()) {
+      <div class="name-field-section">
+        <label for="group-name">Cancel Group Name</label>
         <input
-          id="cancel-start"
-          type="number"
-          class="frame-input"
-          [(ngModel)]="cancelWindowStart"
-          placeholder="Start frame"
+          id="group-name"
+          type="text"
+          class="name-input"
+          [(ngModel)]="groupName"
+          placeholder="Enter group name"
         />
       </div>
-      <div class="frame-field">
-        <label for="cancel-end">Cancel Window End</label>
-        <input
-          id="cancel-end"
-          type="number"
-          class="frame-input"
-          [(ngModel)]="cancelWindowEnd"
-          placeholder="End frame"
-        />
+    } @else {
+      <!-- Phase move mode: cancel window only -->
+      <div class="frame-inputs-section">
+        <div class="frame-field">
+          <label for="cancel-start">Cancel Window Start</label>
+          <input
+            id="cancel-start"
+            type="number"
+            class="frame-input"
+            [(ngModel)]="cancelWindowStart"
+            placeholder="Start frame"
+          />
+        </div>
+        <div class="frame-field">
+          <label for="cancel-end">Cancel Window End</label>
+          <input
+            id="cancel-end"
+            type="number"
+            class="frame-input"
+            [(ngModel)]="cancelWindowEnd"
+            placeholder="End frame"
+          />
+        </div>
       </div>
+      <p class="frame-note">These frame counts start from the beginning of the current phase (frame: {{ phaseStartFrame() }})</p>
+    }
+
+    <!-- Universal/Game Cancel Groups subsection -->
+    @if (hasGameGroups()) {
+      <tfn-expansion-panel
+        [header]="'Cancel Groups'"
+        [subheader]="'Game-level'"
+        subsection
+      >
+        <div class="groups-list">
+          @for (groupName of gameGroupNames(); track groupName) {
+            <label class="group-checkbox">
+              <input
+                type="checkbox"
+                [checked]="selectedUniversalGroups().has(groupName)"
+                (change)="onUniversalGroupChange(groupName, $event.target.checked)"
+              />
+              <span>{{ groupName }}</span>
+            </label>
+          }
+        </div>
+      </tfn-expansion-panel>
+    }
+
+    <!-- Character Cancel Groups subsection -->
+    @if (hasCharacterGroups()) {
+      <tfn-expansion-panel
+        [header]="characterName() + ' Cancel Groups'"
+        [subheader]="'Character-level'"
+        subsection
+      >
+        <div class="groups-list">
+          @for (groupName of characterGroupNames(); track groupName) {
+            <label class="group-checkbox">
+              <input
+                type="checkbox"
+                [checked]="selectedCharacterGroups().has(groupName)"
+                (change)="onCharacterGroupChange(groupName, $event.target.checked)"
+              />
+              <span>{{ groupName }}</span>
+            </label>
+          }
+        </div>
+      </tfn-expansion-panel>
+    }
+
+    <!-- Move list grid -->
+    <div class="move-list-section">
+      <tfn-tile-grid [tiles]="activeMoveList()" (update)="onTileUpdate($event)" />
     </div>
-    <p class="frame-note">These frame counts start from the beginning of the current phase (frame: {{ phaseStartFrame }})</p>
-  }
 
-  <!-- Universal/Game Cancel Groups subsection -->
-  @if (hasGameGroups()) {
-    <tfn-expansion-panel
-      [header]="'Cancel Groups'"
-      [subheader]="'Game-level'"
-      subsection
-    >
-      <div class="groups-list">
-        @for (groupName of gameGroupNames(); track groupName) {
-          <label class="group-checkbox">
-            <input
-              type="checkbox"
-              [checked]="selectedUniversalGroups().has(groupName)"
-              (change)="onUniversalGroupChange(groupName, $event.target.checked)"
-            />
-            <span>{{ groupName }}</span>
-          </label>
-        }
-      </div>
-      @if (gameKey(); as key) {
-        <div class="group-action">
-          <a routerLink="/game/{{ key }}" class="game-link">
-            View game cancel groups
-          </a>
-        </div>
-      }
-    </tfn-expansion-panel>
-  }
-
-  <!-- Character Cancel Groups subsection -->
-  @if (hasCharacterGroups()) {
-    <tfn-expansion-panel
-      [header]="characterName() + ' Cancel Groups'"
-      [subheader]="'Character-level'"
-      subsection
-    >
-      <div class="groups-list">
-        @for (groupName of characterGroupNames(); track groupName) {
-          <label class="group-checkbox">
-            <input
-              type="checkbox"
-              [checked]="selectedCharacterGroups().has(groupName)"
-              (change)="onCharacterGroupChange(groupName, $event.target.checked)"
-            />
-            <span>{{ groupName }}</span>
-          </label>
-        }
-      </div>
-      @if (characterKey(); as key) {
-        <div class="group-action">
-          <a routerLink="/character/{{ key }}" class="character-link">
-            View character cancel groups
-          </a>
-        </div>
-      }
-    </tfn-expansion-panel>
-  }
-
-  <!-- Move list grid (always visible, not in subsection) -->
-  <div class="move-list-section">
-    <h3 class="move-list-title">Moves to Cancel</h3>
-      <tfn-tile-grid [tiles]="moveList()" (update)="onTileUpdate($event)" />
+    <footer class="editor-actions">
+      <button matButton="filled" type="button" (click)="onSave()">Save</button>
+    </footer>
   </div>
-</div>
+</tfn-expansion-panel>

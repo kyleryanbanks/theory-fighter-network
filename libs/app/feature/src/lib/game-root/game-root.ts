@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   FormField,
@@ -18,7 +18,7 @@ import {
   LocalGuideFacadeStore,
 } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { TfnLink } from '@theory-fighter-network/ui';
+import { TfnLink, type Tile } from '@theory-fighter-network/ui';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 interface GameFormModel {
@@ -71,6 +71,27 @@ export class GameRoot {
   });
   readonly vocabularyError = signal('');
 
+
+  // Computed: existing universal cancel groups keyed by name → move keys (passed to editor)
+  readonly universalCancelGroups = computed(() => {
+    const guide = this.facade.guide();
+    if (!guide) return {} as Record<string, string[]>;
+    return guide.entities.game.universal.cancelGroups ?? {};
+  });
+
+  // Computed: all universal moves as toggleable tiles for the cancel group editor
+  readonly universalMoveList = computed((): Tile[] => {
+    const guide = this.facade.guide();
+    if (!guide) return [];
+    const moveKeys = guide.entities.game.universal.moveKeys;
+    const moves = guide.entities.moves;
+    return moveKeys.map((key): Tile => ({
+      key,
+      label: moves.find(m => m.semanticKey === key)?.name ?? key,
+      value: false,
+    }));
+  });
+
   readonly gameForm = form(this.gameModel, (path) => {
     required(path.name, { message: 'Game name is required.' });
     required(path.version, { message: 'Version is required.' });
@@ -100,6 +121,16 @@ export class GameRoot {
           buttons: game.config.inputs.buttons.map((input) => ({ ...input })),
         },
       });
+    });
+
+  }
+
+  async saveUniversalCancelGroup(rule: { name?: string; moveList: string[] }): Promise<void> {
+    await this.facade.createCancelGroup({
+      scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
+      isGameLevel: true,
+      groupName: rule.name ?? '',
+      moveKeys: rule.moveList,
     });
   }
 

@@ -1,505 +1,422 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { CancelGroupsEditorComponent } from './cancel-groups-editor';
+
+const UNIVERSAL_GROUPS = {
+  Launcher: ['move1', 'move2'],
+  Combo: ['move3'],
+};
+
+const CHARACTER_GROUPS = {
+  Hadoken: ['move1', 'move4'],
+};
+
+const MOVE_LIST = [
+  { key: 'move1', label: 'Move 1' },
+  { key: 'move2', label: 'Move 2' },
+  { key: 'move3', label: 'Move 3' },
+  { key: 'move4', label: 'Move 4' },
+];
 
 describe('CancelGroupsEditorComponent', () => {
   let component: CancelGroupsEditorComponent;
   let fixture: ComponentFixture<CancelGroupsEditorComponent>;
-  let facadeMock: any;
 
   beforeEach(async () => {
-    const facadeSpy = {
-      guide: signal(null),
-    };
-
     await TestBed.configureTestingModule({
       imports: [CancelGroupsEditorComponent],
-      providers: [
-        { provide: LocalGuideFacadeStore, useValue: facadeSpy },
-        provideRouter([]),
-      ],
+      providers: [provideRouter([])],
     }).compileComponents();
 
-    facadeMock = TestBed.inject(LocalGuideFacadeStore);
     fixture = TestBed.createComponent(CancelGroupsEditorComponent);
     component = fixture.componentInstance;
   });
 
+  // ── initialization ──────────────────────────────────────────────────────
+
   describe('initialization', () => {
-    beforeEach(() => {
-      fixture.detectChanges();
-    });
+    beforeEach(() => fixture.detectChanges());
 
     it('should create', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize with empty signals', () => {
+    it('should initialize local signals with defaults', () => {
       expect(component.groupName()).toBe('');
       expect(component.cancelWindowStart()).toBeNull();
       expect(component.cancelWindowEnd()).toBeNull();
-      expect(component.selectedGameGroups().size).toBe(0);
+      expect(component.selectedUniversalGroups().size).toBe(0);
       expect(component.selectedCharacterGroups().size).toBe(0);
-      expect(component.userOverrideMoves().size).toBe(0);
+      expect(component.selectedOverrides()).toEqual({});
     });
 
-    it('should accept includeName input and default to true', () => {
-      expect(component.includeName()).toBe(true);
-    });
-  });
-
-  describe('game cancel groups', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Launcher': ['move1', 'move2'],
-                'Combo': ['move3'],
-              },
-            },
-          },
-          characters: [],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-            { semanticKey: 'move2', name: 'Move 2' },
-            { semanticKey: 'move3', name: 'Move 3' },
-          ],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.detectChanges();
-    });
-
-    it('should load game universal cancel groups from facade', () => {
-      const groups = component.gameUniversalGroups();
-      expect(groups['Launcher']).toEqual(['move1', 'move2']);
-      expect(groups['Combo']).toEqual(['move3']);
-    });
-
-    it('should mark hasGameGroups as true when groups exist', () => {
-      expect(component.hasGameGroups()).toBe(true);
-    });
-
-    it('should select a game group when checkbox is checked', () => {
-      component.onGameGroupChange('Launcher', true);
-
-      expect(component.selectedGameGroups().has('Launcher')).toBe(true);
-    });
-
-    it('should deselect a game group when checkbox is unchecked', () => {
-      component.selectedGameGroups.set(new Set(['Launcher']));
-      component.onGameGroupChange('Launcher', false);
-
-      expect(component.selectedGameGroups().has('Launcher')).toBe(false);
-    });
-
-    it('should add moves from selected game group to effective moves', () => {
-      component.onGameGroupChange('Launcher', true);
-
-      const effective = component.effectiveMoves();
-      expect(effective.has('move1')).toBe(true);
-      expect(effective.has('move2')).toBe(true);
-    });
-
-    it('should remove force-ON overrides when a game group is checked', () => {
-      // User had explicitly selected move1
-      component.userOverrideMoves.set(new Map([['move1', true]]));
-
-      // Now select the group that contains move1
-      component.onGameGroupChange('Launcher', true);
-
-      // The override should be removed since the group now provides it
-      expect(component.userOverrideMoves().has('move1')).toBe(false);
-      expect(component.selectedGameGroups().has('Launcher')).toBe(true);
-    });
-
-    it('should keep force-OFF overrides when selecting a group', () => {
-      // User had explicitly deselected move1
-      component.userOverrideMoves.set(new Map([['move1', false]]));
-
-      // Now select the group that contains move1
-      component.onGameGroupChange('Launcher', true);
-
-      // The force-OFF override should remain (user wants to prevent this move even though group has it)
-      expect(component.userOverrideMoves().get('move1')).toBe(false);
-    });
-  });
-
-  describe('character cancel groups', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {},
-            },
-          },
-          characters: [
-            {
-              semanticKey: 'ryu',
-              name: 'Ryu',
-              cancelGroups: {
-                'Hadoken': ['move1', 'move4'],
-              },
-            },
-          ],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-            { semanticKey: 'move4', name: 'Move 4' },
-          ],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.componentRef.setInput('characterKey', 'ryu');
-      fixture.detectChanges();
-    });
-
-    it('should load character cancel groups from facade', () => {
-      const groups = component.characterCancelGroups();
-      expect(groups['Hadoken']).toEqual(['move1', 'move4']);
-    });
-
-    it('should get character name from facade', () => {
-      expect(component.characterName()).toBe('Ryu');
-    });
-
-    it('should mark hasCharacterGroups as true when groups exist', () => {
-      expect(component.hasCharacterGroups()).toBe(true);
-    });
-
-    it('should select a character group when checkbox is checked', () => {
-      component.onCharacterGroupChange('Hadoken', true);
-
-      expect(component.selectedCharacterGroups().has('Hadoken')).toBe(true);
-    });
-
-    it('should add moves from character group to effective moves', () => {
-      component.onCharacterGroupChange('Hadoken', true);
-
-      const effective = component.effectiveMoves();
-      expect(effective.has('move1')).toBe(true);
-      expect(effective.has('move4')).toBe(true);
-    });
-
-    it('should remove force-ON overrides when a character group is checked', () => {
-      component.userOverrideMoves.set(new Map([['move1', true]]));
-
-      component.onCharacterGroupChange('Hadoken', true);
-
-      expect(component.userOverrideMoves().has('move1')).toBe(false);
-    });
-  });
-
-  describe('move merging and overrides', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Universal': ['move1', 'move2'],
-              },
-            },
-          },
-          characters: [
-            {
-              semanticKey: 'ryu',
-              name: 'Ryu',
-              cancelGroups: {
-                'Character': ['move3'],
-              },
-            },
-          ],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-            { semanticKey: 'move2', name: 'Move 2' },
-            { semanticKey: 'move3', name: 'Move 3' },
-            { semanticKey: 'move4', name: 'Move 4' },
-          ],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.componentRef.setInput('characterKey', 'ryu');
-      fixture.detectChanges();
-    });
-
-    it('should merge game and character groups', () => {
-      component.onGameGroupChange('Universal', true);
-      component.onCharacterGroupChange('Character', true);
-
-      const effective = component.effectiveMoves();
-      expect(effective.has('move1')).toBe(true);
-      expect(effective.has('move2')).toBe(true);
-      expect(effective.has('move3')).toBe(true);
-    });
-
-    it('should apply force-OFF overrides to remove moves from merged list', () => {
-      component.onGameGroupChange('Universal', true);
-
-      // User wants to exclude move1 even though it's in the group
-      component.userOverrideMoves.set(new Map([['move1', false]]));
-      fixture.detectChanges();
-
-      const effective = component.effectiveMoves();
-      expect(effective.has('move1')).toBe(false);
-      expect(effective.has('move2')).toBe(true);
-    });
-
-    it('should apply force-ON overrides to add moves outside groups', () => {
-      component.onGameGroupChange('Universal', true);
-
-      // User wants to add move4 which is not in any group
-      component.userOverrideMoves.set(new Map([['move4', true]]));
-      fixture.detectChanges();
-
-      const effective = component.effectiveMoves();
-      expect(effective.has('move4')).toBe(true);
-    });
-  });
-
-  describe('tile generation and tags', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Universal': ['move1'],
-              },
-            },
-          },
-          characters: [
-            {
-              semanticKey: 'ryu',
-              name: 'Ryu',
-              cancelGroups: {
-                'Character': ['move2'],
-              },
-            },
-          ],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-            { semanticKey: 'move2', name: 'Move 2' },
-            { semanticKey: 'move3', name: 'Move 3' },
-          ],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.componentRef.setInput('characterKey', 'ryu');
-      fixture.detectChanges();
-    });
-
-    it('should generate tiles from effective moves', () => {
-      component.onGameGroupChange('Universal', true);
-      fixture.detectChanges();
-
-      const tiles = component.moveTiles();
-      expect(tiles.length).toBe(1);
-      expect(tiles[0].key).toBe('move1');
-      expect(tiles[0].label).toBe('Move 1');
-    });
-
-    it('should tag move with Universal when from game group only', () => {
-      component.onGameGroupChange('Universal', true);
-      fixture.detectChanges();
-
-      const tiles = component.moveTiles();
-      expect(tiles[0].tags).toContainEqual(expect.objectContaining({ label: 'Universal' }));
-    });
-
-    it('should tag move with character name when from character group only', () => {
-      component.onCharacterGroupChange('Character', true);
-      fixture.detectChanges();
-
-      const tiles = component.moveTiles();
-      expect(tiles[0].key).toBe('move2');
-      expect(tiles[0].tags).toContainEqual(expect.objectContaining({ label: 'Ryu' }));
-    });
-
-    it('should tag move with both Universal and character name when in both groups', () => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Universal': ['move1'],
-              },
-            },
-          },
-          characters: [
-            {
-              semanticKey: 'ryu',
-              name: 'Ryu',
-              cancelGroups: {
-                'Character': ['move1'],
-              },
-            },
-          ],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-          ],
-        },
-      };
-      // Update the facade's guide signal directly
-      facadeMock.guide.set(mockGuide);
-      fixture.componentRef.setInput('characterKey', 'ryu');
-      fixture.detectChanges();
-
-      component.onGameGroupChange('Universal', true);
-      component.onCharacterGroupChange('Character', true);
-      fixture.detectChanges();
-
-      const tiles = component.moveTiles();
-      expect(tiles[0].tags).toContainEqual(expect.objectContaining({ label: 'Universal' }));
-      expect(tiles[0].tags).toContainEqual(expect.objectContaining({ label: 'Ryu' }));
-    });
-
-    it('should tag force-ON override moves with Local Override', () => {
-      component.userOverrideMoves.set(new Map([['move3', true]]));
-      fixture.detectChanges();
-
-      const tiles = component.moveTiles();
-      expect(tiles[0].key).toBe('move3');
-      expect(tiles[0].tags).toContainEqual(expect.objectContaining({ label: 'Local Override' }));
-    });
-  });
-
-  describe('tile interaction', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Universal': ['move1', 'move2'],
-              },
-            },
-          },
-          characters: [],
-          moves: [
-            { semanticKey: 'move1', name: 'Move 1' },
-            { semanticKey: 'move2', name: 'Move 2' },
-          ],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.detectChanges();
-    });
-
-    it('should force-OFF a move when tile is deselected and move is in a group', () => {
-      component.onGameGroupChange('Universal', true);
-      fixture.detectChanges();
-
-      const tile = { key: 'move1', label: 'Move 1', value: false };
-      component.onTileUpdate(tile);
-
-      expect(component.userOverrideMoves().get('move1')).toBe(false);
-    });
-
-    it('should force-ON a move when tile is selected and move is not in any group', () => {
-      component.onTileUpdate({ key: 'move3', label: 'Move 3', value: true });
-
-      expect(component.userOverrideMoves().get('move3')).toBe(true);
-    });
-
-    it('should remove override when tile is toggled back to normal', () => {
-      component.userOverrideMoves.set(new Map([['move1', false]]));
-
-      // Simulate re-selecting the move to remove the override
-      component.onTileUpdate({ key: 'move1', label: 'Move 1', value: true });
-
-      expect(component.userOverrideMoves().has('move1')).toBe(false);
-    });
-
-    it('should ignore tile array updates from selection mode', () => {
-      const tiles = [
-        { key: 'move1', label: 'Move 1', value: true },
-        { key: 'move2', label: 'Move 2', value: true },
-      ];
-
-      component.onTileUpdate(tiles);
-
-      // Should not crash, should not add to overrides
-      expect(component.userOverrideMoves().size).toBe(0);
-    });
-  });
-
-  describe('public API', () => {
-    beforeEach(() => {
-      const mockGuide = {
-        entities: {
-          game: {
-            universal: {
-              cancelGroups: {
-                'Launcher': ['move1', 'move2'],
-              },
-            },
-          },
-          characters: [],
-          moves: [],
-        },
-      };
-      facadeMock.guide.set(mockGuide);
-      fixture.detectChanges();
-    });
-
-    it('should return effective moves as array via getSelectedMoves', () => {
-      component.onGameGroupChange('Launcher', true);
-      fixture.detectChanges();
-
-      const selected = component.getSelectedMoves();
-      expect(Array.isArray(selected)).toBe(true);
-      expect(selected).toContain('move1');
-      expect(selected).toContain('move2');
-    });
-
-    it('should accept frame inputs', () => {
-      component.cancelWindowStart.set(5);
-      component.cancelWindowEnd.set(15);
-
-      expect(component.cancelWindowStart()).toBe(5);
-      expect(component.cancelWindowEnd()).toBe(15);
-    });
-
-    it('should accept group name input', () => {
-      component.groupName.set('My Cancel Group');
-
-      expect(component.groupName()).toBe('My Cancel Group');
-    });
-  });
-
-  describe('input properties', () => {
-    it('should accept includeName input', () => {
-      fixture.componentRef.setInput('includeName', false);
-      fixture.detectChanges();
-
+    it('includeName defaults to false (phase move mode)', () => {
       expect(component.includeName()).toBe(false);
     });
 
-    it('should accept gameKey input', () => {
-      fixture.componentRef.setInput('gameKey', 'sf6');
-      fixture.detectChanges();
+    it('isParentGroupMode is false by default', () => {
+      expect(component.isParentGroupMode()).toBe(false);
+    });
+  });
 
-      expect(component.gameKey()).toBe('sf6');
+  // ── mode switching ───────────────────────────────────────────────────────
+
+  describe('mode switching', () => {
+    it('isParentGroupMode is true when includeName is set', () => {
+      fixture.componentRef.setInput('includeName', true);
+      fixture.detectChanges();
+      expect(component.isParentGroupMode()).toBe(true);
+    });
+  });
+
+  // ── universal group checkboxes ───────────────────────────────────────────
+
+  describe('universal group changes', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('universalGroups', UNIVERSAL_GROUPS);
+      fixture.componentRef.setInput('moveList', MOVE_LIST);
+      fixture.detectChanges();
     });
 
-    it('should accept characterKey input', () => {
-      fixture.componentRef.setInput('characterKey', 'ryu');
-      fixture.detectChanges();
-
-      expect(component.characterKey()).toBe('ryu');
+    it('adds a group name to selectedUniversalGroups when checked', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      expect(component.selectedUniversalGroups().has('Launcher')).toBe(true);
     });
 
-    it('should accept phaseStartFrame input', () => {
+    it('removes a group name from selectedUniversalGroups when unchecked', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      component.onUniversalGroupChange('Launcher', false);
+      expect(component.selectedUniversalGroups().has('Launcher')).toBe(false);
+    });
+
+    it('hasGameGroups is true when universalGroups input has entries', () => {
+      expect(component.hasGameGroups()).toBe(true);
+    });
+
+    it('gameGroupNames returns the group names', () => {
+      expect(component.gameGroupNames()).toContain('Launcher');
+      expect(component.gameGroupNames()).toContain('Combo');
+    });
+  });
+
+  // ── character group checkboxes ───────────────────────────────────────────
+
+  describe('character group changes', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('characterGroups', CHARACTER_GROUPS);
+      fixture.componentRef.setInput('moveList', MOVE_LIST);
+      fixture.detectChanges();
+    });
+
+    it('adds a group name to selectedCharacterGroups when checked', () => {
+      component.onCharacterGroupChange('Hadoken', true);
+      expect(component.selectedCharacterGroups().has('Hadoken')).toBe(true);
+    });
+
+    it('hasCharacterGroups is true when characterGroups input has entries', () => {
+      expect(component.hasCharacterGroups()).toBe(true);
+    });
+  });
+
+  // ── activeMoveList computed ──────────────────────────────────────────────
+
+  describe('activeMoveList', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('universalGroups', UNIVERSAL_GROUPS);
+      fixture.componentRef.setInput('characterGroups', CHARACTER_GROUPS);
+      fixture.componentRef.setInput('characterName', 'Ryu');
+      fixture.componentRef.setInput('moveList', MOVE_LIST);
+      fixture.detectChanges();
+    });
+
+    it('marks tiles from selected universal group as selected', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move2')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(false);
+    });
+
+    it('marks tiles from selected character group as selected', () => {
+      component.onCharacterGroupChange('Hadoken', true);
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move4')?.value).toBe(true);
+    });
+
+    it('merges universal and character groups', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      component.onCharacterGroupChange('Hadoken', true);
+      const tiles = component.activeMoveList();
+      // move1: in both groups
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(true);
+      // move2: universal only
+      expect(tiles.find(t => t.key === 'move2')?.value).toBe(true);
+      // move4: character only
+      expect(tiles.find(t => t.key === 'move4')?.value).toBe(true);
+      // move3: not in either selected group
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(false);
+    });
+
+    it('force-on override includes a move not in any group', () => {
+      fixture.componentRef.setInput('overrides', { move3: true });
+      fixture.detectChanges();
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(true);
+    });
+
+    it('checking a group clears pre-existing false overrides for its moves (purely additive)', () => {
+      fixture.componentRef.setInput('overrides', { move1: false });
+      fixture.detectChanges();
+      // Checking Launcher clears the false override on move1
+      component.onUniversalGroupChange('Launcher', true);
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move2')?.value).toBe(true);
+    });
+
+    it('deselecting a group move after the group is checked records a force-off override', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      // User explicitly deselects move1 after group was checked
+      component.onTileUpdate({ key: 'move1', label: 'Move 1', value: false });
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(false);
+      expect(tiles.find(t => t.key === 'move2')?.value).toBe(true);
+    });
+
+    it('force-on override adds a move not in any group', () => {
+      fixture.componentRef.setInput('overrides', { move3: true });
+      fixture.detectChanges();
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(true);
+    });
+
+    it('move with no override and no group membership is unselected', () => {
+      fixture.componentRef.setInput('overrides', { move3: false });
+      fixture.detectChanges();
+      const tiles = component.activeMoveList();
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(false);
+    });
+
+    it('tags move with Universal when from universal group', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      const tile = component.activeMoveList().find(t => t.key === 'move1');
+      expect(tile?.tags).toContainEqual(expect.objectContaining({ label: 'Universal' }));
+    });
+
+    it('tags move with character name when from character group', () => {
+      component.onCharacterGroupChange('Hadoken', true);
+      const tile = component.activeMoveList().find(t => t.key === 'move4');
+      expect(tile?.tags).toContainEqual(expect.objectContaining({ label: 'Ryu' }));
+    });
+
+    it('tags move with both when in universal and character groups', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      component.onCharacterGroupChange('Hadoken', true);
+      const tile = component.activeMoveList().find(t => t.key === 'move1');
+      expect(tile?.tags).toContainEqual(expect.objectContaining({ label: 'Universal' }));
+      expect(tile?.tags).toContainEqual(expect.objectContaining({ label: 'Ryu' }));
+    });
+
+    it('checking a group selects its moves while preserving existing user overrides', () => {
+      // User has move3 selected (not in Launcher), move4 selected (not in Launcher)
+      component.onTileUpdate({ key: 'move3', label: 'Move 3', value: true });
+      component.onTileUpdate({ key: 'move4', label: 'Move 4', value: true });
+      // Now check Launcher (move1, move2) — no overrides on those
+      component.onUniversalGroupChange('Launcher', true);
+      const tiles = component.activeMoveList();
+      // Group moves selected, tagged Universal
+      expect(tiles.find(t => t.key === 'move1')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move1')?.tags).toContainEqual(expect.objectContaining({ label: 'Universal' }));
+      expect(tiles.find(t => t.key === 'move2')?.value).toBe(true);
+      // User overrides preserved
+      expect(tiles.find(t => t.key === 'move3')?.value).toBe(true);
+      expect(tiles.find(t => t.key === 'move4')?.value).toBe(true);
+    });
+  });
+
+  // ── tile override handling ───────────────────────────────────────────────
+
+  describe('onTileUpdate', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('universalGroups', UNIVERSAL_GROUPS);
+      fixture.componentRef.setInput('moveList', MOVE_LIST);
+      fixture.detectChanges();
+    });
+
+    it('records force-on override when tile is selected', () => {
+      component.onTileUpdate({ key: 'move3', label: 'Move 3', value: true });
+      expect(component.selectedOverrides()['move3']).toBe(true);
+    });
+
+    it('records force-off override when tile is deselected', () => {
+      component.onUniversalGroupChange('Launcher', true);
+      component.onTileUpdate({ key: 'move1', label: 'Move 1', value: false });
+      expect(component.selectedOverrides()['move1']).toBe(false);
+    });
+
+    it('ignores array emissions from selection mode', () => {
+      const before = { ...component.selectedOverrides() };
+      component.onTileUpdate([{ key: 'move1', label: 'Move 1', value: true }]);
+      expect(component.selectedOverrides()).toEqual(before);
+    });
+  });
+
+  // ── save output ──────────────────────────────────────────────────────────
+
+  describe('save output', () => {
+    beforeEach(() => {
+      fixture.componentRef.setInput('universalGroups', UNIVERSAL_GROUPS);
+      fixture.componentRef.setInput('moveList', MOVE_LIST);
+      fixture.detectChanges();
+    });
+
+    it('does not emit while user is interacting (no auto-emit on group change)', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.onUniversalGroupChange('Launcher', true);
+
+      expect(emitted.length).toBe(0);
+    });
+
+    it('does not emit while user is interacting (no auto-emit on tile update)', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.onTileUpdate({ key: 'move3', label: 'Move 3', value: true });
+
+      expect(emitted.length).toBe(0);
+    });
+
+    it('emits universalGroups, characterGroups, overrides, and moveList on onSave()', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.onUniversalGroupChange('Launcher', true);
+      component.onSave();
+
+      expect(emitted.length).toBe(1);
+      const result = emitted[0];
+      expect(result.universalGroups).toContain('Launcher');
+      expect(result.characterGroups).toEqual([]);
+      expect(result.overrides).toEqual({});
+      expect(result.moveList).toContain('move1');
+      expect(result.moveList).toContain('move2');
+    });
+
+    it('emits overrides as Record<string, boolean> on onSave()', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.onTileUpdate({ key: 'move3', label: 'Move 3', value: true });
+      component.onSave();
+
+      expect(emitted[0].overrides).toEqual({ move3: true });
+    });
+
+    it('emits accumulated state from multiple interactions on onSave()', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.onTileUpdate({ key: 'move1', label: 'Move 1', value: true });
+      component.onUniversalGroupChange('Combo', true);
+      component.onSave();
+
+      const result = emitted[0];
+      expect(result.overrides['move1']).toBe(true);
+      expect(result.universalGroups).toContain('Combo');
+    });
+
+    it('emits name in parent group mode when groupName is set', () => {
+      fixture.componentRef.setInput('includeName', true);
+      fixture.detectChanges();
+      component.groupName.set('My Group');
+
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+      component.onSave();
+
+      expect(emitted[0].name).toBe('My Group');
+    });
+
+    it('does not emit name when groupName is empty', () => {
+      fixture.componentRef.setInput('includeName', true);
+      fixture.detectChanges();
+
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+      component.onSave();
+
+      expect(emitted[0].name).toBeUndefined();
+    });
+
+    it('includes cancelWindowStart and cancelWindowEnd in phase move mode', () => {
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+
+      component.cancelWindowStart.set(3);
+      component.cancelWindowEnd.set(12);
+      component.onSave();
+
+      expect(emitted[0].cancelWindowStart).toBe(3);
+      expect(emitted[0].cancelWindowEnd).toBe(12);
+    });
+
+    it('omits cancelWindowStart and cancelWindowEnd in parent group mode', () => {
+      fixture.componentRef.setInput('includeName', true);
+      fixture.detectChanges();
+      component.cancelWindowStart.set(3);
+      component.cancelWindowEnd.set(12);
+
+      const emitted: any[] = [];
+      component.save.subscribe((v: any) => emitted.push(v));
+      component.onSave();
+
+      expect(emitted[0].cancelWindowStart).toBeUndefined();
+      expect(emitted[0].cancelWindowEnd).toBeUndefined();
+    });
+  });
+
+  // ── input passthrough ────────────────────────────────────────────────────
+
+  describe('input properties', () => {
+    it('accepts phaseStartFrame', () => {
       fixture.componentRef.setInput('phaseStartFrame', 42);
       fixture.detectChanges();
-
       expect(component.phaseStartFrame()).toBe(42);
+    });
+
+    it('accepts characterName', () => {
+      fixture.componentRef.setInput('characterName', 'Chun-Li');
+      fixture.detectChanges();
+      expect(component.characterName()).toBe('Chun-Li');
+    });
+
+    it('initializes selectedUniversalGroups from overrideUniversalGroups', () => {
+      fixture.componentRef.setInput('overrideUniversalGroups', new Set(['Launcher']));
+      fixture.detectChanges();
+      expect(component.selectedUniversalGroups().has('Launcher')).toBe(true);
+    });
+
+    it('initializes selectedCharacterGroups from overrideCharacterGroups', () => {
+      fixture.componentRef.setInput('overrideCharacterGroups', new Set(['Hadoken']));
+      fixture.detectChanges();
+      expect(component.selectedCharacterGroups().has('Hadoken')).toBe(true);
+    });
+
+    it('initializes selectedOverrides from overrides input', () => {
+      fixture.componentRef.setInput('overrides', { move1: false });
+      fixture.detectChanges();
+      expect(component.selectedOverrides()['move1']).toBe(false);
+    });
+
+    it('cancelWindowStart and cancelWindowEnd are writable', () => {
+      component.cancelWindowStart.set(5);
+      component.cancelWindowEnd.set(15);
+      expect(component.cancelWindowStart()).toBe(5);
+      expect(component.cancelWindowEnd()).toBe(15);
     });
   });
 });

@@ -230,7 +230,12 @@
 		</footer>
 	</form>
 
-	@if (facade.guide()) {
-		<tfn-cancel-groups-editor scope="game" scopeKey="" />
+	@if (facade.guide(); as guide) {
+		<tfn-cancel-groups-editor 
+			includeName
+			[moveList]="universalMoveList()"
+			[universalGroups]="universalCancelGroups()"
+			(save)="saveUniversalCancelGroup($event)"
+		/>
 	}
 </section>

@@ -66,21 +66,21 @@ export class MoveDetail {
     return this.availableMoves().map((move) => ({
       key: move.semanticKey,
       label: move.name,
-      selected: (cancel.allowedMoveKeys ?? []).includes(move.semanticKey),
+      value: (cancel.userOverrideMoves ?? {})[move.semanticKey] === true,
     }));
   }
 
   onCustomMoveTileUpdate(cancel: PhaseCancelRule, tile: Tile | Tile[]): void {
     if (Array.isArray(tile)) {
-      // selections array from maxSelections mode - not used here
       return;
     }
-    const currentKeys = cancel.allowedMoveKeys ?? [];
+    const overrides = { ...(cancel.userOverrideMoves ?? {}) };
     if (tile.value === true) {
-      cancel.allowedMoveKeys = [...currentKeys, tile.key];
-    } else if (tile.value === false) {
-      cancel.allowedMoveKeys = currentKeys.filter((k) => k !== tile.key);
+      overrides[tile.key] = true;
+    } else {
+      delete overrides[tile.key];
     }
+    cancel.userOverrideMoves = overrides;
   }
 
   phaseDuration(phaseIndex: number, phase: 'startup' | 'active' | 'recovery'): DataValue {
@@ -198,7 +198,7 @@ export class MoveDetail {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
     const cancel = currentCancels[cancelIndex];
     if (cancel) {
-      cancel.cancelGroupKeys = groupValues;
+      cancel.universalCancelGroupNames = groupValues;
       void this.updateOutcomeCancel(phaseIndex, outcome, cancelIndex, cancel);
     }
   }

@@ -40,9 +40,9 @@
                           <div class="cancel-groups-section">
                             <label>Cancel groups:</label>
                             @if (availableCancelGroups().length > 0) {
-                              <select [ngModel]="(cancel.cancelGroupKeys ?? []).join(',')" (change)="onCancelGroupsChange(phaseIndex, outcome, $index, $event)" multiple class="cancel-group-select">
+                              <select [ngModel]="(cancel.universalCancelGroupNames ?? []).join(',')" (change)="onCancelGroupsChange(phaseIndex, outcome, $index, $event)" multiple class="cancel-group-select">
                                 @for (group of availableCancelGroups(); track group.name) {
-                                  <option [value]="group.name" [selected]="(cancel.cancelGroupKeys ?? []).includes(group.name)">{{ group.name }}</option>
+                                  <option [value]="group.name" [selected]="(cancel.universalCancelGroupNames ?? []).includes(group.name)">{{ group.name }}</option>
                                 }
                               </select>
                             }
@@ -62,7 +62,7 @@
                           <tfn-delete-button [ariaLabel]="'Remove cancel rule'" (delete)="removeOutcomeCancel(phaseIndex, outcome, $index)" />
                         </div>
                       }
-                      <button matButton="outlined" type="button" (click)="addOutcomeCancel(phaseIndex, outcome, { startFrame: 0, endFrame: 0, cancelGroupKeys: [], allowedMoveKeys: [] })">Add cancel rule</button>
+                      <button matButton="outlined" type="button" (click)="addOutcomeCancel(phaseIndex, outcome, { startFrame: 0, endFrame: 0, universalCancelGroupNames: [], userOverrideMoves: {} })">Add cancel rule</button>
                     </div>
                   </div>
                 </div>

@@ -78,18 +78,18 @@
   font-size: 0.625rem;
   font-weight: 700;
   text-transform: uppercase;
-  
-  &--success {
-    background: #4caf50;
-  }
-  
-  &--warning {
-    background: #ff9800;
-  }
-  
-  &--danger {
-    background: #f44336;
-  }
+}
+
+.tile-tag--success {
+  background: #4caf50;
+}
+
+.tile-tag--warning {
+  background: #ff9800;
+}
+
+.tile-tag--danger {
+  background: #f44336;
 }
 
 .tile-tags {
@@ -143,21 +143,21 @@
     outline: 2px solid #6fbf94;
     outline-offset: -2px;
   }
+}
 
-  &--success {
-    color: #4caf50;
-    font-weight: 600;
-  }
+.tile-choice-button--success {
+  color: #4caf50;
+  font-weight: 600;
+}
 
-  &--warning {
-    color: #ff9800;
-    font-weight: 600;
-  }
+.tile-choice-button--warning {
+  color: #ff9800;
+  font-weight: 600;
+}
 
-  &--danger {
-    color: #f44336;
-    font-weight: 600;
-  }
+.tile-choice-button--danger {
+  color: #f44336;
+  font-weight: 600;
 }
 
 

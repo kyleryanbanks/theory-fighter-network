@@ -106,6 +106,12 @@
   font-style: italic;
 }
 
+.editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .frame-inputs-section {
