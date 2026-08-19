@@ -21,30 +21,36 @@
   </div>
 
   <div class="comparison-controls" aria-labelledby="comparison-type-heading">
-    <h4 id="comparison-type-heading">Comparison type</h4>
-    <div class="phase-buttons">
-      <button
-        class="phase-button"
-        [class.phase-button--active]="comparisonType().phase === 'startup'"
-        (click)="setComparisonType({ phase: 'startup', phaseIndex: 0 })"
-      >
-        Startup
-      </button>
-      <button
-        class="phase-button"
-        [class.phase-button--active]="comparisonType().phase === 'active'"
-        (click)="setComparisonType({ phase: 'active', phaseIndex: 0 })"
-      >
-        Active
-      </button>
-      <button
-        class="phase-button"
-        [class.phase-button--active]="comparisonType().phase === 'recovery'"
-        (click)="setComparisonType({ phase: 'recovery', phaseIndex: 0 })"
-      >
-        Recovery
-      </button>
-    </div>
+    <h4 id="comparison-type-heading">Comparison field</h4>
+    <select
+      class="field-select"
+      aria-labelledby="comparison-type-heading"
+      [value]="comparisonType().fieldId"
+      (change)="setComparisonField($any($event.target).value)"
+    >
+      @for (group of fieldGroups; track group.label) {
+        <optgroup [label]="group.label">
+          @for (field of group.fields; track field.id) {
+            <option [value]="field.id">{{ field.label }}</option>
+          }
+        </optgroup>
+      }
+    </select>
+
+    @if (maxPhaseCount() > 1) {
+      <label class="phase-select-label">
+        Phase
+        <select
+          class="phase-select"
+          [value]="comparisonType().phaseIndex"
+          (change)="setPhaseIndex(+$any($event.target).value)"
+        >
+          @for (index of phaseIndexOptions(); track index) {
+            <option [value]="index">{{ index + 1 }}</option>
+          }
+        </select>
+      </label>
+    }
   </div>
 
   @if (pins().length) {
