@@ -418,11 +418,18 @@ The following workflows are **intentionally deferred until immediately before Fi
 - ✅ **Matchup > Response Tiles** (`matchup-editor`) — `TileGridComponent` in choice mode via `responseTiles(matchup, scenario)`. `(update)` wired to `onResponseTileUpdate`.
 - ✅ **Move > Phase > Cancel Rule Editor** (`move-detail`) — `CancelGroupsEditorComponent` wired per cancel rule instance with `[universalGroups]`, `[characterGroups]`, `[moveList]`, `[overrides]`, `[overrideUniversalGroups]`, `[header]`, and `(save)` bound to `onCancelRuleSave`. Delete button alongside each rule.
 
-**CancelGroupsEditor integration — Complete (2026-08-18).** Both integration points wired:
+**CancelGroupsEditor integration — Complete (2026-08-18).** All three integration points wired:
 
 - ✅ **Game > Universal Cancel Groups** (`game-root`) — `tfn-cancel-groups-editor` wired with universal group authoring.
 - ✅ **Move > Phase > Cancel Rules** (`move-detail`) — `tfn-cancel-groups-editor` in phase move mode, one instance per cancel rule, with full group + override binding.
-- ⏳ **Character > Character-Scoped Cancel Groups** (`character-editor`) — Not yet implemented. Characters can have their own cancel groups (distinct from universal game-level groups) that moves in that character's kit can reference. Needs a `CancelGroupsEditorComponent` instance in `character-editor` in parent group mode (`includeName`), analogous to how `game-root` handles universal groups.
+- ✅ **Character > Character-Scoped Cancel Groups** — `CancelGroupsEditorComponent` in `includeName` (parent group) mode wired into both `character-editor` (list view, per-character panel) and `character-detail` (detail page). Calls `facade.createCancelGroup({ isGameLevel: false, ... })`. Reactive `cancelGroups` and `moveList` computeds keep both surfaces in sync.
+
+**State Patch Operator support — Complete (2026-08-18).** Numeric outcome effects now carry an explicit mutation mode:
+
+- Added `PatchOperator = '=' | '+' | '-' | '*'` and `NumericStatePatch { op, value }` to `state.ts`.
+- `StatePatch` numeric entries updated from bare `DataValue` to `NumericStatePatch`.
+- `StatePatchEditorComponent` now renders a compact operator `mat-select` (`=`, `+`, `−`, `×`) before the `DataValueEditor` for numeric states. Operator characters only; full descriptions via `aria-label`.
+- Default on enable: `{ op: '=', value: { relative: 50 } }`.
 
 ### Ready to Start
 - **Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine** — Foundation already laid (2026-08-17). Move-comparison component now supports generic field selection (startup/active/recovery) with extensible infrastructure for future range/damage comparisons.
@@ -460,11 +467,10 @@ The following workflows are **intentionally deferred until immediately before Fi
 **Deliverables**:
 - Move phase editor: Extend the existing phase editor with complete phase fields and richer editing beyond duration DataValues
 - Collision box editor: Visual/numeric editor for hitBoxes, hurtBoxes, collisionBoxes, throwBoxes (Region objects)
-- Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, resources, positional)
-- Resource effect UI: Select resource → choose modification mode (delta/multiply/exact/amount) → set value
-- ✅ **Cancel Groups editor** (complete 2026-08-18) — `CancelGroupsEditorComponent` with group checkboxes, per-move override tile grid, expansion panel UX, explicit Save, and toggle-model overrides. Wired into `game-root` for universal groups AND into `move-detail` per cancel rule instance (phase move mode with `cancelWindowStart`/`cancelWindowEnd`).
+- Move outcome effects: Define effects on hit, block, guard (opponent stun, damage, positional) — ✅ **State patches with operator support complete (2026-08-18)**. Resources are states; the `StatePatchEditorComponent` with `PatchOperator` (`=`/`+`/`-`/`×`) covers all resource effect authoring without a separate UI.
+- ✅ **Cancel Groups editor** (complete 2026-08-18) — `CancelGroupsEditorComponent` with group checkboxes, per-move override tile grid, expansion panel UX, explicit Save, and toggle-model overrides. Wired into `game-root` for universal groups, `character-editor`/`character-detail` for character-scoped groups, AND into `move-detail` per cancel rule instance (phase move mode with `cancelWindowStart`/`cancelWindowEnd`).
 - Cancel window UI: `cancelWindowStart`/`cancelWindowEnd` fields are wired from `CancelGroupsEditorComponent` into `move-detail` via `onCancelRuleSave`. ✅ Complete.
-- Precondition UI: Set required/forbidden player state, required opponent state, cancel/follow-up restrictions
+- ✅ **Precondition UI** (complete 2026-08-18) — `MovePreconditionEditorComponent` covers player/opponent state guards with comparison operators, plus follow-up/cancel move tile grids.
 - Effect validation: Highlight resources defined in game config; warn on undefined resources
 
 **Validation**: All phases have duration; collision boxes are valid; effects reference defined resources

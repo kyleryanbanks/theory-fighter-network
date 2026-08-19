@@ -10,11 +10,13 @@ import {
   StateCreateDialogComponent,
   type StateCreateDialogResult,
 } from '@theory-fighter-network/ui';
+import type { Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
+import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 @Component({
   selector: 'tfn-character-detail',
-  imports: [JsonPipe, EntityDetailShell, EntityNotes, ExpansionPanel, GameStateManagerComponent],
+  imports: [JsonPipe, EntityDetailShell, EntityNotes, ExpansionPanel, GameStateManagerComponent, CancelGroupsEditorComponent],
   templateUrl: './character-detail.html',
 })
 export class CharacterDetail {
@@ -35,6 +37,19 @@ export class CharacterDetail {
   readonly gameStateCategories = computed(() =>
     Object.keys(this.facade.guide()?.entities.game.states ?? {})
   );
+
+  readonly cancelGroups = computed(() => this.character()?.cancelGroups ?? {});
+
+  readonly moveList = computed((): Tile[] => {
+    const character = this.character();
+    const allMoves = this.facade.guide()?.entities.moves ?? [];
+    const keys = character?.hierarchy?.moveKeys ?? [];
+    return keys.map((key): Tile => ({
+      key,
+      label: allMoves.find(m => m.semanticKey === key)?.name ?? key,
+      value: false,
+    }));
+  });
 
   openStateDialog(): void {
     const ref = this.dialog.open<
@@ -60,6 +75,15 @@ export class CharacterDetail {
 
   deleteState(event: { category: string; semanticKey: string }): void {
     void this.facade.deleteCharacterState({ characterKey: this.entityKey, ...event });
+  }
+
+  async saveCancelGroup(rule: { name?: string; moveList: string[] }): Promise<void> {
+    await this.facade.createCancelGroup({
+      scopeKey: this.entityKey,
+      isGameLevel: false,
+      groupName: rule.name ?? '',
+      moveKeys: rule.moveList,
+    });
   }
 }
 

@@ -6,7 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
+import type { Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
+import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 interface CharacterDraft {
   name: string;
@@ -14,7 +16,7 @@ interface CharacterDraft {
 
 @Component({
   selector: 'tfn-character-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
+  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink, CancelGroupsEditorComponent],
   templateUrl: './character-editor.html',
   styleUrl: './character-editor.css',
 })
@@ -33,6 +35,30 @@ export class CharacterEditor {
   readonly characterForm = form(this.characterModel, (path) => {
     required(path.name, { message: 'Character name is required.' });
   });
+
+  characterCancelGroups(characterKey: string): Record<string, string[]> {
+    const character = this.characters().find(c => c.semanticKey === characterKey);
+    return character?.cancelGroups ?? {};
+  }
+
+  characterMoveList(characterKey: string): Tile[] {
+    const character = this.characters().find(c => c.semanticKey === characterKey);
+    const keys = character?.hierarchy?.moveKeys ?? [];
+    return keys.map((key): Tile => ({
+      key,
+      label: this.moves().find(m => m.semanticKey === key)?.name ?? key,
+      value: false,
+    }));
+  }
+
+  async saveCharacterCancelGroup(characterKey: string, rule: { name?: string; moveList: string[] }): Promise<void> {
+    await this.facade.createCancelGroup({
+      scopeKey: characterKey,
+      isGameLevel: false,
+      groupName: rule.name ?? '',
+      moveKeys: rule.moveList,
+    });
+  }
 
   characterMoves(characterKey: string) {
     const character = this.characters().find(

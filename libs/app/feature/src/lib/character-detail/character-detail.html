@@ -20,6 +20,12 @@
       (addState)="openStateDialog()"
       (deleteState)="deleteState($event)"
     />
+    <tfn-cancel-groups-editor
+      includeName
+      [moveList]="moveList()"
+      [universalGroups]="cancelGroups()"
+      (save)="saveCancelGroup($event)"
+    />
     <tfn-expansion-panel header="Complete data" subheader="All stored fields for this character">
       <pre>{{ currentCharacter | json }}</pre>
     </tfn-expansion-panel>
