@@ -10,7 +10,7 @@ import {
   DataValue,
 } from './shared';
 import { Region } from './region';
-import { RuntimeStatePatch, StateModel } from './state';
+import { StatePatch, StateModel } from './state';
 import { normalizeGameName } from './game';
 
 export interface MoveDocument {
@@ -232,9 +232,9 @@ export interface MoveOutcomeEffect<
 
   cancels?: PhaseCancelRule[]; // Cancel windows available from this outcome
 
-  source?: RuntimeStatePatch<TStateModel>;
-  target?: RuntimeStatePatch<TStateModel>;
-  game?: RuntimeStatePatch<TStateModel>;
+  source?: StatePatch<TStateModel>;
+  target?: StatePatch<TStateModel>;
+  game?: StatePatch<TStateModel>;
 }
 
 export const createMoveOutcomeEffect = (

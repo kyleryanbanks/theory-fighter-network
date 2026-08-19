@@ -1,4 +1,10 @@
 <tfn-expansion-panel [header]="header()" [subheader]="subheader()">
+  <div tfnExpansionPanelAction class="state-patch-editor__actions">
+    <button mat-button type="button" (click)="createGameState.emit()">+ Game State</button>
+    @if (hasCharacter()) {
+      <button mat-button type="button" (click)="createCharacterState.emit()">+ Character State</button>
+    }
+  </div>
   <div class="state-patch-editor">
     @for (category of categories(); track category.category) {
       <tfn-expansion-panel [header]="category.category" subsection secondary>
@@ -8,7 +14,7 @@
 
         <div class="state-patch-editor__rows">
           @for (state of category.states; track state.semanticKey) {
-            <div class="state-patch-editor__row">
+            <div class="state-patch-editor__row" [class.state-patch-editor__row--numeric]="isAffected(category.category, state.semanticKey) && isNumericState(state)">
               <label class="state-patch-editor__toggle">
                 <mat-checkbox
                   [attr.data-testid]="'affected-' + category.category + '-' + state.semanticKey"

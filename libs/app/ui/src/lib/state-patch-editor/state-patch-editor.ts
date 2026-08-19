@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import {
@@ -19,6 +20,7 @@ import { ExpansionPanel } from '../exp-panel/expansion-panel';
     CommonModule,
     DataValueEditor,
     ExpansionPanel,
+    MatButtonModule,
     MatButtonToggleModule,
     MatCheckboxModule,
   ],
@@ -30,7 +32,12 @@ export class StatePatchEditorComponent {
   readonly value = input<StatePatch>({});
   readonly header = input('State Patch');
   readonly subheader = input<string>();
+  readonly characterKey = input<string | undefined>(undefined);
   readonly valueChange = output<StatePatch>();
+  readonly createGameState = output<void>();
+  readonly createCharacterState = output<void>();
+
+  readonly hasCharacter = computed(() => !!this.characterKey());
 
   readonly categories = computed(() =>
     Object.entries(this.stateModel())

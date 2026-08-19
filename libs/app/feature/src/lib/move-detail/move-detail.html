@@ -50,6 +50,36 @@
                       <button matButton="outlined" type="button" (click)="addOutcomeCancel(phaseIndex, outcome, { startFrame: 0, endFrame: 0, universalCancelGroupNames: [], userOverrideMoves: {} })">Add cancel rule</button>
                     </div>
                   </div>
+                  <tfn-state-patch-editor
+                    header="Source state changes"
+                    subheader="State applied to the attacker"
+                    [stateModel]="stateModel()"
+                    [characterKey]="move()?.characterKey"
+                    [value]="outcomeStatePatch(phaseIndex, outcome, 'source')"
+                    (valueChange)="updateOutcomeStatePatch(phaseIndex, outcome, 'source', $event)"
+                    (createGameState)="openCreateGameStateDialog()"
+                    (createCharacterState)="openCreateCharacterStateDialog()"
+                  />
+                  <tfn-state-patch-editor
+                    header="Target state changes"
+                    subheader="State applied to the defender"
+                    [stateModel]="stateModel()"
+                    [characterKey]="move()?.characterKey"
+                    [value]="outcomeStatePatch(phaseIndex, outcome, 'target')"
+                    (valueChange)="updateOutcomeStatePatch(phaseIndex, outcome, 'target', $event)"
+                    (createGameState)="openCreateGameStateDialog()"
+                    (createCharacterState)="openCreateCharacterStateDialog()"
+                  />
+                  <tfn-state-patch-editor
+                    header="Global state changes"
+                    subheader="State applied to the game/environment"
+                    [stateModel]="stateModel()"
+                    [characterKey]="move()?.characterKey"
+                    [value]="outcomeStatePatch(phaseIndex, outcome, 'game')"
+                    (valueChange)="updateOutcomeStatePatch(phaseIndex, outcome, 'game', $event)"
+                    (createGameState)="openCreateGameStateDialog()"
+                    (createCharacterState)="openCreateCharacterStateDialog()"
+                  />
                 </div>
               </tfn-expansion-panel>
             }

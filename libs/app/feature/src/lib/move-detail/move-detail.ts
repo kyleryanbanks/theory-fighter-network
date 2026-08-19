@@ -1,16 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
-import type { DataValue, PhaseCancelRule } from '@theory-fighter-network/data';
+import type { DataValue, PhaseCancelRule, StatePatch, StateModel } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, Tile } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent],
+  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent, StatePatchEditorComponent],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
@@ -18,6 +19,7 @@ export class MoveDetail {
   readonly phaseNames = ['startup', 'active', 'recovery'] as const;
   readonly outcomeNames = ['onHit', 'onBlock', 'onCounterHit', 'onWhiff', 'onSecondaryTrigger'] as const;
   private readonly route = inject(ActivatedRoute);
+  private readonly dialog = inject(MatDialog);
   readonly facade = inject(LocalGuideFacadeStore);
   readonly move = computed(() => {
     const key = this.route.snapshot.paramMap.get('moveKey');
@@ -50,6 +52,82 @@ export class MoveDetail {
       label: m.name,
     }))
   );
+
+  readonly stateModel = computed((): StateModel => {
+    const guide = this.facade.guide();
+    if (!guide) return {};
+    const gameStates = guide.entities.game.states;
+    const move = this.move();
+    if (!move?.characterKey) return gameStates;
+    const characterStates = guide.entities.characters.find(
+      (c) => c.semanticKey === move.characterKey
+    )?.states ?? {};
+    const merged: StateModel = { ...gameStates };
+    for (const [category, states] of Object.entries(characterStates)) {
+      merged[category] = { ...(merged[category] ?? {}), ...states };
+    }
+    return merged;
+  });
+
+  openCreateGameStateDialog(): void {
+    const guide = this.facade.guide();
+    if (!guide) return;
+    const ref = this.dialog.open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+      StateCreateDialogComponent,
+      {
+        data: {
+          existingStates: guide.entities.game.states,
+          existingCategories: Object.keys(guide.entities.game.states),
+        },
+      }
+    );
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      void this.facade.createGameState(result);
+    });
+  }
+
+  openCreateCharacterStateDialog(): void {
+    const guide = this.facade.guide();
+    const characterKey = this.move()?.characterKey;
+    if (!guide || !characterKey) return;
+    const character = guide.entities.characters.find((c) => c.semanticKey === characterKey);
+    const characterStates: StateModel = character?.states ?? {};
+    const existingCategories = [
+      ...new Set([
+        ...Object.keys(characterStates),
+        ...Object.keys(guide.entities.game.states),
+      ]),
+    ].sort();
+    const ref = this.dialog.open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+      StateCreateDialogComponent,
+      { data: { existingStates: characterStates, existingCategories } }
+    );
+    ref.afterClosed().subscribe((result) => {
+      if (!result) return;
+      void this.facade.createCharacterState({ characterKey, ...result });
+    });
+  }
+
+  outcomeStatePatch(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    field: 'source' | 'target' | 'game'
+  ): StatePatch {
+    return this.move()?.phases?.[phaseIndex]?.effects?.[outcome]?.[field] ?? {};
+  }
+
+  async updateOutcomeStatePatch(
+    phaseIndex: number,
+    outcome: typeof this.outcomeNames[number],
+    field: 'source' | 'target' | 'game',
+    patch: StatePatch
+  ): Promise<void> {
+    const moveKey = this.move()?.semanticKey;
+    if (moveKey) {
+      await this.facade.updateMoveOutcomeStatePatch({ moveKey, phaseIndex, outcome, field, patch });
+    }
+  }
 
   cancelOverrides(cancel: PhaseCancelRule): Record<string, boolean> {
     return cancel.userOverrideMoves ?? {};

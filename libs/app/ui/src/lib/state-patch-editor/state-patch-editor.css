@@ -5,16 +5,28 @@
 
 .state-patch-editor__rows {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .state-patch-editor__row {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+/* In numeric rows the editor fills remaining space */
+.state-patch-editor__row--numeric {
+  flex-wrap: nowrap;
+}
+
+.state-patch-editor__row--numeric tfn-data-value-editor {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .state-patch-editor__toggle {
-  display: block;
+  flex: 0 0 auto;
 }
 
 .state-patch-editor__test-hook {
