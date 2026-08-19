@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore, resolveEffectiveMove, buildCharacterMoveList } from '@theory-fighter-network/data';
 import type { DataValue, PhaseCancelRule, StatePatch, StateModel, MovePreconditions } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
 import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@theory-fighter-network/ui';
@@ -46,12 +46,21 @@ export class MoveDetail {
     return character?.cancelGroups ?? {};
   });
 
-  readonly cancelMoveList = computed((): Tile[] =>
-    (this.facade.guide()?.entities.moves ?? []).map((m) => ({
-      key: m.semanticKey,
-      label: m.name,
-    }))
-  );
+  readonly cancelMoveList = computed((): Tile[] => {
+    const guide = this.facade.guide();
+    if (!guide) return [];
+    const move = this.move();
+    const universalMoveKeys = guide.entities.game.universal.moveKeys;
+    const characterMoveKeys = move?.characterKey
+      ? (guide.entities.characters.find((c) => c.semanticKey === move.characterKey)?.hierarchy?.moveKeys ?? [])
+      : [];
+    return buildCharacterMoveList(universalMoveKeys, characterMoveKeys, guide.entities.moves)
+      .map((entry) => ({
+        key: entry.semanticKey,
+        label: entry.name,
+        tags: entry.isUniversal ? [{ label: 'Universal', color: 'info' as const }] : undefined,
+      }));
+  });
 
   readonly stateModel = computed((): StateModel => {
     const guide = this.facade.guide();

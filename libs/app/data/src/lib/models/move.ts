@@ -142,6 +142,71 @@ export function resolveEffectiveMove(
   };
 }
 
+/**
+ * A resolved move entry for display in a move-picker list.
+ * Universal moves that have been overridden by a character move are excluded;
+ * the character override appears instead, without the isUniversal flag.
+ */
+export interface ResolvedMoveEntry {
+  semanticKey: string;
+  name: string;
+  /** True when this move comes from the game's universal pool (no character override exists). */
+  isUniversal: boolean;
+}
+
+/**
+ * Builds the effective move list for a character:
+ * - Includes all universal moves, tagged isUniversal=true
+ * - Replaces any universal move that has a character override with the override (isUniversal=false)
+ * - Appends character-only moves (no parentKey) with isUniversal=false
+ *
+ * Use this wherever a per-character move picker is needed so overrides suppress their universal parents.
+ */
+export function buildCharacterMoveList(
+  universalMoveKeys: string[],
+  characterMoveKeys: string[],
+  allMoves: MoveDocument[]
+): ResolvedMoveEntry[] {
+  const byKey = new Map(allMoves.map((m) => [m.semanticKey, m]));
+
+  // Keys of universal moves that have been overridden by a character move
+  const overriddenUniversalKeys = new Set(
+    characterMoveKeys
+      .map((k) => byKey.get(k)?.parentKey)
+      .filter((k): k is string => !!k)
+  );
+
+  const results: ResolvedMoveEntry[] = [];
+
+  // Universal moves — skip those that are overridden
+  for (const key of universalMoveKeys) {
+    if (overriddenUniversalKeys.has(key)) continue;
+    const move = byKey.get(key);
+    if (move) results.push({ semanticKey: move.semanticKey, name: move.name, isUniversal: true });
+  }
+
+  // Character moves — overrides replace their parent; new moves are appended
+  for (const key of characterMoveKeys) {
+    const move = byKey.get(key);
+    if (move) {
+      if (move.parentKey) {
+        // Override: insert at the same position as the universal parent
+        const parentIndex = results.findIndex((r) => r.semanticKey === move.parentKey);
+        const entry: ResolvedMoveEntry = { semanticKey: move.semanticKey, name: move.name, isUniversal: false };
+        if (parentIndex >= 0) {
+          results.splice(parentIndex, 0, entry);
+        } else {
+          results.push(entry);
+        }
+      } else {
+        results.push({ semanticKey: move.semanticKey, name: move.name, isUniversal: false });
+      }
+    }
+  }
+
+  return results;
+}
+
 function fnv1a(input: string): string {
   let hash = 2166136261;
 

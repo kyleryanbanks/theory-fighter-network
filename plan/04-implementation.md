@@ -420,9 +420,14 @@ The following workflows are **intentionally deferred until immediately before Fi
 
 **CancelGroupsEditor integration — Complete (2026-08-18).** All three integration points wired:
 
-- ✅ **Game > Universal Cancel Groups** (`game-root`) — `tfn-cancel-groups-editor` wired with universal group authoring.
+- ✅ **Game > Universal Cancel Groups** (`game-root`) — `tfn-cancel-groups-editor` wired with universal group authoring. Rename/delete wired to `renameCancelGroup`/`deleteCancelGroup` facade mutations. Rename cascades through all `PhaseCancelRule.universalCancelGroupNames` references across all moves automatically.
 - ✅ **Move > Phase > Cancel Rules** (`move-detail`) — `tfn-cancel-groups-editor` in phase move mode, one instance per cancel rule, with full group + override binding.
-- ✅ **Character > Character-Scoped Cancel Groups** — `CancelGroupsEditorComponent` in `includeName` (parent group) mode wired into both `character-editor` (list view, per-character panel) and `character-detail` (detail page). Calls `facade.createCancelGroup({ isGameLevel: false, ... })`. Reactive `cancelGroups` and `moveList` computeds keep both surfaces in sync.
+- ✅ **Character > Character-Scoped Cancel Groups** — `CancelGroupsEditorComponent` in `includeName` (parent group) mode wired into both `character-editor` (list view, per-character panel) and `character-detail` (detail page). Create/rename/delete all wired. Rename cascades through that character's `PhaseCancelRule.characterCancelGroupNames` references.
+
+**Cancel group rename cascade — Complete (2026-08-18).** `renameCancelGroup` facade mutation now rewrites all affected `PhaseCancelRule` references:
+- Universal rename: updates `universalCancelGroupNames` on every move's phase outcome effects.
+- Character rename: updates `characterCancelGroupNames` on that character's moves only.
+- No error message needed — rename always succeeds and stays consistent.
 
 **State Patch Operator support — Complete (2026-08-18).** Numeric outcome effects now carry an explicit mutation mode:
 
@@ -430,6 +435,13 @@ The following workflows are **intentionally deferred until immediately before Fi
 - `StatePatch` numeric entries updated from bare `DataValue` to `NumericStatePatch`.
 - `StatePatchEditorComponent` now renders a compact operator `mat-select` (`=`, `+`, `−`, `×`) before the `DataValueEditor` for numeric states. Operator characters only; full descriptions via `aria-label`.
 - Default on enable: `{ op: '=', value: { relative: 50 } }`.
+
+**`buildCharacterMoveList` utility — Complete (2026-08-18).** Convenience function in `move.ts` for all character-scoped move pickers:
+- Takes `universalMoveKeys`, `characterMoveKeys`, `allMoves[]`.
+- Returns `ResolvedMoveEntry[]` — each has `semanticKey`, `name`, `isUniversal`.
+- Universal moves with a character override are suppressed; the override appears in the parent's position.
+- All call sites map entries to `Tile` with a `'Universal'` (color: `'info'`) tag where `isUniversal=true`.
+- Used by: `move-detail` (follow-up/cancel precondition tile grids), `character-editor` (cancel groups editor), `character-detail` (cancel groups editor).
 
 ### Ready to Start
 - **Phase 2.1: Comparative Property Ordering + Inferred-Bound Engine** — Foundation already laid (2026-08-17). Move-comparison component now supports generic field selection (startup/active/recovery) with extensible infrastructure for future range/damage comparisons.

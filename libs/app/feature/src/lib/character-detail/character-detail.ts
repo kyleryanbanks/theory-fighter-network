@@ -2,7 +2,7 @@ import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { LocalGuideFacadeStore, type StateModel } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore, buildCharacterMoveList, type StateModel } from '@theory-fighter-network/data';
 import {
   EntityDetailShell,
   ExpansionPanel,
@@ -41,14 +41,17 @@ export class CharacterDetail {
   readonly cancelGroups = computed(() => this.character()?.cancelGroups ?? {});
 
   readonly moveList = computed((): Tile[] => {
+    const guide = this.facade.guide();
+    if (!guide) return [];
     const character = this.character();
-    const allMoves = this.facade.guide()?.entities.moves ?? [];
-    const keys = character?.hierarchy?.moveKeys ?? [];
-    return keys.map((key): Tile => ({
-      key,
-      label: allMoves.find(m => m.semanticKey === key)?.name ?? key,
-      value: false,
-    }));
+    const universalMoveKeys = guide.entities.game.universal.moveKeys;
+    const characterMoveKeys = character?.hierarchy?.moveKeys ?? [];
+    return buildCharacterMoveList(universalMoveKeys, characterMoveKeys, guide.entities.moves)
+      .map((entry) => ({
+        key: entry.semanticKey,
+        label: entry.name,
+        tags: entry.isUniversal ? [{ label: 'Universal', color: 'info' as const }] : undefined,
+      }));
   });
 
   openStateDialog(): void {
