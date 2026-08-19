@@ -90,6 +90,29 @@ describe('ComparisonAxis', () => {
     expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
   });
 
+  it('moves a pin from a touch pointer position on the track', () => {
+    fixture.componentInstance.changes = [];
+    const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;
+    Object.defineProperty(track, 'getBoundingClientRect', {
+      value: () => ({ left: 0, width: 100 }),
+    });
+    const pin = fixture.nativeElement.querySelector('[data-testid="axis-pin-move-a"]');
+
+    pin.dispatchEvent(new PointerEvent('pointerdown', {
+      bubbles: true,
+      pointerId: 1,
+      pointerType: 'touch',
+      clientX: 25,
+    }));
+    track.dispatchEvent(new PointerEvent('pointermove', {
+      bubbles: true,
+      pointerType: 'touch',
+      clientX: 60,
+    }));
+
+    expect(fixture.componentInstance.changes.at(-1)).toEqual({ key: 'move-a', relative: 60 });
+  });
+
   it('moves a pin from its range value without changing the tile vertical position', () => {
     fixture.componentInstance.changes = [];
     const track = fixture.nativeElement.querySelector('.comparison-axis__track') as HTMLElement;

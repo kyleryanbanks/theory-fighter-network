@@ -6,6 +6,7 @@
   display: grid;
   gap: 8px;
   padding: 14px 8px 18px;
+  touch-action: none;
 }
 
 .comparison-axis__labels {
