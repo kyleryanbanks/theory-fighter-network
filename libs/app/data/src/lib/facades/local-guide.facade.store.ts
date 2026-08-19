@@ -34,7 +34,7 @@ import type { MovePhase, PhaseCancelRule } from '../models/move';
 import { createSequence } from '../models/sequence';
 import { createTeam } from '../models/team';
 import { createState } from '../models/state';
-import type { StatePatch } from '../models/state';
+import type { StatePatch, MovePreconditions } from '../models/state';
 import {
   createMatchup,
   createMatchupScenarioEntry,
@@ -1417,6 +1417,37 @@ export const LocalGuideFacadeStore = signalStore(
             const updatedMove = {
               ...move,
               phases,
+              meta: { ...move.meta, lastUpdatedAt: new Date() },
+            };
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                moves: localGuide.entities.moves.map((candidate) =>
+                  candidate.semanticKey === input.moveKey ? updatedMove : candidate
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    updateMovePreconditions: rxMutation({
+      operation: (input: { moveKey: string; preconditions: MovePreconditions }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const move = localGuide.entities.moves.find(
+              (candidate) => candidate.semanticKey === input.moveKey
+            );
+            if (!move) throw new Error(`Move "${input.moveKey}" does not exist.`);
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'move', entityKey: input.moveKey });
+            const updatedMove = {
+              ...move,
+              preconditions: input.preconditions,
               meta: { ...move.meta, lastUpdatedAt: new Date() },
             };
             return {

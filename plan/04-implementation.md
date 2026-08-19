@@ -12,7 +12,7 @@ This roadmap restructures development around agreed priority order. The work is 
 
 ## Current Implementation Status (2026-08-18)
 
-**Phase 1 is ~97% complete.** All core entity hierarchies are implemented with full CRUD. Phase 1.7 foundational gaps 1, 2, and 4 are resolved. Gap 3 (Move Preconditions) is the remaining blocker before Phase 1.7 workflows are fully functional.
+**Phase 1 is complete.** All core entity hierarchies are implemented with full CRUD. All four Phase 1.7 foundational gaps are resolved. Phase 1.7 workflows are unblocked.
 
 Commit history confirms:
 
@@ -23,19 +23,11 @@ Commit history confirms:
 - **Phase 1.5 & 1.5.1 are complete.** Character and Move CRUD (universal and character-scoped) with full phase/DataValue editing for Startup/Active/Recovery/Hit-stop/Stun. Sequence creation/deletion (universal, character-scoped, team-scoped) with canonical semantic keys and bidirectional linkage.
 - **Phase 1.6 is complete.** Team creation/deletion with ordered Character references, semantic key derivation from character order, Team Size validation, and bidirectional `Game.hierarchy.teamKeys` linkage. Material Team editor with character selection. **Deferred**: Team member reordering (edit vs. delete+recreate) and assist/loadout scoping (needs schema design).
 - **Phase 1.7 CRUD is ~90% complete (2026-08-16).** Matchup creation/deletion, Scenario CRUD (with Move/Sequence references, optional Stage scoping, parent-scenario links), and Response CRUD (Win/Trade/Loss outcomes, keyboard-accessible UI, color-coded indicators) are all working. Material `MatchupEditor` at `/matchups`. Move and Sequence detail routing implemented. **Deferred (intentionally for Phase 5.1 pre-work)**: Scenario → Response-tree navigation UI, counter-scenario parent-link validation/cycle prevention, complete note-to-Scenario/note-to-Response workflows.
-- **Phase 1.7 Foundational Gaps (CRITICAL - discovered 2026-08-17):** Phase 1.7 workflows cannot function without UI to edit three critical fields:
-  1. ✅ **Sequence Step.frames** (FIXED 2026-08-17, commit 40dc2da) — Users can now edit frame delays between combo moves
-  2. ✅ **Move Outcome Effects Infrastructure** (FIXED 2026-08-17, commits 36f8a2c, d93b910, b0fa4a0) — Model refactored to nest cancels within outcomes. Mutation added. move-detail component extended with outcomeCancels/updateOutcomeCancels methods. Next: build cancel rules UI (PhaseCancelRule array editor)
-  3. ⏳ **Move Preconditions** (NEXT) — Users need UI to define when moves are valid (required/forbidden player/opponent states, follow-up/cancel rules). Tightly coupled with Game State Management (gap 4).
-  4. ✅ **Game State Management** (COMPLETE 2026-08-18) — Full state authoring pipeline is implemented end-to-end:
-     - Game-level and character-level state definition CRUD (`createGameState`, `deleteGameState`, `createCharacterState`, `deleteCharacterState` facade mutations)
-     - `GameStateManagerComponent` — reusable state list + delete UI; used in both `GameRoot` and `CharacterDetail`
-     - `CharacterDetail` — dedicated route component using `EntityDetailShell`; character state dialog merges game categories into autocomplete
-     - `StateCreateDialogComponent` — Signal Forms dialog with category autocomplete, duplicate validation, numeric toggle (min/max/unit prefilled to 0/100); guides start with empty state model
-     - `StatePatchEditorComponent` wired into all three move outcome effect fields (source/target/game) in `move-detail`
-     - `StatePatchEditorComponent` exposes `createGameState` and `createCharacterState` outputs with inline "+" buttons so users can create missing states directly from the patch editor without navigating away
-     - `MoveOutcomeEffect.source/target/game` typed as `StatePatch` (authored intent); `updateMoveOutcomeStatePatch` facade mutation persists changes
-     - Patch editor layout: label + control inline (flex row, `flex-start`); numeric editor fills remaining width; boolean toggle stays adjacent at natural size
+- **Phase 1.7 Foundational Gaps — all resolved (2026-08-17–18):**
+  1. ✅ **Sequence Step.frames** (FIXED 2026-08-17) — Users can now edit frame delays between combo moves
+  2. ✅ **Move Outcome Effects Infrastructure** (FIXED 2026-08-17) — Model refactored to nest cancels within outcomes. Cancel rules UI built via `CancelGroupsEditorComponent`.
+  3. ✅ **Move Preconditions** (FIXED 2026-08-18) — Full `MovePreconditionEditorComponent` with state conditions (player/opponent), operator dropdown, and follow-up/cancel move tile grids. See section below.
+  4. ✅ **Game State Management** (FIXED 2026-08-18) — Full state authoring pipeline. See section below.
 - **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
 
 ### TileGridComponent — Bug Fix (2026-08-18)
@@ -53,6 +45,17 @@ The `&:focus` rule used `outline-offset: -2px`, drawing the 2px green focus ring
 - `--disabled` applied to remaining tiles when limit is reached
 
 **21 tests total in tile-grid.spec.ts** (3 pre-existing failures unrelated to selection mode — choice color CSS class assertions).
+
+### TileGridComponent — Unified `TileUpdate` output (2026-08-18)
+
+`(update)` previously emitted `Tile | Tile[]` — a union that required `Array.isArray` guards in every consumer and made toggle mode and selection mode incompatible to handle.
+
+**New contract:** `(update)` always emits `TileUpdate { tile: Tile; selection: string[] }`:
+- **Toggle mode**: `tile` is the clicked tile with its new boolean value; `selection` is the full array of keys whose value is now `true`
+- **Selection mode** (maxSelections): `tile` is the clicked tile; `selection` is the current selected key array
+- **Passive / choice mode**: `tile` is the clicked tile; `selection` is `[]`
+
+`TileUpdate` is exported from `tile-grid.models.ts`. All existing consumers (`TeamEditor`, `CancelGroupsEditor`, `MatchupEditor`, `MovePreconditionEditor`) updated to destructure `{ tile }` or `{ selection }` as needed. No `Array.isArray` guards remain.
 
 ### Cancel Groups Editor — Complete (2026-08-18)
 
@@ -163,6 +166,25 @@ Full state authoring pipeline is implemented end-to-end across game, character, 
 - `createCharacterState` — adds to `character.states[category]`
 - `deleteCharacterState` — removes from `character.states[category]`
 - `updateMoveOutcomeStatePatch` — patches `move.phases[n].effects[outcome][field]`
+
+### Move Preconditions — Complete (2026-08-18)
+
+`MovePreconditionEditorComponent` (`libs/app/ui/src/lib/move-precondition-editor/`) defines when a move is available to use. Wired into `move-detail` above the phases panel, sharing the same `stateModel()` computed as the patch editors.
+
+**Data model (`state.ts`):**
+- `ComparisonOperator = '>' | '<' | '=' | '!=' | '<=' | '>='`
+- `StatePrecondition { category, stateKey, operator, value: number | boolean }` — one state check
+- `MovePreconditions { player?, opponent?, followUpFromMoveKeys?, cancelFromMoveKeys? }` — replaces the old string-array preconditions shape on `MoveDocument`
+
+**`MovePreconditionEditorComponent` contract:**
+- Mirrors `StatePatchEditorComponent` exactly: category expansion panels → state rows → checkbox to include state as a condition
+- When checked: operator `<mat-select>` + value control appear inline
+- Boolean states only offer `=` and `≠` operators; numeric states offer all six
+- Two target sections: **Player conditions** / **Opponent conditions** (rendered from a `targets` array — no template duplication)
+- **Follow-up from** and **Cancel from** panels show when `moveList` is non-empty — toggle-mode `TileGrid` per panel, emitting via the unified `(update)` output
+- `characterKey`, `createGameState`, `createCharacterState` outputs — same inline create convenience as `StatePatchEditorComponent`
+
+**Facade mutation:** `updateMovePreconditions({ moveKey, preconditions })` — replaces the full `MovePreconditions` object on the move.
 
 ### Completed Supporting Work Not Previously Captured Here
 

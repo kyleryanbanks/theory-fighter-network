@@ -1,0 +1,86 @@
+<tfn-expansion-panel [header]="header()" [subheader]="subheader()">
+  <div tfnExpansionPanelAction class="precondition-editor__actions">
+    <button mat-button type="button" (click)="createGameState.emit()">+ Game State</button>
+    @if (hasCharacter()) {
+      <button mat-button type="button" (click)="createCharacterState.emit()">+ Character State</button>
+    }
+  </div>
+  <div class="precondition-editor">
+    @for (target of targets; track target.key) {
+      <tfn-expansion-panel [header]="target.label" subsection secondary>
+        <div class="precondition-editor__rows">
+          @for (category of categories(); track category.category) {
+            <tfn-expansion-panel [header]="category.category" subsection secondary>
+              <div class="precondition-editor__rows">
+                @for (state of category.states; track state.semanticKey) {
+                  <div class="precondition-editor__row"
+                    [class.precondition-editor__row--active]="isConditioned(target.key, category.category, state.semanticKey)"
+                    [class.precondition-editor__row--numeric]="isConditioned(target.key, category.category, state.semanticKey) && isNumericState(state)"
+                  >
+                    <label class="precondition-editor__toggle">
+                      <mat-checkbox
+                        [checked]="isConditioned(target.key, category.category, state.semanticKey)"
+                        (change)="onConditionedChange(target.key, state, category.category, $event.checked)"
+                      >
+                        {{ state.name }}
+                      </mat-checkbox>
+                    </label>
+
+                    @if (isConditioned(target.key, category.category, state.semanticKey)) {
+                      <mat-form-field class="precondition-editor__operator">
+                        <mat-select
+                          [value]="operatorValue(target.key, category.category, state.semanticKey)"
+                          (selectionChange)="onOperatorChange(target.key, category.category, state.semanticKey, $event.value)"
+                        >
+                          @for (op of operatorsFor(state); track op.value) {
+                            <mat-option [value]="op.value">{{ op.label }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+
+                      @if (isNumericState(state)) {
+                        <mat-form-field class="precondition-editor__value">
+                          <input
+                            matInput
+                            type="number"
+                            [value]="numericValue(target.key, category.category, state.semanticKey)"
+                            (change)="onNumericValueChange(target.key, category.category, state.semanticKey, $any($event.target).value)"
+                          />
+                          @if (state.unit) {
+                            <span matSuffix>{{ state.unit }}</span>
+                          }
+                        </mat-form-field>
+                      } @else {
+                        <mat-button-toggle-group
+                          [value]="booleanValue(target.key, category.category, state.semanticKey) ? 'true' : 'false'"
+                          (change)="onBooleanValueChange(target.key, category.category, state.semanticKey, $event.value === 'true')"
+                        >
+                          <mat-button-toggle value="true">True</mat-button-toggle>
+                          <mat-button-toggle value="false">False</mat-button-toggle>
+                        </mat-button-toggle-group>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            </tfn-expansion-panel>
+          }
+
+          @if (categories().length === 0) {
+            <p class="precondition-editor__empty">No states defined yet. Add states to the game or character first.</p>
+          }
+        </div>
+      </tfn-expansion-panel>
+    }
+
+    @if (moveList().length > 0) {
+      <tfn-expansion-panel header="Follow-up from" subheader="Only available directly after one of these moves" secondary subsection>
+        <tfn-tile-grid [tiles]="followUpTiles()" (update)="onFollowUpToggle($event)" />
+      </tfn-expansion-panel>
+
+      <tfn-expansion-panel header="Cancel from" subheader="Only available as a cancel out of one of these moves" secondary subsection>
+        <tfn-tile-grid [tiles]="cancelTiles()" (update)="onCancelToggle($event)" />
+      </tfn-expansion-panel>
+    }
+  </div>
+</tfn-expansion-panel>

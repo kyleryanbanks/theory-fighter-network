@@ -10,7 +10,7 @@ import {
   DataValue,
 } from './shared';
 import { Region } from './region';
-import { StatePatch, StateModel } from './state';
+import { StatePatch, StateModel, MovePreconditions } from './state';
 import { normalizeGameName } from './game';
 
 export interface MoveDocument {
@@ -26,13 +26,7 @@ export interface MoveDocument {
   // Input sequence for this move, using input values from GameDocument.inputs
   sequence?: Step[];
 
-  preconditions: {
-    requiredPlayerState?: string[];
-    forbiddenPlayerState?: string[];
-    requiredOpponentState?: string[];
-    followUpOnlyFromMoveKeys?: string[];
-    cancelFromMoveKeys?: string[];
-  };
+  preconditions: MovePreconditions;
 
   phases?: MovePhase[];
 

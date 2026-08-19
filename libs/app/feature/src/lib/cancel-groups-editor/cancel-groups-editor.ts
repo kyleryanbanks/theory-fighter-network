@@ -170,10 +170,8 @@ export class CancelGroupsEditorComponent {
     this.selectedOverrides.set(updated);
   }
 
-  onTileUpdate(tile: Tile | Tile[]): void {    if (Array.isArray(tile)) return; // selection-mode emission; not used here
-
+  onTileUpdate({ tile }: { tile: Tile; selection: string[] }): void {
     const updated = { ...this.selectedOverrides() };
-    // Record the explicit user intent: true = force-on, false = force-off
     updated[tile.key] = tile.value === true;
     this.selectedOverrides.set(updated);
   }

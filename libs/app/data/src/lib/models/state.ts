@@ -141,6 +141,39 @@ export const createStateModel = (
 };
 
 /**
+ * Comparison operators for state preconditions.
+ * Numeric states support all six; boolean states use only "=" and "!=".
+ */
+export type ComparisonOperator = '>' | '<' | '=' | '!=' | '<=' | '>=';
+
+/**
+ * A single state precondition: the move is only available when
+ * the named state satisfies the operator/value check at runtime.
+ * - Boolean states: value is true/false, operator is "=" or "!="
+ * - Numeric states: value is a number, any operator applies
+ */
+export interface StatePrecondition {
+  category: string;
+  stateKey: string;
+  operator: ComparisonOperator;
+  value: number | boolean;
+}
+
+/**
+ * Preconditions grouped by whose state is being checked.
+ */
+export interface MovePreconditions {
+  /** Conditions on the player executing the move */
+  player?: StatePrecondition[];
+  /** Conditions on the opponent */
+  opponent?: StatePrecondition[];
+  /** Move only available as a follow-up directly after one of these moves */
+  followUpFromMoveKeys?: string[];
+  /** Move only available as a cancel out of one of these moves */
+  cancelFromMoveKeys?: string[];
+}
+
+/**
  * Current game state context with type-safe runtime values
  * Runtime values are keyed by state semanticKey within each category
  * Type parameters ensure every runtime value key exists in the corresponding StateCollection

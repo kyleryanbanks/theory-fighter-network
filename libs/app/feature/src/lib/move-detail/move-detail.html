@@ -7,6 +7,15 @@
     [metadata]="currentMove.meta"
   >
     <tfn-entity-notes detail-notes entityType="move" [entityKey]="currentMove.semanticKey" [notes]="currentMove.meta && currentMove.meta.notes || []" [notAddressable]="true" />
+    <tfn-move-precondition-editor
+      [stateModel]="stateModel()"
+      [moveList]="cancelMoveList()"
+      [characterKey]="move()?.characterKey"
+      [value]="preconditions()"
+      (valueChange)="updatePreconditions($event)"
+      (createGameState)="openCreateGameStateDialog()"
+      (createCharacterState)="openCreateCharacterStateDialog()"
+    />
     <tfn-expansion-panel header="Move phases" subheader="Frame data and on-hit values">
       @for (phaseIndex of phaseIndices(); track phaseIndex) {
         <tfn-expansion-panel subsection secondary [header]="'Phase ' + (phaseIndex + 1)">

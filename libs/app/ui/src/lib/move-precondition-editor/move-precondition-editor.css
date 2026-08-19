@@ -1,0 +1,47 @@
+.precondition-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.precondition-editor__rows {
+  display: grid;
+  gap: 8px;
+}
+
+.precondition-editor__row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+
+.precondition-editor__row--numeric tfn-data-value-editor,
+.precondition-editor__row--numeric .precondition-editor__value {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.precondition-editor__toggle {
+  flex: 0 0 auto;
+}
+
+.precondition-editor__operator {
+  width: 148px;
+  flex-shrink: 0;
+}
+
+.precondition-editor__value {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.precondition-editor__row mat-button-toggle-group {
+  width: fit-content;
+}
+
+.precondition-editor__empty {
+  margin: 0;
+  color: #617168;
+  font-size: 0.875rem;
+  font-style: italic;
+}

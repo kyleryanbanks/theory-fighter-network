@@ -60,11 +60,9 @@ export class TeamEditor {
     return characterKeys.map((key) => this.characterName(key)).join(' + ');
   }
 
-  onCharacterTileUpdate(tileOrTiles: Tile | Tile[]): void {
-    if (Array.isArray(tileOrTiles)) {
-      this.draftCharacterKeys.set(tileOrTiles.map((t) => t.key));
-      this.teamError.set('');
-    }
+  onCharacterTileUpdate({ selection }: { tile: Tile; selection: string[] }): void {
+    this.draftCharacterKeys.set(selection);
+    this.teamError.set('');
   }
 
   async createTeam(): Promise<void> {

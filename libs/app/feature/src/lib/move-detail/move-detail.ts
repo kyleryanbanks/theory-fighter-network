@@ -3,15 +3,15 @@ import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { LocalGuideFacadeStore, resolveEffectiveMove } from '@theory-fighter-network/data';
-import type { DataValue, PhaseCancelRule, StatePatch, StateModel } from '@theory-fighter-network/data';
+import type { DataValue, PhaseCancelRule, StatePatch, StateModel, MovePreconditions } from '@theory-fighter-network/data';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent, StatePatchEditorComponent],
+  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent, StatePatchEditorComponent, MovePreconditionEditorComponent],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
@@ -107,6 +107,17 @@ export class MoveDetail {
       if (!result) return;
       void this.facade.createCharacterState({ characterKey, ...result });
     });
+  }
+
+  preconditions(): MovePreconditions {
+    return this.move()?.preconditions ?? {};
+  }
+
+  async updatePreconditions(preconditions: MovePreconditions): Promise<void> {
+    const moveKey = this.move()?.semanticKey;
+    if (moveKey) {
+      await this.facade.updateMovePreconditions({ moveKey, preconditions });
+    }
   }
 
   outcomeStatePatch(

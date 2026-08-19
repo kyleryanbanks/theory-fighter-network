@@ -377,10 +377,8 @@ export class MatchupEditor {
   async onResponseTileUpdate(
     matchupKey: string,
     scenarioKey: string,
-    tileOrTiles: Tile | Tile[]
+    { tile }: { tile: Tile; selection: string[] }
   ): Promise<void> {
-    if (Array.isArray(tileOrTiles)) return;
-    const tile = tileOrTiles;
     if (typeof tile.value === 'boolean') return;
 
     if (!tile.value || tile.value.value === undefined) {

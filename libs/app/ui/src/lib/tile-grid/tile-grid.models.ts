@@ -44,3 +44,16 @@ export interface Tile {
     color?: string;
   }[];
 }
+
+/**
+ * Emitted by TileGridComponent on every interaction.
+ * - `tile`: the tile that was clicked (with its updated value after toggle/choice)
+ * - `selection`: the current set of selected tile keys after this interaction.
+ *   In toggle mode: keys of all tiles whose value is `true`.
+ *   In selection mode (maxSelections): keys of all currently selected tiles.
+ *   In passive/choice mode: empty array (no persistent selection).
+ */
+export interface TileUpdate {
+  tile: Tile;
+  selection: string[];
+}
