@@ -27,8 +27,18 @@
 
               @if (isAffected(category.category, state.semanticKey)) {
                 @if (isNumericState(state)) {
+                  <mat-select
+                    [attr.data-testid]="'patch-op-' + category.category + '-' + state.semanticKey"
+                    [value]="numericPatch(category.category, state.semanticKey).op"
+                    (selectionChange)="onNumericOpChange(category.category, state.semanticKey, $event.value)"
+                    class="state-patch-editor__op-select"
+                  >
+                    @for (op of patchOperators; track op.value) {
+                      <mat-option [value]="op.value" [attr.aria-label]="op.ariaLabel">{{ op.label }}</mat-option>
+                    }
+                  </mat-select>
                   <tfn-data-value-editor
-                    [value]="numericValue(category.category, state.semanticKey)"
+                    [value]="numericPatch(category.category, state.semanticKey).value"
                     (valueChange)="onNumericValueChange(category.category, state.semanticKey, $event)"
                   />
                 } @else {

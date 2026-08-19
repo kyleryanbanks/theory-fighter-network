@@ -3,15 +3,25 @@ import { Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSelectModule } from '@angular/material/select';
 import {
   createDataValue,
   type DataValue,
+  type NumericStatePatch,
+  type PatchOperator,
   type StateDocument,
   type StateModel,
   type StatePatch,
 } from '@theory-fighter-network/data';
 import { DataValueEditor } from '../data-value-editor/data-value-editor';
 import { ExpansionPanel } from '../exp-panel/expansion-panel';
+
+const PATCH_OPERATORS: { value: PatchOperator; label: string; ariaLabel: string }[] = [
+  { value: '=', label: '=', ariaLabel: 'Set to' },
+  { value: '+', label: '+', ariaLabel: 'Add' },
+  { value: '-', label: '−', ariaLabel: 'Subtract' },
+  { value: '*', label: '×', ariaLabel: 'Multiply by' },
+];
 
 @Component({
   selector: 'tfn-state-patch-editor',
@@ -23,6 +33,7 @@ import { ExpansionPanel } from '../exp-panel/expansion-panel';
     MatButtonModule,
     MatButtonToggleModule,
     MatCheckboxModule,
+    MatSelectModule,
   ],
   templateUrl: './state-patch-editor.html',
   styleUrl: './state-patch-editor.css',
@@ -38,6 +49,7 @@ export class StatePatchEditorComponent {
   readonly createCharacterState = output<void>();
 
   readonly hasCharacter = computed(() => !!this.characterKey());
+  readonly patchOperators = PATCH_OPERATORS;
 
   readonly categories = computed(() =>
     Object.entries(this.stateModel())
@@ -69,8 +81,8 @@ export class StatePatchEditorComponent {
       return;
     }
 
-    const nextValue = this.isNumericState(state)
-      ? { relative: 50 }
+    const nextValue: boolean | NumericStatePatch = this.isNumericState(state)
+      ? { op: '=', value: createDataValue({ relative: 50 }) }
       : true;
 
     this.emitStateValue(category, state.semanticKey, nextValue);
@@ -84,30 +96,40 @@ export class StatePatchEditorComponent {
     this.emitStateValue(category, semanticKey, nextValue);
   }
 
+  onNumericOpChange(
+    category: string,
+    semanticKey: string,
+    op: PatchOperator
+  ): void {
+    const current = this.numericPatch(category, semanticKey);
+    this.emitStateValue(category, semanticKey, { ...current, op });
+  }
+
   onNumericValueChange(
     category: string,
     semanticKey: string,
-    nextValue: DataValue
+    value: DataValue
   ): void {
-    this.emitStateValue(category, semanticKey, nextValue);
+    const current = this.numericPatch(category, semanticKey);
+    this.emitStateValue(category, semanticKey, { ...current, value });
   }
 
   booleanValue(category: string, semanticKey: string): boolean {
     return this.value()[category]?.[semanticKey] === true;
   }
 
-  numericValue(category: string, semanticKey: string): DataValue {
+  numericPatch(category: string, semanticKey: string): NumericStatePatch {
     const current = this.value()[category]?.[semanticKey];
-    if (current && typeof current === 'object') {
-      return current as DataValue;
+    if (current && typeof current === 'object' && 'op' in current) {
+      return current as NumericStatePatch;
     }
-    return createDataValue({ relative: 50, exact: undefined });
+    return { op: '=', value: createDataValue({ relative: 50, exact: undefined }) };
   }
 
   private emitStateValue(
     category: string,
     semanticKey: string,
-    nextValue: boolean | DataValue
+    nextValue: boolean | NumericStatePatch
   ): void {
     const nextPatch: StatePatch = {
       ...this.value(),

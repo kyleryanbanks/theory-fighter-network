@@ -115,11 +115,29 @@ export type RuntimeStatePatch<TStateModel extends StateModel = StateModel> = Par
 }>;
 
 /**
+ * Mathematical operator for how a numeric state patch is applied at runtime.
+ * - '=':  replace the state's current value with the given value
+ * - '+':  add the given value to the current value
+ * - '-':  subtract the given value from the current value
+ * - '*':  multiply the current value by the given value
+ */
+export type PatchOperator = '=' | '+' | '-' | '*';
+
+/**
+ * A numeric state patch entry: both the operator and the DataValue to apply.
+ */
+export interface NumericStatePatch {
+  op: PatchOperator;
+  value: DataValue;
+}
+
+/**
  * Author-authored partial state update payload.
- * Numeric states use DataValue so users can record exact or relative intent.
+ * Numeric states carry a NumericStatePatch (operator + value).
+ * Boolean states carry a plain boolean.
  */
 export type StatePatch<TStateModel extends StateModel = StateModel> = Partial<{
-  [K in keyof TStateModel]: Record<string, boolean | DataValue>;
+  [K in keyof TStateModel]: Record<string, boolean | NumericStatePatch>;
 }>;
 
 /**

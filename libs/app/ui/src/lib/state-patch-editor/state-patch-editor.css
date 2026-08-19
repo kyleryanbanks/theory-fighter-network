@@ -29,6 +29,12 @@
   flex: 0 0 auto;
 }
 
+.state-patch-editor__op-select {
+  flex: 0 0 auto;
+  width: 56px;
+}
+
+
 .state-patch-editor__test-hook {
   display: none;
 }
