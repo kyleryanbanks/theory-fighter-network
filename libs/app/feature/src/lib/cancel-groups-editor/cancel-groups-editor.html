@@ -1,16 +1,44 @@
 <tfn-expansion-panel [header]="header()" [subheader]="subheader()">
-  <!-- Parent group mode: name field only -->
+  <!-- Parent group mode: manage existing groups + add new -->
   @if (isParentGroupMode()) {
-    <div class="name-field-section">
-      <label for="group-name">Cancel Group Name</label>
-      <input
-        id="group-name"
-        type="text"
-        class="name-input"
-        [(ngModel)]="groupName"
-        placeholder="Enter group name"
-      />
-    </div>
+    <ng-container>
+      <!-- Existing groups -->
+      @if (gameGroupNames().length > 0) {
+        <div class="existing-groups">
+          @for (name of gameGroupNames(); track name) {
+            <div class="existing-group-row">
+              @if (renamingGroup() === name) {
+                <input
+                  type="text"
+                  class="name-input name-input--inline"
+                  [value]="renameValue()"
+                  (input)="renameValue.set($any($event.target).value)"
+                  (keydown.enter)="commitRename(name)"
+                  (keydown.escape)="cancelRename()"
+                  (blur)="commitRename(name)"
+                  [attr.aria-label]="'Rename group ' + name"
+                />
+              } @else {
+                <span class="existing-group-name">{{ name }}</span>
+                <button mat-button type="button" (click)="startRename(name)" [attr.aria-label]="'Rename ' + name">Rename</button>
+                <tfn-delete-button [ariaLabel]="'Delete group ' + name" (delete)="onDeleteGroup(name)" />
+              }
+            </div>
+          }
+        </div>
+      }
+      <!-- Add new group -->
+      <div class="name-field-section">
+        <label for="group-name">New Cancel Group Name</label>
+        <input
+          id="group-name"
+          type="text"
+          class="name-input"
+          [(ngModel)]="groupName"
+          placeholder="Enter group name"
+        />
+      </div>
+    </ng-container>
   } @else {
     <!-- Phase move mode: cancel window -->
     <ng-container>

@@ -2997,6 +2997,44 @@ export const LocalGuideFacadeStore = signalStore(
           (async () => {
             const localGuide = requireGuide(store.value());
 
+            // Helper: rewrite all moves' cancel rules to use newName instead of oldName.
+            const rewriteGroupName = (names: string[] | undefined): string[] | undefined =>
+              names?.includes(oldName) ? names.map((n: string) => (n === oldName ? newName : n)) : names;
+
+            const rewriteOutcomeEffect = (
+              effect: import('../models/move').MoveOutcomeEffect | undefined,
+              field: 'universalCancelGroupNames' | 'characterCancelGroupNames'
+            ): import('../models/move').MoveOutcomeEffect | undefined => {
+              if (!effect?.cancels) return effect;
+              return {
+                ...effect,
+                cancels: effect.cancels.map((rule: import('../models/move').PhaseCancelRule) => ({
+                  ...rule,
+                  [field]: rewriteGroupName(rule[field]),
+                })),
+              };
+            };
+
+            const rewriteMoveCancelRules = (
+              moves: typeof localGuide.entities.moves,
+              field: 'universalCancelGroupNames' | 'characterCancelGroupNames'
+            ) =>
+              moves.map((move) => ({
+                ...move,
+                phases: move.phases?.map((phase) => ({
+                  ...phase,
+                  effects: phase.effects
+                    ? {
+                        onHit: rewriteOutcomeEffect(phase.effects.onHit, field),
+                        onBlock: rewriteOutcomeEffect(phase.effects.onBlock, field),
+                        onCounterHit: rewriteOutcomeEffect(phase.effects.onCounterHit, field),
+                        onWhiff: rewriteOutcomeEffect(phase.effects.onWhiff, field),
+                        onSecondaryTrigger: rewriteOutcomeEffect(phase.effects.onSecondaryTrigger, field),
+                      }
+                    : undefined,
+                })),
+              }));
+
             if (isGameLevel) {
               const game = localGuide.entities.game;
               if (game.semanticKey !== scopeKey) {
@@ -3019,6 +3057,7 @@ export const LocalGuideFacadeStore = signalStore(
                 entities: {
                   ...localGuide.entities,
                   game: { ...game, universal: { ...game.universal, cancelGroups } },
+                  moves: rewriteMoveCancelRules(localGuide.entities.moves, 'universalCancelGroupNames'),
                 },
               };
             } else {
@@ -3039,6 +3078,13 @@ export const LocalGuideFacadeStore = signalStore(
               const guide = cloneGuideMetadata(localGuide);
               markEntityUnsaved(guide, { entityType: 'character', entityKey: character.semanticKey });
 
+              // Only rewrite moves belonging to this character
+              const updatedMoves = rewriteMoveCancelRules(
+                localGuide.entities.moves.filter((m) => m.characterKey === scopeKey),
+                'characterCancelGroupNames'
+              );
+              const otherMoves = localGuide.entities.moves.filter((m) => m.characterKey !== scopeKey);
+
               return {
                 ...localGuide,
                 guide,
@@ -3047,6 +3093,7 @@ export const LocalGuideFacadeStore = signalStore(
                   characters: localGuide.entities.characters.map((c) =>
                     c.semanticKey === scopeKey ? { ...c, cancelGroups } : c
                   ),
+                  moves: [...otherMoves, ...updatedMoves],
                 },
               };
             }

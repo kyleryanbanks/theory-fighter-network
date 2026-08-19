@@ -60,6 +60,23 @@ export class CharacterEditor {
     });
   }
 
+  async renameCharacterCancelGroup(characterKey: string, event: { oldName: string; newName: string }): Promise<void> {
+    await this.facade.renameCancelGroup({
+      scopeKey: characterKey,
+      isGameLevel: false,
+      oldName: event.oldName,
+      newName: event.newName,
+    });
+  }
+
+  async deleteCharacterCancelGroup(characterKey: string, event: { groupName: string }): Promise<void> {
+    await this.facade.deleteCancelGroup({
+      scopeKey: characterKey,
+      isGameLevel: false,
+      groupName: event.groupName,
+    });
+  }
+
   characterMoves(characterKey: string) {
     const character = this.characters().find(
       (candidate) => candidate.semanticKey === characterKey

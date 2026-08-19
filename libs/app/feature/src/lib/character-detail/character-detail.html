@@ -25,6 +25,8 @@
       [moveList]="moveList()"
       [universalGroups]="cancelGroups()"
       (save)="saveCancelGroup($event)"
+      (renameGroup)="renameCancelGroup($event)"
+      (deleteGroup)="deleteCancelGroup($event)"
     />
     <tfn-expansion-panel header="Complete data" subheader="All stored fields for this character">
       <pre>{{ currentCharacter | json }}</pre>

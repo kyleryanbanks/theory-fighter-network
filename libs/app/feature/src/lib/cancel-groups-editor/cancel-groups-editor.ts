@@ -2,7 +2,7 @@ import { booleanAttribute, Component, computed, input, linkedSignal, output, sig
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { TileGridComponent, Tile, ExpansionPanel } from '@theory-fighter-network/ui';
+import { TileGridComponent, Tile, ExpansionPanel, DeleteButton } from '@theory-fighter-network/ui';
 
 /**
  * CancelGroupsEditor - Displays and edits cancel group selections at game, character, or phase level.
@@ -19,7 +19,7 @@ import { TileGridComponent, Tile, ExpansionPanel } from '@theory-fighter-network
   templateUrl: './cancel-groups-editor.html',
   styleUrls: ['./cancel-groups-editor.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, TileGridComponent, ExpansionPanel],
+  imports: [CommonModule, FormsModule, MatButtonModule, TileGridComponent, ExpansionPanel, DeleteButton],
 })
 export class CancelGroupsEditorComponent {
 
@@ -75,6 +75,16 @@ export class CancelGroupsEditorComponent {
     cancelWindowStart?: number | null;
     cancelWindowEnd?: number | null;
   }>();
+
+  /** Emitted when the user renames an existing parent group. Only fires in parent group mode. */
+  readonly renameGroup = output<{ oldName: string; newName: string }>();
+
+  /** Emitted when the user deletes an existing parent group. Only fires in parent group mode. */
+  readonly deleteGroup = output<{ groupName: string }>();
+
+  /** Tracks which existing group is being renamed (null = none). */
+  readonly renamingGroup = signal<string | null>(null);
+  readonly renameValue = signal('');
 
   // ── Computed ──────────────────────────────────────────────────────────────
 
@@ -168,6 +178,27 @@ export class CancelGroupsEditorComponent {
     const updated = { ...current };
     keys.forEach(k => { if (updated[k] === false) delete updated[k]; });
     this.selectedOverrides.set(updated);
+  }
+
+  startRename(groupName: string): void {
+    this.renamingGroup.set(groupName);
+    this.renameValue.set(groupName);
+  }
+
+  commitRename(oldName: string): void {
+    const newName = this.renameValue().trim();
+    if (newName && newName !== oldName) {
+      this.renameGroup.emit({ oldName, newName });
+    }
+    this.renamingGroup.set(null);
+  }
+
+  cancelRename(): void {
+    this.renamingGroup.set(null);
+  }
+
+  onDeleteGroup(groupName: string): void {
+    this.deleteGroup.emit({ groupName });
   }
 
   onTileUpdate({ tile }: { tile: Tile; selection: string[] }): void {

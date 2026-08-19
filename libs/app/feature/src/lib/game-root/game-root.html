@@ -244,6 +244,8 @@
 			[moveList]="universalMoveList()"
 			[universalGroups]="universalCancelGroups()"
 			(save)="saveUniversalCancelGroup($event)"
+			(renameGroup)="renameUniversalCancelGroup($event)"
+			(deleteGroup)="deleteUniversalCancelGroup($event)"
 		/>
 	}
 </section>

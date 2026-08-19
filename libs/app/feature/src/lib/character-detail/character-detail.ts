@@ -85,5 +85,22 @@ export class CharacterDetail {
       moveKeys: rule.moveList,
     });
   }
+
+  async renameCancelGroup(event: { oldName: string; newName: string }): Promise<void> {
+    await this.facade.renameCancelGroup({
+      scopeKey: this.entityKey,
+      isGameLevel: false,
+      oldName: event.oldName,
+      newName: event.newName,
+    });
+  }
+
+  async deleteCancelGroup(event: { groupName: string }): Promise<void> {
+    await this.facade.deleteCancelGroup({
+      scopeKey: this.entityKey,
+      isGameLevel: false,
+      groupName: event.groupName,
+    });
+  }
 }
 

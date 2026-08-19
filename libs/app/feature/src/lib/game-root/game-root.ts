@@ -145,6 +145,23 @@ export class GameRoot {
     });
   }
 
+  async renameUniversalCancelGroup(event: { oldName: string; newName: string }): Promise<void> {
+    await this.facade.renameCancelGroup({
+      scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
+      isGameLevel: true,
+      oldName: event.oldName,
+      newName: event.newName,
+    });
+  }
+
+  async deleteUniversalCancelGroup(event: { groupName: string }): Promise<void> {
+    await this.facade.deleteCancelGroup({
+      scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
+      isGameLevel: true,
+      groupName: event.groupName,
+    });
+  }
+
   async openStateCreateDialog(): Promise<void> {
     const guide = this.facade.guide();
     if (!guide) {
