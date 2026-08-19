@@ -1,41 +1,28 @@
 import { Route } from '@angular/router';
-import { Feature } from './feature/feature';
-import { GameRoot } from './game-root/game-root';
-import { StageEditor } from './stage-editor/stage-editor';
-import { CharacterEditor } from './character-editor/character-editor';
-import { MoveEditor } from './move-editor/move-editor';
-import { SequenceEditor } from './sequence-editor/sequence-editor';
-import { TeamEditor } from './team-editor/team-editor';
-import { MatchupEditor } from './matchup-editor/matchup-editor';
-import { MoveDetail } from './move-detail/move-detail';
-import { SequenceDetail } from './sequence-detail/sequence-detail';
-import { EntityDetail } from './entity-detail/entity-detail';
-import { MoveComparison } from './move-comparison/move-comparison';
-import { CharacterDetail } from './character-detail/character-detail';
 
 export const featureRoutes: Route[] = [
   {
     path: '',
-    component: Feature,
+    loadComponent: () => import('./feature/feature').then((m) => m.Feature),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'game' },
-      { path: 'game', component: GameRoot },
-      { path: 'game/:entityKey', component: EntityDetail, data: { entityType: 'game' } },
-      { path: 'stages', component: StageEditor },
-      { path: 'stages/:entityKey', component: EntityDetail, data: { entityType: 'stage' } },
-      { path: 'zones/:entityKey', component: EntityDetail, data: { entityType: 'stageZone' } },
-      { path: 'characters', component: CharacterEditor },
-      { path: 'characters/:entityKey', component: CharacterDetail },
-      { path: 'moves', component: MoveEditor },
-      { path: 'move-comparison', component: MoveComparison },
-      { path: 'moves/:moveKey', component: MoveDetail },
-      { path: 'sequences', component: SequenceEditor },
-      { path: 'sequences/:sequenceKey', component: SequenceDetail },
-      { path: 'teams', component: TeamEditor },
-      { path: 'teams/:entityKey', component: EntityDetail, data: { entityType: 'team' } },
-      { path: 'projectiles/:entityKey', component: EntityDetail, data: { entityType: 'projectile' } },
-      { path: 'matchups', component: MatchupEditor },
-      { path: 'matchups/:entityKey', component: EntityDetail, data: { entityType: 'matchup' } },
+      { path: 'game', loadComponent: () => import('./game-root/game-root').then((m) => m.GameRoot) },
+      { path: 'game/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'game' } },
+      { path: 'stages', loadComponent: () => import('./stage-editor/stage-editor').then((m) => m.StageEditor) },
+      { path: 'stages/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'stage' } },
+      { path: 'zones/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'stageZone' } },
+      { path: 'characters', loadComponent: () => import('./character-editor/character-editor').then((m) => m.CharacterEditor) },
+      { path: 'characters/:entityKey', loadComponent: () => import('./character-detail/character-detail').then((m) => m.CharacterDetail) },
+      { path: 'moves', loadComponent: () => import('./move-editor/move-editor').then((m) => m.MoveEditor) },
+      { path: 'move-comparison', loadComponent: () => import('./move-comparison/move-comparison').then((m) => m.MoveComparison) },
+      { path: 'moves/:moveKey', loadComponent: () => import('./move-detail/move-detail').then((m) => m.MoveDetail) },
+      { path: 'sequences', loadComponent: () => import('./sequence-editor/sequence-editor').then((m) => m.SequenceEditor) },
+      { path: 'sequences/:sequenceKey', loadComponent: () => import('./sequence-detail/sequence-detail').then((m) => m.SequenceDetail) },
+      { path: 'teams', loadComponent: () => import('./team-editor/team-editor').then((m) => m.TeamEditor) },
+      { path: 'teams/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'team' } },
+      { path: 'projectiles/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'projectile' } },
+      { path: 'matchups', loadComponent: () => import('./matchup-editor/matchup-editor').then((m) => m.MatchupEditor) },
+      { path: 'matchups/:entityKey', loadComponent: () => import('./entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'matchup' } },
     ],
   },
 ];
