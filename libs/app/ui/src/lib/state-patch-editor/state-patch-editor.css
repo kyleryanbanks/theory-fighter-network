@@ -1,0 +1,22 @@
+.state-patch-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.state-patch-editor__rows {
+  display: grid;
+  gap: 12px;
+}
+
+.state-patch-editor__row {
+  display: grid;
+  gap: 10px;
+}
+
+.state-patch-editor__toggle {
+  display: block;
+}
+
+.state-patch-editor__test-hook {
+  display: none;
+}

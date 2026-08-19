@@ -27,11 +27,11 @@ Commit history confirms:
   1. ✅ **Sequence Step.frames** (FIXED 2026-08-17, commit 40dc2da) — Users can now edit frame delays between combo moves
   2. ✅ **Move Outcome Effects Infrastructure** (FIXED 2026-08-17, commits 36f8a2c, d93b910, b0fa4a0) — Model refactored to nest cancels within outcomes. Mutation added. move-detail component extended with outcomeCancels/updateOutcomeCancels methods. Next: build cancel rules UI (PhaseCancelRule array editor)
   3. ⏳ **Move Preconditions** (NEXT) — Users need UI to define when moves are valid (required/forbidden player/opponent states, follow-up/cancel rules). Tightly coupled with Game State Management (gap 4).
-  4. ⏳ **Game State Management** (NEXT) — Users need UI to create/edit available game states that preconditions and effects reference. Will unblock Move Preconditions (gap 3).
-  - Completed this session: model refactoring + facade mutation + component methods + unit tests (3 new test cases)
-  - Pending: Move Outcome Effects UI template, Move Preconditions UI, Game State Management UI
-  - Estimated time to unblock remaining gaps: 8-16 hours
-  - Recommendation: Complete Move Outcome Effects UI before Game State Management
+  4. ⏳ **Game State Management** (IN PROGRESS) — GameRoot now supports game-level state definition creation through a dialog and grouped browsing by category; reusable `StatePatchEditorComponent` exists for later effect/scenario/simulation consumers. Remaining: edit/delete state definitions and wire state patches into move outcomes/projectiles/scenarios. Will unblock Move Preconditions (gap 3).
+  - Completed this session: agnostic state categories, `createGameState` facade mutation, `StateCreateDialogComponent`, grouped GameRoot state list, `StatePatchEditorComponent`, and targeted unit coverage
+  - Pending: Move Outcome Effects UI template, state definition editing/deletion, Move Preconditions UI, and `StatePatchEditorComponent` wiring into move/projectile/scenario surfaces
+  - Estimated time to unblock remaining gaps: 6-12 hours
+  - Recommendation: Wire `StatePatchEditorComponent` into Move Outcome Effects next, then reuse the same component for scenario/simulation presets before building Move Preconditions
 - **Phase 2.1 pre-work is complete (2026-08-17).** Comparison type system for move-comparison refactored to support startup/active/recovery phase selection with generic DataValue extraction. UI includes three buttons to switch comparison modes. Extensible for future range/damage comparisons.
 
 ### TileGridComponent — Bug Fix (2026-08-18)
@@ -116,6 +116,48 @@ The `&:focus` rule used `outline-offset: -2px`, drawing the 2px green focus ring
 - ✅ **Scalable:** No wasted properties in data model; UI shows only relevant categories
 - ✅ **Future-proof:** New game mechanics don't require schema changes — just add a custom category
 - ✅ **Type-safe:** RuntimeStateModel still infers types correctly for any StateModel shape
+
+### State Creation + StatePatchEditor Foundations (2026-08-18)
+
+Two reusable state-authoring primitives are now in place:
+
+1. **`StateCreateDialogComponent` (`libs/app/ui/src/lib/state-create-dialog/`)**
+   - Angular Material dialog for creating new game state definitions.
+   - Uses Material autocomplete for category selection (existing + suggested categories).
+   - Name is a plain text field with duplicate validation scoped to the selected category.
+   - Supports optional numeric metadata (`min`, `max`, `unit`) behind a "Numeric state" toggle.
+   - Returns `{ category, name, min?, max?, unit? }` to the caller.
+
+2. **`StatePatchEditorComponent` (`libs/app/ui/src/lib/state-patch-editor/`)**
+   - Reusable expansion-panel editor for authored state patches, intended for move effects first and scenario/simulation presets later.
+   - Renders category subsections sorted alphabetically, with state rows sorted by display name.
+   - Boolean states use an "affected" checkbox plus explicit true/false toggle.
+   - Numeric states use the shared `DataValueEditor`, shown only when the state is marked affected.
+   - Emits a sparse `StatePatch` object (`boolean | DataValue` values) rather than mutating runtime state directly.
+
+**GameRoot integration:**
+- `GameRoot` now renders a primary **Game States** expansion panel.
+- Existing state definitions are shown grouped by category in subsection panels.
+- "Add state" opens `StateCreateDialogComponent`; saved dialog values call the new facade mutation `createGameState`.
+
+**Data-layer support:**
+- `LocalGuideFacadeStore.createGameState` adds state definitions directly to `game.states[category]`.
+- State semantic keys are normalized from the authored state name.
+- Duplicate normalized names within the same category are rejected.
+- Game metadata is marked unsaved when state definitions change.
+
+**Tests added (TDD):**
+- `local-guide.facade.store.spec.ts`
+  - creates a game state definition in the chosen category
+  - rejects duplicate normalized names within the same category
+- `game-root.spec.ts`
+  - renders grouped game states
+  - opens the create-state dialog and persists the result
+- `state-patch-editor.spec.ts`
+  - sorts categories/states
+  - defaults affected boolean states to `true`
+  - supports explicit `false`
+  - reveals `DataValueEditor` only for affected numeric states
 
 ### Completed Supporting Work Not Previously Captured Here
 

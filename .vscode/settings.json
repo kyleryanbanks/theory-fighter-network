@@ -5,6 +5,9 @@
         "/^npm run 2>&1 \\| grep -E \"test\\|build\\|lint\" \\| head -20$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "npx ng": true,
+        "npx vitest": true,
+        "mkdir": true
     }
 }

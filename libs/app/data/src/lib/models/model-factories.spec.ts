@@ -42,8 +42,8 @@ describe('model factories', () => {
     expect(createInput().label).toBe('');
     expect(createInputs()).toEqual({ directions: [], buttons: [] });
     expect(createState().semanticKey).toBe('');
-    expect(createStateModel().Attack).toEqual({});
-    expect(createRuntimeStateModel().Attack).toEqual({});
+    expect(createStateModel()).toEqual({});
+    expect(createRuntimeStateModel()).toEqual({});
     expect(createGameDocument().community.ownerId).toBe('local-user');
     expect(createGameDocument().hierarchy.stageKeys).toEqual([]);
     expect(createGameDocument().universal.moveKeys).toEqual([]);
@@ -56,7 +56,7 @@ describe('model factories', () => {
     expect(createMovePhase()).toEqual({});
     expect(createMoveDocument().preconditions).toEqual({});
     expect(createProjectilePhase().duration).toEqual({ exact: 0 });
-    expect(createProjectileDocument().state.Projectile).toEqual({});
+    expect(createProjectileDocument().state).toEqual({});
     expect(createTeamDocument().orderedCharacterKeys).toEqual([]);
     expect(createTeamDocument().hierarchy.sequenceKeys).toEqual([]);
     expect(createSequenceDocument().sequence).toEqual([]);

@@ -231,6 +231,14 @@
 	</form>
 
 	@if (facade.guide(); as guide) {
+		<tfn-game-state-manager
+			header="Game States"
+			subheader="Reusable state definitions for effects, projectiles, and later simulation tooling."
+			[stateModel]="guide.entities.game.states"
+			(addState)="openStateCreateDialog()"
+			(deleteState)="deleteGameState($event)"
+		/>
+
 		<tfn-cancel-groups-editor 
 			includeName
 			[moveList]="universalMoveList()"

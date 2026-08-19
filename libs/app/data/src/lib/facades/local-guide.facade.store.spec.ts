@@ -108,6 +108,81 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.guide.localChanges).toContain(`game:${semanticKey}`);
   });
 
+  it('creates a game state definition in the chosen category and marks the game unsaved', async () => {
+    await store.createGuide({
+      name: 'State Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
+    });
+
+    const createGameState = Reflect.get(store, 'createGameState') as
+      | ((
+          input: {
+            category: string;
+            name: string;
+            min?: number;
+            max?: number;
+            unit?: string;
+          }
+        ) => Promise<{ status: string }>)
+      | undefined;
+
+    const result = await createGameState?.({
+      category: 'Defense',
+      name: 'Guard Crush',
+    });
+
+    expect(result?.status).toBe('success');
+    expect(store.value()?.entities.game.states.Defense['guard-crush']).toMatchObject({
+      semanticKey: 'guard-crush',
+      name: 'Guard Crush',
+    });
+    expect(store.value()?.guide.localChanges).toContain(
+      `game:${store.value()?.entities.game.semanticKey}`
+    );
+  });
+
+  it('rejects duplicate normalized state names within the same category', async () => {
+    await store.createGuide({
+      name: 'State Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
+    });
+
+    const createGameState = Reflect.get(store, 'createGameState') as
+      | ((
+          input: {
+            category: string;
+            name: string;
+            min?: number;
+            max?: number;
+            unit?: string;
+          }
+        ) => Promise<{ status: string }>)
+      | undefined;
+
+    await createGameState?.({
+      category: 'Defense',
+      name: 'Guard Crush',
+    });
+
+    const duplicate = await createGameState?.({
+      category: 'Defense',
+      name: ' guard-crush ',
+    });
+
+    expect(duplicate?.status).toBe('error');
+    expect(Object.keys(store.value()?.entities.game.states.Defense ?? {})).toEqual([
+      'guard-crush',
+    ]);
+  });
+
   it('creates and deletes Stages while tracking Guide changes', async () => {
     await store.createGuide({
       name: 'Stage Fighter', version: '1.0.0', frameRate: 60,
@@ -1296,6 +1371,67 @@ describe('LocalGuideFacadeStore', () => {
     }
 
     expect(persistence.buildArchiveFile).toHaveBeenCalledTimes(1);
+  });
+
+  it('deleteGameState removes a state entry and marks game unsaved', async () => {
+    await store.createGuide({
+      name: 'State Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const createGameState = Reflect.get(store, 'createGameState') as
+      | ((input: { category: string; name: string }) => Promise<{ status: string }>)
+      | undefined;
+    const deleteGameState = Reflect.get(store, 'deleteGameState') as
+      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | undefined;
+
+    await createGameState?.({ category: 'Defense', name: 'Guard Crush' });
+
+    const result = await deleteGameState?.({ category: 'Defense', semanticKey: 'guard-crush' });
+
+    expect(result?.status).toBe('success');
+    expect(store.value()?.entities.game.states['Defense']).toBeUndefined();
+    expect(store.value()?.guide.localChanges).toContain(
+      `game:${store.value()?.entities.game.semanticKey}`
+    );
+  });
+
+  it('deleteGameState removes only the targeted state, leaving others in the category', async () => {
+    await store.createGuide({
+      name: 'State Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const createGameState = Reflect.get(store, 'createGameState') as
+      | ((input: { category: string; name: string }) => Promise<{ status: string }>)
+      | undefined;
+    const deleteGameState = Reflect.get(store, 'deleteGameState') as
+      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | undefined;
+
+    await createGameState?.({ category: 'Defense', name: 'Guard Crush' });
+    await createGameState?.({ category: 'Defense', name: 'Parry' });
+
+    await deleteGameState?.({ category: 'Defense', semanticKey: 'guard-crush' });
+
+    expect(store.value()?.entities.game.states['Defense']?.['guard-crush']).toBeUndefined();
+    expect(store.value()?.entities.game.states['Defense']?.['parry']).toBeDefined();
+  });
+
+  it('deleteGameState returns error when state does not exist', async () => {
+    await store.createGuide({
+      name: 'State Fighter', version: '1.0.0', frameRate: 60,
+      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+    });
+
+    const deleteGameState = Reflect.get(store, 'deleteGameState') as
+      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | undefined;
+
+    const result = await deleteGameState?.({ category: 'Defense', semanticKey: 'nonexistent' });
+
+    expect(result?.status).toBe('error');
   });
 
   it('updates Sequence steps including frame delays', async () => {

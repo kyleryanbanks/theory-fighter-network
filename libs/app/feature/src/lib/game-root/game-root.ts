@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
   FormField,
@@ -10,6 +10,7 @@ import {
 } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import {
@@ -18,8 +19,15 @@ import {
   LocalGuideFacadeStore,
 } from '@theory-fighter-network/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { TfnLink, type Tile } from '@theory-fighter-network/ui';
+import {
+  GameStateManagerComponent,
+  StateCreateDialogComponent,
+  type StateCreateDialogResult,
+  TfnLink,
+  type Tile,
+} from '@theory-fighter-network/ui';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
+import { firstValueFrom } from 'rxjs';
 
 interface GameFormModel {
   name: string;
@@ -41,18 +49,21 @@ interface InputDraftModel {
     FormField,
     MatButtonModule,
     MatCheckboxModule,
+    MatDialogModule,
     MatFormFieldModule,
     MatInputModule,
     RouterLink,
     TfnLink,
     EntityNotes,
     CancelGroupsEditorComponent,
+    GameStateManagerComponent,
   ],
   templateUrl: './game-root.html',
   styleUrl: './game-root.css',
 })
 export class GameRoot {
   readonly facade = inject(LocalGuideFacadeStore);
+  readonly dialog = inject(MatDialog);
   readonly gameModel = signal<GameFormModel>({
     name: 'Theory Fighter Network',
     version: '1.0.0',
@@ -132,6 +143,37 @@ export class GameRoot {
       groupName: rule.name ?? '',
       moveKeys: rule.moveList,
     });
+  }
+
+  async openStateCreateDialog(): Promise<void> {
+    const guide = this.facade.guide();
+    if (!guide) {
+      return;
+    }
+
+    const result = await firstValueFrom(
+      this.dialog
+        .open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+          StateCreateDialogComponent,
+          {
+            data: {
+              existingStates: guide.entities.game.states,
+              existingCategories: Object.keys(guide.entities.game.states),
+            },
+          }
+        )
+        .afterClosed()
+    );
+
+    if (!result) {
+      return;
+    }
+
+    await this.facade.createGameState(result);
+  }
+
+  async deleteGameState(event: { category: string; semanticKey: string }): Promise<void> {
+    await this.facade.deleteGameState(event);
   }
 
   createGuide(): void {

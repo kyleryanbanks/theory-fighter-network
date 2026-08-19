@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { createStateModel, LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { GameRoot } from './game-root';
 
@@ -11,7 +13,8 @@ function createGuide(
   inputs = {
     directions: [] as { label: string; value?: string }[],
     buttons: [] as { label: string; value?: string }[],
-  }
+  },
+  states = createStateModel()
 ) {
   return {
     guide: { gameKey: 'loaded-game' },
@@ -38,6 +41,7 @@ function createGuide(
           sequenceKeys: [],
           projectileKeys: [],
         },
+        states,
       },
     },
   };
@@ -52,6 +56,16 @@ describe('GameRoot', () => {
     guide,
     createGuide: vi.fn(async () => ({ status: 'success' })),
     updateActiveGame: vi.fn(async () => ({ status: 'success' })),
+    createGameState: vi.fn(async () => ({ status: 'success' })),
+  };
+  const dialog = {
+    open: vi.fn(() => ({
+      afterClosed: () =>
+        of({
+          category: 'Defense',
+          name: 'Guard Crush',
+        }),
+    })),
   };
 
   beforeEach(async () => {
@@ -60,8 +74,13 @@ describe('GameRoot', () => {
 
     await TestBed.configureTestingModule({
       imports: [GameRoot],
-      providers: [provideRouter([]), { provide: LocalGuideFacadeStore, useValue: mockStore }],
-    }).compileComponents();
+      providers: [
+        provideRouter([]),
+        { provide: LocalGuideFacadeStore, useValue: mockStore },
+      ],
+    })
+      .overrideProvider(MatDialog, { useValue: dialog })
+      .compileComponents();
 
     fixture = TestBed.createComponent(GameRoot);
     fixture.detectChanges();
@@ -80,6 +99,41 @@ describe('GameRoot', () => {
 
     expect(name.value).toBe('Loaded Fighter');
     expect(version.value).toBe('2.3.0');
+  });
+
+  it('renders grouped game states when a Guide is loaded', () => {
+    guide.set(
+      createGuide('Loaded Fighter', '2.3.0', undefined, {
+        ...createStateModel(),
+        Defense: {
+          'guard-crush': { semanticKey: 'guard-crush', name: 'Guard Crush' },
+        },
+        Sequence: {
+          'damage-scaling': { semanticKey: 'damage-scaling', name: 'Damage Scaling', min: 0, max: 100 },
+        },
+      })
+    );
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Game States');
+    expect(fixture.nativeElement.textContent).toContain('Defense');
+    expect(fixture.nativeElement.textContent).toContain('Guard Crush');
+    expect(fixture.nativeElement.textContent).toContain('Sequence');
+    expect(fixture.nativeElement.textContent).toContain('Damage Scaling');
+  });
+
+  it('opens the create-state dialog and persists the result', async () => {
+    guide.set(createGuide('Loaded Fighter', '2.3.0'));
+    fixture.detectChanges();
+
+    click('[data-testid="add-game-state"]');
+    await fixture.whenStable();
+
+    expect(dialog.open).toHaveBeenCalled();
+    expect(mockStore.createGameState).toHaveBeenCalledWith({
+      category: 'Defense',
+      name: 'Guard Crush',
+    });
   });
 
   it('creates a Guide from the new-game draft', async () => {

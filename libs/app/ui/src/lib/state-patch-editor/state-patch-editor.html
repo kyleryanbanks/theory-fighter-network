@@ -1,0 +1,56 @@
+<tfn-expansion-panel [header]="header()" [subheader]="subheader()">
+  <div class="state-patch-editor">
+    @for (category of categories(); track category.category) {
+      <tfn-expansion-panel [header]="category.category" subsection secondary>
+        <span class="state-patch-editor__test-hook" data-testid="state-category-header">
+          {{ category.category }}
+        </span>
+
+        <div class="state-patch-editor__rows">
+          @for (state of category.states; track state.semanticKey) {
+            <div class="state-patch-editor__row">
+              <label class="state-patch-editor__toggle">
+                <mat-checkbox
+                  [attr.data-testid]="'affected-' + category.category + '-' + state.semanticKey"
+                  [checked]="isAffected(category.category, state.semanticKey)"
+                  (change)="onAffectedChange(category.category, state, $event.checked)"
+                >
+                  <span data-testid="state-row-name">{{ state.name }}</span>
+                </mat-checkbox>
+              </label>
+
+              @if (isAffected(category.category, state.semanticKey)) {
+                @if (isNumericState(state)) {
+                  <tfn-data-value-editor
+                    [value]="numericValue(category.category, state.semanticKey)"
+                    (valueChange)="onNumericValueChange(category.category, state.semanticKey, $event)"
+                  />
+                } @else {
+                  <mat-button-toggle-group
+                    [value]="booleanValue(category.category, state.semanticKey) ? 'true' : 'false'"
+                    (change)="onBooleanValueChange(category.category, state.semanticKey, $event.value === 'true')"
+                  >
+                    <mat-button-toggle
+                      [attr.data-testid]="'state-value-true-' + category.category + '-' + state.semanticKey"
+                      value="true"
+                      (click)="onBooleanValueChange(category.category, state.semanticKey, true)"
+                    >
+                      True
+                    </mat-button-toggle>
+                    <mat-button-toggle
+                      [attr.data-testid]="'state-value-false-' + category.category + '-' + state.semanticKey"
+                      value="false"
+                      (click)="onBooleanValueChange(category.category, state.semanticKey, false)"
+                    >
+                      False
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                }
+              }
+            </div>
+          }
+        </div>
+      </tfn-expansion-panel>
+    }
+  </div>
+</tfn-expansion-panel>

@@ -10,3 +10,6 @@ export * from './lib/data-value-editor/data-value-editor';
 export * from './lib/comparison-axis/comparison-axis';
 export * from './lib/tile-grid/tile-grid';
 export * from './lib/tile-grid/tile-grid.models';
+export * from './lib/state-create-dialog/state-create-dialog';
+export * from './lib/state-patch-editor/state-patch-editor';
+export * from './lib/game-state-manager/game-state-manager';

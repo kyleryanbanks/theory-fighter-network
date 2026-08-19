@@ -1,0 +1,37 @@
+<tfn-expansion-panel [header]="header()" [subheader]="subheader()">
+  <button
+    tfnExpansionPanelAction
+    matButton="filled"
+    type="button"
+    data-testid="add-game-state"
+    (click)="addState.emit()"
+  >
+    Add state
+  </button>
+
+  @if (stateCategories().length > 0) {
+    <div class="state-category-list">
+      @for (category of stateCategories(); track category.category) {
+        <tfn-expansion-panel [header]="category.category" subsection secondary>
+          <div class="state-entry-list">
+            @for (state of category.states; track state.semanticKey) {
+              <div class="state-entry" data-testid="game-state-entry">
+                <span>
+                  <strong>{{ state.name }}</strong>
+                  <small>{{ state.semanticKey }}</small>
+                </span>
+                <small>{{ stateSummary(state) }}</small>
+                <tfn-delete-button
+                  [ariaLabel]="'Delete ' + state.name"
+                  (delete)="onDeleteState(category.category, state.semanticKey)"
+                />
+              </div>
+            }
+          </div>
+        </tfn-expansion-panel>
+      }
+    </div>
+  } @else {
+    <p class="empty-state">No states added yet.</p>
+  }
+</tfn-expansion-panel>

@@ -1,0 +1,23 @@
+.state-category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.state-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.state-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.state-entry span {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}

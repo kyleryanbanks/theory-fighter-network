@@ -22,6 +22,7 @@ import {
 } from '../guide';
 import {
   createGame,
+  normalizeGameName,
   updateGameMetadata,
   type CreateGameInput,
   type GameMetadataUpdate,
@@ -32,6 +33,7 @@ import { createMove, resolveEffectiveMove } from '../models/move';
 import type { MovePhase, PhaseCancelRule } from '../models/move';
 import { createSequence } from '../models/sequence';
 import { createTeam } from '../models/team';
+import { createState } from '../models/state';
 import {
   createMatchup,
   createMatchupScenarioEntry,
@@ -142,6 +144,139 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => {
         patchState(store, { value: guide });
       },
+    }),
+
+    createGameState: rxMutation({
+      operation: ({
+        category,
+        name,
+        min,
+        max,
+        unit,
+      }: {
+        category: string;
+        name: string;
+        min?: number;
+        max?: number;
+        unit?: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const categoryName = category.trim();
+            const stateName = name.trim();
+
+            if (!categoryName) {
+              throw new Error('State category is required.');
+            }
+            if (!stateName) {
+              throw new Error('State name is required.');
+            }
+
+            const semanticKey = normalizeGameName(stateName);
+            const existingStates = localGuide.entities.game.states[categoryName] ?? {};
+            if (existingStates[semanticKey]) {
+              throw new Error(
+                `State "${stateName}" already exists in category "${categoryName}".`
+              );
+            }
+
+            const nextState = createState({
+              semanticKey,
+              name: stateName,
+              ...(min !== undefined ? { min } : {}),
+              ...(max !== undefined ? { max } : {}),
+              ...(unit?.trim() ? { unit: unit.trim() } : {}),
+            });
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const game = {
+              ...localGuide.entities.game,
+              states: {
+                ...localGuide.entities.game.states,
+                [categoryName]: {
+                  ...existingStates,
+                  [semanticKey]: nextState,
+                },
+              },
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteGameState: rxMutation({
+      operation: ({
+        category,
+        semanticKey,
+      }: {
+        category: string;
+        semanticKey: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const existingCategory = localGuide.entities.game.states[category];
+            if (!existingCategory || !existingCategory[semanticKey]) {
+              throw new Error(
+                `State "${semanticKey}" does not exist in category "${category}".`
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, {
+              entityType: 'game',
+              entityKey: localGuide.entities.game.semanticKey,
+            });
+
+            const nextCategory = { ...existingCategory };
+            delete nextCategory[semanticKey];
+
+            const nextStates = { ...localGuide.entities.game.states };
+            if (Object.keys(nextCategory).length === 0) {
+              delete nextStates[category];
+            } else {
+              nextStates[category] = nextCategory;
+            }
+
+            const game = {
+              ...localGuide.entities.game,
+              states: nextStates,
+              meta: {
+                ...localGuide.entities.game.meta,
+                lastUpdatedAt: new Date(),
+              },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                game,
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
     createStage: rxMutation({

@@ -3,6 +3,8 @@
  * Defines all game configuration states and current runtime values
  */
 
+import type { DataValue } from './shared';
+
 /**
  * Serializable state definition stored in a guide.
  * Behavior code is compiled and registered separately at runtime.
@@ -102,17 +104,7 @@ export const createRuntimeStateModel = (
 /**
  * Create a StateModel with suggested default categories
  */
-const createDefaultStateModel = (): StateModel => ({
-  Character: {},
-  Attack: {},
-  Defense: {},
-  Movement: {},
-  Resource: {},
-  Environment: {},
-  Sequence: {},
-  Projectile: {},
-  Custom: {},
-});
+const createDefaultStateModel = (): StateModel => ({});
 
 /**
  * Partial runtime state update payload organized by category.
@@ -123,15 +115,30 @@ export type RuntimeStatePatch<TStateModel extends StateModel = StateModel> = Par
 }>;
 
 /**
+ * Author-authored partial state update payload.
+ * Numeric states use DataValue so users can record exact or relative intent.
+ */
+export type StatePatch<TStateModel extends StateModel = StateModel> = Partial<{
+  [K in keyof TStateModel]: Record<string, boolean | DataValue>;
+}>;
+
+/**
  * Create a StateModel initialized with suggested categories.
  * Users can customize: add/remove categories or provide custom structure entirely.
  */
 export const createStateModel = (
   overrides: Partial<StateModel> = {}
-): StateModel => ({
-  ...createDefaultStateModel(),
-  ...overrides,
-});
+): StateModel => {
+  const stateModel = createDefaultStateModel();
+
+  for (const [category, states] of Object.entries(overrides)) {
+    if (states !== undefined) {
+      stateModel[category] = states;
+    }
+  }
+
+  return stateModel;
+};
 
 /**
  * Current game state context with type-safe runtime values

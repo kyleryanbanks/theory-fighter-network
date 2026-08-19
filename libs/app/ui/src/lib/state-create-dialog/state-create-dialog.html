@@ -1,0 +1,91 @@
+<div mat-dialog-title class="state-create-dialog__title">
+  <span>Create state</span>
+  <button matButton mat-dialog-close class="state-create-dialog__close" aria-label="Close dialog">&#x2715;</button>
+</div>
+
+<mat-dialog-content class="state-create-dialog">
+  <mat-form-field appearance="outline">
+    <mat-label>Category</mat-label>
+    <input
+      matInput
+      data-testid="state-category"
+      [formField]="stateForm.category"
+      [matAutocomplete]="categoryAutocomplete"
+    />
+    <mat-autocomplete #categoryAutocomplete="matAutocomplete" (optionSelected)="selectCategory($event.option.value)">
+      @for (categoryOption of filteredCategories(); track categoryOption) {
+        <mat-option [value]="categoryOption">{{ categoryOption }}</mat-option>
+      }
+    </mat-autocomplete>
+    @if (stateForm.category().touched() && stateForm.category().errors().length) {
+      <mat-error>{{ stateForm.category().errors()[0].message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input
+      matInput
+      data-testid="state-name"
+      [formField]="stateForm.name"
+    />
+    @if (stateForm.name().touched() && stateForm.name().errors().length) {
+      <mat-error>{{ stateForm.name().errors()[0].message }}</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-checkbox
+    data-testid="state-numeric-toggle"
+    [checked]="model().isNumeric"
+    (change)="model.update(m => ({ ...m, isNumeric: $event.checked, min: '0', max: '100', unit: '' }))"
+  >
+    Numeric state
+  </mat-checkbox>
+
+  @if (model().isNumeric) {
+    <div class="state-create-dialog__numeric-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>Min</mat-label>
+        <input
+          matInput
+          type="number"
+          data-testid="state-min"
+          [formField]="stateForm.min"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Max</mat-label>
+        <input
+          matInput
+          type="number"
+          data-testid="state-max"
+          [formField]="stateForm.max"
+        />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Unit</mat-label>
+        <input
+          matInput
+          data-testid="state-unit"
+          [formField]="stateForm.unit"
+        />
+      </mat-form-field>
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button matButton type="button" (click)="cancel()">Cancel</button>
+  <button
+    matButton="filled"
+    type="button"
+    data-testid="save-state"
+    [disabled]="stateForm().invalid() || null"
+    (click)="save()"
+  >
+    Save
+  </button>
+</mat-dialog-actions>
+

@@ -1,0 +1,36 @@
+.state-create-dialog__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.state-create-dialog__close {
+  min-width: unset;
+  padding: 0 8px;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.state-create-dialog {
+  display: grid;
+  gap: 16px;
+  min-width: min(560px, 100%);
+  padding-top: 16px;
+  overflow: visible;
+}
+
+.state-create-dialog__numeric-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 640px) {
+  .state-create-dialog {
+    min-width: 0;
+  }
+
+  .state-create-dialog__numeric-grid {
+    grid-template-columns: 1fr;
+  }
+}
