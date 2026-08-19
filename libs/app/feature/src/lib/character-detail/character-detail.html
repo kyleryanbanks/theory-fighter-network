@@ -1,0 +1,29 @@
+@if (character(); as currentCharacter) {
+  <tfn-entity-detail-shell
+    [title]="currentCharacter.name"
+    [entityKey]="entityKey"
+    backLabel="Back to Characters"
+    [backLink]="['/characters']"
+    [metadata]="currentCharacter.meta"
+  >
+    <tfn-entity-notes
+      detail-notes
+      entityType="character"
+      [entityKey]="entityKey"
+      [notes]="currentCharacter.meta.notes || []"
+      [notAddressable]="true"
+    />
+    <tfn-game-state-manager
+      header="Character States"
+      subheader="State definitions specific to this character."
+      [stateModel]="states()"
+      (addState)="openStateDialog()"
+      (deleteState)="deleteState($event)"
+    />
+    <tfn-expansion-panel header="Complete data" subheader="All stored fields for this character">
+      <pre>{{ currentCharacter | json }}</pre>
+    </tfn-expansion-panel>
+  </tfn-entity-detail-shell>
+} @else {
+  <p class="empty-state">Character not found.</p>
+}

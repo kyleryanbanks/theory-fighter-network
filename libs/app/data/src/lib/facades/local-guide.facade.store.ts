@@ -279,6 +279,142 @@ export const LocalGuideFacadeStore = signalStore(
       onSuccess: (guide) => patchState(store, { value: guide }),
     }),
 
+    createCharacterState: rxMutation({
+      operation: ({
+        characterKey,
+        category,
+        name,
+        min,
+        max,
+        unit,
+      }: {
+        characterKey: string;
+        category: string;
+        name: string;
+        min?: number;
+        max?: number;
+        unit?: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const character = localGuide.entities.characters.find(
+              (c) => c.semanticKey === characterKey
+            );
+            if (!character) {
+              throw new Error(`Character "${characterKey}" not found.`);
+            }
+
+            const categoryName = category.trim();
+            const stateName = name.trim();
+
+            if (!categoryName) throw new Error('State category is required.');
+            if (!stateName) throw new Error('State name is required.');
+
+            const semanticKey = normalizeGameName(stateName);
+            const existingStates = character.states[categoryName] ?? {};
+            if (existingStates[semanticKey]) {
+              throw new Error(
+                `State "${stateName}" already exists in category "${categoryName}".`
+              );
+            }
+
+            const nextState = createState({
+              semanticKey,
+              name: stateName,
+              ...(min !== undefined ? { min } : {}),
+              ...(max !== undefined ? { max } : {}),
+              ...(unit?.trim() ? { unit: unit.trim() } : {}),
+            });
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'character', entityKey: characterKey });
+
+            const updatedCharacter = {
+              ...character,
+              states: {
+                ...character.states,
+                [categoryName]: { ...existingStates, [semanticKey]: nextState },
+              },
+              meta: { ...character.meta, lastUpdatedAt: new Date() },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                characters: localGuide.entities.characters.map((c) =>
+                  c.semanticKey === characterKey ? updatedCharacter : c
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
+    deleteCharacterState: rxMutation({
+      operation: ({
+        characterKey,
+        category,
+        semanticKey,
+      }: {
+        characterKey: string;
+        category: string;
+        semanticKey: string;
+      }) =>
+        from(
+          (async () => {
+            const localGuide = requireGuide(store.value());
+            const character = localGuide.entities.characters.find(
+              (c) => c.semanticKey === characterKey
+            );
+            if (!character) {
+              throw new Error(`Character "${characterKey}" not found.`);
+            }
+
+            const existingCategory = character.states[category];
+            if (!existingCategory || !existingCategory[semanticKey]) {
+              throw new Error(
+                `State "${semanticKey}" does not exist in category "${category}".`
+              );
+            }
+
+            const guide = cloneGuideMetadata(localGuide);
+            markEntityUnsaved(guide, { entityType: 'character', entityKey: characterKey });
+
+            const nextCategory = { ...existingCategory };
+            delete nextCategory[semanticKey];
+
+            const nextStates = { ...character.states };
+            if (Object.keys(nextCategory).length === 0) {
+              delete nextStates[category];
+            } else {
+              nextStates[category] = nextCategory;
+            }
+
+            const updatedCharacter = {
+              ...character,
+              states: nextStates,
+              meta: { ...character.meta, lastUpdatedAt: new Date() },
+            };
+
+            return {
+              ...localGuide,
+              guide,
+              entities: {
+                ...localGuide.entities,
+                characters: localGuide.entities.characters.map((c) =>
+                  c.semanticKey === characterKey ? updatedCharacter : c
+                ),
+              },
+            };
+          })()
+        ),
+      onSuccess: (guide) => patchState(store, { value: guide }),
+    }),
+
     createStage: rxMutation({
       operation: ({ name }: { name: string }) =>
         from(

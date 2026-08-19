@@ -3,8 +3,7 @@ import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
 import type { EntityMetadata } from '@theory-fighter-network/data';
-import { ExpansionPanel } from '@theory-fighter-network/ui';
-import { EntityDetailShell } from '@theory-fighter-network/ui';
+import { ExpansionPanel, EntityDetailShell } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 type EntityType =
@@ -68,3 +67,4 @@ export class EntityDetail {
     return entity?.meta ? { meta: entity.meta } : undefined;
   }
 }
+
