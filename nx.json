@@ -63,7 +63,15 @@
     },
     "@nx/angular:library": {
       "linter": "eslint",
-      "unitTestRunner": "vitest-analog"
+      "unitTestRunner": "vitest-analog",
+      "displayBlock": true,
+      "changeDetection": "OnPush",
+      "style": "css",
+      "flat": true,
+      "prefix": "tfn",
+      "standalone": true,
+      "strict": true,
+      "importPath": "@tfn/"
     },
     "@nx/angular:component": {
       "style": "css"
