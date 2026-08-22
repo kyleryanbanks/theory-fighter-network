@@ -10,7 +10,7 @@ import {
 } from '@tfn/app-shell/data';
 import type { NoteEntry } from '@tfn/app-shell/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@tfn/app-shell/ui';
 
 const UNSCOPED_STAGE = '';
 

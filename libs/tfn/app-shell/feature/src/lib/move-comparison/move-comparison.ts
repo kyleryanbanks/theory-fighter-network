@@ -10,7 +10,7 @@ import {
   DataValue,
 } from '@tfn/app-shell/data';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
-import { ComparisonAxis, TfnLink } from '@theory-fighter-network/ui';
+import { ComparisonAxis, TfnLink } from '@tfn/app-shell/ui';
 
 type OutcomeKey = 'onHit' | 'onBlock' | 'onCounterHit' | 'onWhiff' | 'onSecondaryTrigger';
 

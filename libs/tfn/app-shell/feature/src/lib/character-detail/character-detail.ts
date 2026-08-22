@@ -9,8 +9,8 @@ import {
   GameStateManagerComponent,
   StateCreateDialogComponent,
   type StateCreateDialogResult,
-} from '@theory-fighter-network/ui';
-import type { Tile } from '@theory-fighter-network/ui';
+} from '@tfn/app-shell/ui';
+import type { Tile } from '@tfn/app-shell/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 

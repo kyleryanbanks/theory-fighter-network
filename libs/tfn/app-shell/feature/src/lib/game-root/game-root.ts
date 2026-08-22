@@ -25,7 +25,7 @@ import {
   type StateCreateDialogResult,
   TfnLink,
   type Tile,
-} from '@theory-fighter-network/ui';
+} from '@tfn/app-shell/ui';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 import { firstValueFrom } from 'rxjs';
 

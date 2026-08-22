@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@theory-fighter-network/ui": ["./libs/app/ui/src/index.ts"],
+      "@tfn/app-shell/ui": ["./libs/app/ui/src/index.ts"],
       "@tfn/app-shell/feature": ["./libs/tfn/app-shell/feature/src/index.ts"],
       "@tfn/app-shell/data": ["./libs/tfn/app-shell/data/src/index.ts"],
       "@tfn/app-shell/ui": ["./libs/tfn/app-shell/ui/src/index.ts"]

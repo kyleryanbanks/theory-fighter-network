@@ -2,7 +2,7 @@ import { booleanAttribute, Component, computed, input, linkedSignal, output, sig
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { TileGridComponent, Tile, ExpansionPanel, DeleteButton } from '@theory-fighter-network/ui';
+import { TileGridComponent, Tile, ExpansionPanel, DeleteButton } from '@tfn/app-shell/ui';
 
 /**
  * CancelGroupsEditor - Displays and edits cancel group selections at game, character, or phase level.

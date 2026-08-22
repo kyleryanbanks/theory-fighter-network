@@ -4,7 +4,7 @@ import { signal } from '@angular/core';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { vi } from 'vitest';
 import { TeamEditor } from './team-editor';
-import type { Tile } from '@theory-fighter-network/ui';
+import type { Tile } from '@tfn/app-shell/ui';
 
 function buildGuide(
   characters: Array<{ name: string; semanticKey: string }> = [],

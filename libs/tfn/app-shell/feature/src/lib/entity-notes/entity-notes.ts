@@ -5,7 +5,7 @@ import {
   type EntityType,
   type NoteEntry,
 } from '@tfn/app-shell/data';
-import { NotesList } from '@theory-fighter-network/ui';
+import { NotesList } from '@tfn/app-shell/ui';
 
 @Component({
   selector: 'tfn-entity-notes',

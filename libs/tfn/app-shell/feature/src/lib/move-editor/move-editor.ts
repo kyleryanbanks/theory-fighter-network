@@ -9,7 +9,7 @@ import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
 } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
+import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 interface MoveDraft {

@@ -4,7 +4,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore, type Step } from '@tfn/app-shell/data';
-import { ExpansionPanel, EntityDetailShell } from '@theory-fighter-network/ui';
+import { ExpansionPanel, EntityDetailShell } from '@tfn/app-shell/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 @Component({

@@ -3,7 +3,7 @@ import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import type { EntityMetadata } from '@tfn/app-shell/data';
-import { ExpansionPanel, EntityDetailShell } from '@theory-fighter-network/ui';
+import { ExpansionPanel, EntityDetailShell } from '@tfn/app-shell/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 
 type EntityType =

@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { LocalGuideFacadeStore, resolveEffectiveMove, buildCharacterMoveList } from '@tfn/app-shell/data';
 import type { DataValue, PhaseCancelRule, StatePatch, StateModel, MovePreconditions } from '@tfn/app-shell/data';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@theory-fighter-network/ui';
+import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@tfn/app-shell/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
 
