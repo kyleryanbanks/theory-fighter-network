@@ -1,0 +1,227 @@
+/**
+ * Projectile entity and related types
+ * 
+ * Projectiles are moves without input triggers.
+ * They are spawned by moves and live as independent entities during simulation.
+ * Users define projectile properties using the game's state categories (typically "Projectile").
+ */
+
+import { MoveOutcomeEffect } from './move';
+import { Region } from './region';
+import {
+  CommunityMetadata,
+  createCommunityMetadata,
+  createDataValue,
+  createEntityMetadata,
+  EntityMetadata,
+  DataValue,
+} from './shared';
+import {
+  createRuntimeStateModel,
+  RuntimeStateModel,
+  StateModel,
+} from './state';
+
+/**
+ * ProjectileDocument defines a reusable projectile template.
+ * Similar to MoveDocument, but with no inputFrames (spawned by moves, not player input).
+ * Projectiles have phases that describe their motion and interaction over time.
+ */
+export interface ProjectileDocument<
+  TStateModel extends StateModel = StateModel
+> {
+  gameKey: string;
+  characterKey?: string;  // Character-specific projectile (or undefined for universal)
+  semanticKey: string;    // hash(gameSemanticKey + characterSemanticKey + normalizedProjectileProperties)
+
+  /**
+   * Phases describing projectile lifetime:
+   * - Duration: how long this phase lasts (frames)
+   * - Velocity: motion per frame (in game dimensions, e.g., x/y or x/y/z)
+   * - Position: starting position for this phase
+   * - Hitboxes: regions that cause damage
+   * - Hurtboxes: regions that can be destroyed
+   * - Collisionboxes: non-damaging collision regions
+   * - Effects: what happens on hit/block/whiff
+   * - destroyedAfter: if true, projectile ends after this phase
+   */
+  phases: ProjectilePhase[];
+
+  /**
+   * Initial state values for this projectile template.
+   * These are copied into ProjectileInstance.runtimeState when the projectile spawns.
+   * Users can set any state from the game's state categories here.
+   * 
+   * Example (if "Projectile" category has durability and priority states):
+   * state: {
+   *   Projectile: {
+   *     durability: 1,
+   *     priority: 3
+   *   }
+   * }
+   */
+  state: RuntimeStateModel<TStateModel>;
+
+  community: CommunityMetadata;
+  meta: EntityMetadata;
+}
+
+export const createProjectileDocument = (
+  overrides: Partial<ProjectileDocument> = {}
+): ProjectileDocument => ({
+  gameKey: '',
+  semanticKey: '',
+  phases: [],
+  state: createRuntimeStateModel(),
+  community: createCommunityMetadata(),
+  meta: createEntityMetadata(),
+  ...overrides,
+});
+
+/**
+ * Single phase of a projectile's lifetime
+ */
+export interface ProjectilePhase<
+  TStateModel extends StateModel = StateModel
+> 
+ {
+  label?: string;
+  notes?: string;
+
+  /**
+   * Duration of this phase (frames)
+   */
+  duration: DataValue;
+
+  /**
+   * Velocity per frame during this phase.
+   * Keys depend on game.is3d:
+   * - 2D games: x, y
+   * - 3D games: x, y, z
+   * 
+   * Example: { x: { exact: 5 }, y: { exact: 0 } }
+   * Position at frame N = initialPosition + (velocity * N)
+   */
+  velocity?: {
+    x?: DataValue;
+    y?: DataValue;
+    z?: DataValue;  // Only used if game.is3d
+  };
+
+  /**
+   * Starting position for this phase (absolute coordinates).
+   * If undefined, continues from previous phase's end position.
+   * 
+   * Keys depend on game.is3d:
+   * - 2D games: x, y
+   * - 3D games: x, y, z
+   * 
+   * Example: { x: { exact: 0 }, y: { exact: 100 } }
+   */
+  initialPosition?: {
+    x?: DataValue;
+    y?: DataValue;
+    z?: DataValue;  // Only used if game.is3d
+  };
+
+  /**
+   * Hitboxes that deal damage when they touch opponent hurtboxes.
+   * Defined relative to projectile origin.
+   */
+  hitBoxes?: Region[];
+
+  /**
+   * Hurtboxes that receive damage (e.g., projectile can be destroyed by opponent attack).
+   * Defined relative to projectile origin.
+   */
+  hurtBoxes?: Region[];
+
+  /**
+   * Collision boxes for stage boundaries or non-damaging obstruction.
+   * Defined relative to projectile origin.
+   */
+  collisionBoxes?: Region[];
+
+  /**
+   * Effects this projectile applies when it connects
+   */
+  effects?: {
+    onHit?: MoveOutcomeEffect<TStateModel>;        // Hit opponent character/projectile
+    onBlock?: MoveOutcomeEffect<TStateModel>;      // Opponent blocked the projectile
+    onCounterHit?: MoveOutcomeEffect<TStateModel>; // Hit opponent during their active frames
+  };
+
+  /**
+   * If true, projectile is destroyed at the end of this phase (lifetime expiration).
+   * If false, transitions to next phase.
+   */
+  destroyedAfter?: boolean;
+}
+
+export const createProjectilePhase = (
+  overrides: Partial<ProjectilePhase> = {}
+): ProjectilePhase => ({
+  duration: createDataValue(),
+  ...overrides,
+});
+
+/**
+ * Runtime instance of an active projectile during simulation
+ */
+export interface ProjectileInstance<
+  TStateModel extends StateModel = StateModel
+> {
+  /**
+   * Unique ID for this projectile instance during the current simulation
+   */
+  id: string;
+
+  /**
+   * Reference to the ProjectileDocument this instance was created from
+   */
+  projectileSemanticKey: string;
+
+  /**
+   * When was this projectile spawned (game frame number)
+   */
+  spawnedAtGameFrame: number;
+
+  /**
+   * Which phase of the projectile are we currently in (0-indexed)
+   */
+  currentPhaseIndex: number;
+
+  /**
+   * Current runtime state of the projectile
+   * This is the mutable copy of projectileDocument.state
+   * Can be modified by effects or onUpdate/onFrameAdvance callbacks
+   */
+  runtimeState: RuntimeStateModel<TStateModel>;
+
+  /**
+   * Current position of projectile origin in world space
+   */
+  currentPosition: {
+    x: number;
+    y: number;
+    z?: number;  // Only used if game.is3d
+  };
+
+  /**
+   * When was this projectile destroyed (frame number), if applicable
+   * undefined = still active
+   */
+  destroyedAtGameFrame?: number;
+}
+
+export const createProjectileInstance = (
+  overrides: Partial<ProjectileInstance> = {}
+): ProjectileInstance => ({
+  id: '',
+  projectileSemanticKey: '',
+  spawnedAtGameFrame: 0,
+  currentPhaseIndex: 0,
+  runtimeState: createRuntimeStateModel(),
+  currentPosition: { x: 0, y: 0 },
+  ...overrides,
+});
