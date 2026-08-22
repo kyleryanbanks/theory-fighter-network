@@ -17,7 +17,8 @@
     "paths": {
       "@theory-fighter-network/feature": ["./libs/app/feature/src/index.ts"],
       "@theory-fighter-network/data": ["./libs/app/data/src/index.ts"],
-      "@theory-fighter-network/ui": ["./libs/app/ui/src/index.ts"]
+      "@theory-fighter-network/ui": ["./libs/app/ui/src/index.ts"],
+      "@tfn/app-shell/feature": ["./libs/tfn/app-shell/feature/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
