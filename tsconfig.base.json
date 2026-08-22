@@ -19,7 +19,8 @@
       "@tfn/app-shell/feature": ["./libs/tfn/app-shell/feature/src/index.ts"],
       "@tfn/app-shell/data": ["./libs/tfn/app-shell/data/src/index.ts"],
       "@tfn/game/data": ["./libs/tfn/game/data/src/index.ts"],
-      "@tfn/game/feature": ["./libs/tfn/game/feature/src/index.ts"]
+      "@tfn/game/feature": ["./libs/tfn/game/feature/src/index.ts"],
+      "@tfn/game/ui": ["./libs/tfn/game/ui/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
