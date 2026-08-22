@@ -1,0 +1,9 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.empty-state {
+  padding: 28px;
+  color: #617168;
+}

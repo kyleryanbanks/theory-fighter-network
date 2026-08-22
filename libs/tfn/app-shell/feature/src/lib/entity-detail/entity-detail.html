@@ -1,0 +1,18 @@
+@if (entity(); as currentEntity) {
+  @if (metadata(); as entityMetadata) {
+    <tfn-entity-detail-shell
+      [title]="title()"
+      [entityKey]="entityKey"
+      [backLabel]="'Back to ' + entityTypeLabel() + ' list'"
+      [backLink]="backRoute()"
+      [metadata]="entityMetadata.meta"
+    >
+      <tfn-entity-notes detail-notes [entityType]="entityType" [entityKey]="entityKey" [notes]="entityMetadata.meta.notes || []" [notAddressable]="true" />
+      <tfn-expansion-panel header="Complete data" subheader="All stored fields for this entity">
+        <pre>{{ currentEntity | json }}</pre>
+      </tfn-expansion-panel>
+    </tfn-entity-detail-shell>
+  }
+} @else {
+  <p class="empty-state">{{ entityTypeLabel() }} not found.</p>
+}

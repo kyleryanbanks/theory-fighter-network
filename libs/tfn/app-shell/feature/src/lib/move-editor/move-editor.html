@@ -1,0 +1,118 @@
+<section aria-labelledby="moves-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Character-level hierarchy</p>
+      <h3 id="moves-heading">Moves</h3>
+    </div>
+    <p>{{ moves().length }} total</p>
+    <tfn-link [routerLink]="['/move-comparison']">Compare Moves</tfn-link>
+  </div>
+
+  <mat-form-field appearance="outline" class="scope-select">
+    <mat-label>Scope</mat-label>
+    <mat-select
+      data-testid="move-scope"
+      [value]="scopeKey()"
+      (selectionChange)="setScope($event.value)"
+    >
+      <mat-option value="">Universal (Game-level)</mat-option>
+      @for (character of characters(); track character.semanticKey) {
+        <mat-option [value]="character.semanticKey">
+          {{ character.name }}
+        </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <form class="move-form" (submit)="$event.preventDefault(); createMove()">
+    <mat-form-field appearance="outline">
+      <mat-label>Move name</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        data-testid="move-name"
+        [formField]="moveForm.name"
+      />
+      @if (moveForm.name().touched() && moveForm.name().invalid()) {
+        <mat-error>{{ moveForm.name().errors()[0].message }}</mat-error>
+      }
+    </mat-form-field>
+    <button matButton="filled" type="submit" data-testid="add-move">
+      Add Move
+    </button>
+  </form>
+
+  @if (moveError()) {
+    <p class="move-alert" role="alert">{{ moveError() }}</p>
+  }
+
+  <div class="move-list">
+    @if (scopeKey() === '') {
+      @for (move of moves(); track move.semanticKey) {
+        <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+          <tfn-link tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</tfn-link>
+          <tfn-expansion-panel subsection secondary header="Notes">
+            <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
+          </tfn-expansion-panel>
+          <tfn-expansion-panel subsection secondary header="Metadata">
+            <tfn-entity-metadata [metadata]="move.meta" />
+            <tfn-delete-button [ariaLabel]="'Delete Move ' + move.name" (delete)="deleteMove(move.semanticKey)" />
+          </tfn-expansion-panel>
+        </tfn-expansion-panel>
+      } @empty {
+        <p class="empty-state">No Moves added in this scope.</p>
+      }
+    } @else {
+      @for (universalMove of universalMoves(); track universalMove.semanticKey) {
+        @if (!isOverridden(universalMove.semanticKey)) {
+          <tfn-expansion-panel class="move-entry move-entry--inherited" data-testid="move-entry" [header]="universalMove.name" subheader="Universal">
+            <tfn-link tfnExpansionPanelAction [routerLink]="['/moves', universalMove.semanticKey]">Open details</tfn-link>
+            <tfn-expansion-panel subsection secondary header="Notes">
+              <tfn-entity-notes entityType="move" [entityKey]="universalMove.semanticKey" [notes]="universalMove.meta && universalMove.meta.notes || []" [notAddressable]="true" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel subsection secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="universalMove.meta" />
+              <button matButton type="button" [attr.aria-label]="'Override ' + universalMove.name" (click)="overrideMove(universalMove.semanticKey)">
+                Override Move
+              </button>
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
+        }
+      }
+      @for (move of ownMoves(); track move.semanticKey) {
+        @if (move.parentKey) {
+          <tfn-expansion-panel class="move-entry move-entry--override" data-testid="move-entry" [header]="move.name" [subheader]="'Overrides ' + move.parentKey">
+            <tfn-link tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</tfn-link>
+            <tfn-expansion-panel subsection secondary header="Notes">
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel subsection secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="move.meta" />
+                <tfn-delete-button [ariaLabel]="'Revert ' + move.name + ' to Universal'" (delete)="deleteMove(move.semanticKey)" />
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
+        } @else {
+          <tfn-expansion-panel class="move-entry" data-testid="move-entry" [header]="move.name" [subheader]="move.semanticKey">
+            <tfn-link tfnExpansionPanelAction [routerLink]="['/moves', move.semanticKey]">Open details</tfn-link>
+            <tfn-expansion-panel subsection secondary header="Notes">
+              <tfn-entity-notes entityType="move" [entityKey]="move.semanticKey" [notes]="move.meta && move.meta.notes || []" [notAddressable]="true" />
+            </tfn-expansion-panel>
+            <tfn-expansion-panel subsection secondary header="Metadata">
+              <tfn-entity-metadata [metadata]="move.meta" />
+              <span>
+                <button matButton type="button" [attr.aria-label]="'Promote ' + move.name + ' to Universal'" (click)="promoteMove(move.semanticKey)">
+                  Promote to Universal
+                </button>
+                <tfn-delete-button [ariaLabel]="'Delete Move ' + move.name" (delete)="deleteMove(move.semanticKey)" />
+              </span>
+            </tfn-expansion-panel>
+          </tfn-expansion-panel>
+        }
+      } @empty {
+        @if (universalMoves().length === 0) {
+          <p class="empty-state">No Moves added in this scope.</p>
+        }
+      }
+    }
+  </div>
+</section>

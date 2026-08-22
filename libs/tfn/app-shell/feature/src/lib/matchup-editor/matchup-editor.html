@@ -1,0 +1,89 @@
+<section aria-labelledby="matchups-heading">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Game-level hierarchy</p>
+      <h3 id="matchups-heading">Matchups</h3>
+    </div>
+    <p>{{ matchups().length }} total</p>
+  </div>
+
+  <div class="matchup-draft">
+    <mat-form-field appearance="outline">
+      <mat-label>Attacker</mat-label>
+      <mat-select data-testid="attacker-select" [value]="attackerKey()" (selectionChange)="attackerKey.set($event.value)">
+        @for (character of characters(); track character.semanticKey) {
+          <mat-option [value]="character.semanticKey">{{ character.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Defender</mat-label>
+      <mat-select data-testid="defender-select" [value]="defenderKey()" (selectionChange)="defenderKey.set($event.value)">
+        @for (character of characters(); track character.semanticKey) {
+          <mat-option [value]="character.semanticKey">{{ character.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <button matButton="filled" type="button" data-testid="add-matchup" (click)="createMatchup()">Add Matchup</button>
+  </div>
+
+  @if (matchupError()) { <p class="matchup-alert" role="alert">{{ matchupError() }}</p> }
+
+  <div class="matchup-list">
+    @for (matchup of matchups(); track matchup.semanticKey) {
+      <tfn-expansion-panel class="matchup-item" data-testid="matchup-item" [header]="characterName(matchup.attackerKey) + ' vs ' + characterName(matchup.defenderKey)" [subheader]="matchup.semanticKey">
+        <tfn-link tfnExpansionPanelAction [routerLink]="['/matchups', matchup.semanticKey]">Open details</tfn-link>
+        <div class="matchup-details">
+          <tfn-expansion-panel subsection secondary header="Notes">
+            <tfn-entity-notes entityType="matchup" [entityKey]="matchup.semanticKey" [notes]="matchup.meta && matchup.meta.notes || []" addressLabel="Create a new Scenario to address this note" (address)="addressNote(matchup.semanticKey, $event)" />
+          </tfn-expansion-panel>
+
+          <tfn-expansion-panel subsection secondary header="Scenarios">
+            <div class="scenario-draft">
+              <mat-form-field appearance="outline">
+                <mat-label>Opponent option</mat-label>
+                <mat-select [value]="draftOpponentOptionKey()" (selectionChange)="draftOpponentOptionKey.set($event.value)">
+                  @for (move of moves(); track move.semanticKey) { <mat-option [value]="move.semanticKey">{{ move.name }}</mat-option> }
+                  @for (sequence of sequences(); track sequence.semanticKey) { <mat-option [value]="sequence.semanticKey">{{ optionLabel(sequence.semanticKey) }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Scenario name</mat-label>
+                <input matInput [value]="draftScenarioName()" (input)="draftScenarioName.set($any($event.target).value)" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Stage</mat-label>
+                <mat-select [value]="draftScenarioStageKey()" (selectionChange)="draftScenarioStageKey.set($event.value)">
+                  <mat-option value="">Unscoped</mat-option>
+                  @for (stage of stages(); track stage.semanticKey) { <mat-option [value]="stage.semanticKey">{{ stage.name }}</mat-option> }
+                </mat-select>
+              </mat-form-field>
+              <button matButton="filled" type="button" (click)="addScenario(matchup.semanticKey)">Add Scenario</button>
+            </div>
+            @if (scenarioError()) { <p class="matchup-alert" role="alert">{{ scenarioError() }}</p> }
+
+            @for (scenario of matchup.scenarios; track scenario.semanticKey) {
+              <tfn-expansion-panel class="scenario-entry" data-testid="scenario-entry" [header]="optionLabel(scenario.opponentOptionKey)" [subheader]="scenario.name || scenario.semanticKey">
+                <tfn-expansion-panel subsection header="Responses">
+                  <tfn-tile-grid
+                    [tiles]="responseTiles(matchup, scenario)"
+                    (update)="onResponseTileUpdate(matchup.semanticKey, scenario.semanticKey, $event)"
+                  />
+                </tfn-expansion-panel>
+                <tfn-expansion-panel subsection header="Metadata">
+                  @if (scenario.stageKey; as stageKey) { <p class="scenario-stage">Stage: {{ stageName(stageKey) }}</p> }
+                  <tfn-delete-button [ariaLabel]="'Delete Scenario ' + scenario.semanticKey" (delete)="removeScenario(matchup.semanticKey, scenario.semanticKey)" />
+                </tfn-expansion-panel>
+              </tfn-expansion-panel>
+            } @empty { <p class="empty-state">No Scenarios added.</p> }
+          </tfn-expansion-panel>
+
+          <tfn-expansion-panel subsection secondary header="Metadata">
+            <tfn-entity-metadata [metadata]="matchup.meta" />
+            <tfn-delete-button [ariaLabel]="'Delete Matchup ' + matchup.semanticKey" (delete)="deleteMatchup(matchup.semanticKey)" />
+          </tfn-expansion-panel>
+        </div>
+      </tfn-expansion-panel>
+    } @empty { <p class="empty-state">No Matchups added.</p> }
+  </div>
+</section>

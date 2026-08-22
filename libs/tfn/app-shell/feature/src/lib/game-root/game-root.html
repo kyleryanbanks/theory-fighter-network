@@ -1,0 +1,251 @@
+<section aria-labelledby="game-root-heading">
+	<div class="section-heading">
+		<h3 id="game-root-heading">Game</h3>
+		@if (facade.guide(); as guide) {
+			<tfn-link [routerLink]="['/game', guide.entities.game.semanticKey]">Open details</tfn-link>
+		}
+	</div>
+	@if (facade.guide(); as guide) {
+		<tfn-entity-notes
+			entityType="game"
+			[entityKey]="guide.entities.game.semanticKey"
+			[notes]="guide.entities.game.meta && guide.entities.game.meta.notes || []"
+			[notAddressable]="true"
+		/>
+	}
+	<form class="game-form" (submit)="$event.preventDefault(); createGuide()">
+		<section class="form-section" aria-labelledby="identity-heading">
+			<div class="section-heading">
+				<h3 id="identity-heading">Identity</h3>
+				@if (facade.guide()) {
+					<p>Name and version are fixed after game creation.</p>
+				}
+			</div>
+
+			<div class="field-grid identity-grid">
+				<mat-form-field appearance="outline">
+					<mat-label>Game name</mat-label>
+					<input
+						matInput
+						data-testid="game-name"
+						autocomplete="off"
+						[formField]="gameForm.name"
+					/>
+					@if (gameForm.name().touched() && gameForm.name().invalid()) {
+						<mat-error>{{ gameForm.name().errors()[0].message }}</mat-error>
+					}
+				</mat-form-field>
+
+				<mat-form-field appearance="outline">
+					<mat-label>Version</mat-label>
+					<input
+						matInput
+						data-testid="game-version"
+						autocomplete="off"
+						[formField]="gameForm.version"
+					/>
+					@if (gameForm.version().touched() && gameForm.version().invalid()) {
+						<mat-error>{{ gameForm.version().errors()[0].message }}</mat-error>
+					}
+				</mat-form-field>
+			</div>
+		</section>
+
+		<section class="form-section" aria-labelledby="rules-heading">
+			<div class="section-heading">
+				<h3 id="rules-heading">Rules</h3>
+			</div>
+
+			<div class="field-grid rules-grid">
+				<mat-form-field appearance="outline">
+					<mat-label>Frame rate</mat-label>
+					<input
+						matInput
+						type="number"
+						data-testid="frame-rate"
+						[formField]="gameForm.frameRate"
+					/>
+					@if (gameForm.frameRate().touched() && gameForm.frameRate().invalid()) {
+						<mat-error>{{ gameForm.frameRate().errors()[0].message }}</mat-error>
+					}
+				</mat-form-field>
+
+				<mat-form-field appearance="outline">
+					<mat-label>Team size</mat-label>
+					<input
+						matInput
+						type="number"
+						data-testid="team-size"
+						[formField]="gameForm.teamSize"
+					/>
+					@if (gameForm.teamSize().touched() && gameForm.teamSize().invalid()) {
+						<mat-error>{{ gameForm.teamSize().errors()[0].message }}</mat-error>
+					}
+				</mat-form-field>
+
+				<mat-checkbox [formField]="gameForm.is3d">3D game</mat-checkbox>
+			</div>
+		</section>
+
+		<section class="form-section" aria-labelledby="inputs-heading">
+			<div class="section-heading">
+				<h3 id="inputs-heading">Input vocabulary</h3>
+				<p>Add each direction and button separately. Values must be unique.</p>
+			</div>
+
+			@if (vocabularyError()) {
+				<p class="form-alert" role="alert">{{ vocabularyError() }}</p>
+			}
+
+			<div class="vocabulary-grid">
+				<section class="vocabulary-column" aria-labelledby="directions-heading">
+					<h4 id="directions-heading">Directions</h4>
+					<div class="entry-form">
+						<mat-form-field appearance="outline">
+							<mat-label>Label</mat-label>
+							<input
+								matInput
+								data-testid="direction-label"
+								autocomplete="off"
+								[formField]="directionDraftForm.label"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline">
+							<mat-label>Value</mat-label>
+							<input
+								matInput
+								data-testid="direction-value"
+								autocomplete="off"
+								[formField]="directionDraftForm.value"
+							/>
+							<mat-hint>Defaults to label</mat-hint>
+						</mat-form-field>
+
+						<button
+							matButton="filled"
+							type="button"
+							data-testid="add-direction"
+							(click)="addDirection()"
+						>
+							Add direction
+						</button>
+					</div>
+
+					<div class="entry-list">
+						@for (direction of gameModel().inputs.directions; track $index) {
+							<div class="vocabulary-entry" data-testid="direction-entry">
+								<span>
+									<strong>{{ direction.label }}</strong>
+									<small>{{ direction.value || direction.label }}</small>
+								</span>
+								<button
+									matButton
+									type="button"
+									[attr.aria-label]="'Remove direction ' + direction.label"
+									(click)="removeDirection($index)"
+								>
+									Remove
+								</button>
+							</div>
+						} @empty {
+							<p class="empty-state">No directions added.</p>
+						}
+					</div>
+				</section>
+
+				<section class="vocabulary-column" aria-labelledby="buttons-heading">
+					<h4 id="buttons-heading">Buttons</h4>
+					<div class="entry-form">
+						<mat-form-field appearance="outline">
+							<mat-label>Label</mat-label>
+							<input
+								matInput
+								data-testid="button-label"
+								autocomplete="off"
+								[formField]="buttonDraftForm.label"
+							/>
+						</mat-form-field>
+
+						<mat-form-field appearance="outline">
+							<mat-label>Value</mat-label>
+							<input
+								matInput
+								data-testid="button-value"
+								autocomplete="off"
+								[formField]="buttonDraftForm.value"
+							/>
+							<mat-hint>Defaults to label</mat-hint>
+						</mat-form-field>
+
+						<button
+							matButton="filled"
+							type="button"
+							data-testid="add-button"
+							(click)="addButton()"
+						>
+							Add button
+						</button>
+					</div>
+
+					<div class="entry-list">
+						@for (button of gameModel().inputs.buttons; track $index) {
+							<div class="vocabulary-entry" data-testid="button-entry">
+								<span>
+									<strong>{{ button.label }}</strong>
+									<small>{{ button.value || button.label }}</small>
+								</span>
+								<button
+									matButton
+									type="button"
+									[attr.aria-label]="'Remove button ' + button.label"
+									(click)="removeButton($index)"
+								>
+									Remove
+								</button>
+							</div>
+						} @empty {
+							<p class="empty-state">No buttons added.</p>
+						}
+					</div>
+				</section>
+			</div>
+		</section>
+
+		<footer class="form-actions">
+			@if (!facade.guide()) {
+				<button matButton="filled" type="submit" data-testid="create-guide">
+					Create guide
+				</button>
+			} @else {
+				<button
+					matButton="filled"
+					type="button"
+					data-testid="update-game"
+					(click)="updateActiveGame()"
+				>
+					Save game
+				</button>
+			}
+		</footer>
+	</form>
+
+	@if (facade.guide(); as guide) {
+		<tfn-game-state-manager
+			header="Game States"
+			subheader="Reusable state definitions for effects, projectiles, and later simulation tooling."
+			[stateModel]="guide.entities.game.states"
+			(addState)="openStateCreateDialog()"
+			(deleteState)="deleteGameState($event)"
+		/>
+
+		<tfn-cancel-groups-editor 
+			includeName
+			[moveList]="universalMoveList()"
+			[universalGroups]="universalCancelGroups()"
+			(save)="saveUniversalCancelGroup($event)"
+			(renameGroup)="renameUniversalCancelGroup($event)"
+			(deleteGroup)="deleteUniversalCancelGroup($event)"
+		/>
+	}
+</section>

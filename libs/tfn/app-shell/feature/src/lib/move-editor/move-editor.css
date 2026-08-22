@@ -1,0 +1,152 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+section {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  border-top: 3px solid #3f6654;
+  padding: 24px 28px 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 32px rgba(26, 48, 39, 0.07);
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.section-heading p,
+h2 {
+  margin: 0;
+}
+
+.section-heading > p,
+.eyebrow {
+  color: #617168;
+  font-size: 0.8125rem;
+}
+
+.eyebrow {
+  margin-bottom: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-family: 'Rockwell', 'Avenir Next', sans-serif;
+  font-size: 1.35rem;
+  letter-spacing: 0;
+}
+
+.scope-select {
+  display: block;
+  max-width: 320px;
+  margin-bottom: 10px;
+}
+
+.move-form {
+  display: grid;
+  grid-template-columns: minmax(180px, 420px) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.move-form button {
+  min-height: 56px;
+}
+
+.move-alert {
+  margin: 0 0 14px;
+  border-left: 3px solid #b42318;
+  padding: 8px 12px;
+  background: #fff1f0;
+  color: #8c1d18;
+}
+
+.move-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.move-entry,
+.empty-state {
+  min-height: 56px;
+  margin: 0;
+  background: #f9faf8;
+}
+
+.move-entry {
+  border: 1px solid #d8e2dc;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.move-entry summary.move-identity {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 14px;
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.move-entry .entity-entry-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #d8e2dc;
+  padding: 10px 14px;
+}
+
+.move-entry strong,
+.move-entry small {
+  overflow-wrap: anywhere;
+}
+
+.move-entry small {
+  color: #68776f;
+}
+
+.move-entry--inherited {
+  background: #eaeeec;
+}
+
+.move-entry--override strong {
+  color: #3f6654;
+}
+
+.lock-icon {
+  font-size: 0.8125rem;
+}
+
+.empty-state {
+  display: grid;
+  place-items: center start;
+  padding: 0 14px;
+  color: #79877f;
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 640px) {
+  section {
+    padding: 20px;
+  }
+
+  .move-form {
+    grid-template-columns: 1fr;
+  }
+
+  .move-form button {
+    width: 100%;
+  }
+}

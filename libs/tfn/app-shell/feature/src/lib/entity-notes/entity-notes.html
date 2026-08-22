@@ -1,0 +1,12 @@
+@if (error()) {
+  <p class="entity-notes-error" role="alert">{{ error() }}</p>
+}
+<tfn-notes-list
+  [notes]="notes()"
+  [notAddressable]="notAddressable()"
+  [addressLabel]="addressLabel()"
+  [addressUrl]="addressUrl()"
+  (add)="addNote($event)"
+  (remove)="removeNote($event)"
+  (address)="addressNote($event)"
+/>
