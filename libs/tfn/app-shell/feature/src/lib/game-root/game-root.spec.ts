@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { createStateModel, LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { createStateModel, LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { GameRoot } from './game-root';

@@ -7,8 +7,8 @@ import { MatSelectModule } from '@angular/material/select';
 import {
   createMatchupScenarioSemanticKey,
   LocalGuideFacadeStore,
-} from '@theory-fighter-network/data';
-import type { NoteEntry } from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
+import type { NoteEntry } from '@tfn/app-shell/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@theory-fighter-network/ui';
 

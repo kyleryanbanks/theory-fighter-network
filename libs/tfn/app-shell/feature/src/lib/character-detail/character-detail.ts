@@ -2,7 +2,7 @@ import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { LocalGuideFacadeStore, buildCharacterMoveList, type StateModel } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore, buildCharacterMoveList, type StateModel } from '@tfn/app-shell/data';
 import {
   EntityDetailShell,
   ExpansionPanel,

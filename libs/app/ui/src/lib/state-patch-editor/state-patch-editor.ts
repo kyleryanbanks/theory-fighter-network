@@ -12,7 +12,7 @@ import {
   type StateDocument,
   type StateModel,
   type StatePatch,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { DataValueEditor } from '../data-value-editor/data-value-editor';
 import { ExpansionPanel } from '../exp-panel/expansion-panel';
 

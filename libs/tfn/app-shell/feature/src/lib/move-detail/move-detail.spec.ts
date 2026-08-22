@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import type { PhaseCancelRule } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
+import type { PhaseCancelRule } from '@tfn/app-shell/data';
 import { vi } from 'vitest';
 import { MoveDetail } from './move-detail';
 

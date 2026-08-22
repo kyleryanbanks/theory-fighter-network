@@ -17,7 +17,7 @@ import {
   type Input,
   type Inputs,
   LocalGuideFacadeStore,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { EntityNotes } from '../entity-notes/entity-notes';
 import {
   GameStateManagerComponent,

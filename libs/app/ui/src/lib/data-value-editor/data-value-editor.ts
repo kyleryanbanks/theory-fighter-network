@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSliderModule } from '@angular/material/slider';
-import type { DataValue } from '@theory-fighter-network/data';
+import type { DataValue } from '@tfn/app-shell/data';
 
 type DataValueMode = 'relative' | 'exact';
 

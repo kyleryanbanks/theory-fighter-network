@@ -4,7 +4,7 @@ import {
   LocalGuideFacadeStore,
   type EntityType,
   type NoteEntry,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { NotesList } from '@theory-fighter-network/ui';
 
 @Component({

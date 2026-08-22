@@ -11,7 +11,7 @@ import {
   type StatePrecondition,
   type StateDocument,
   type StateModel,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { ExpansionPanel } from '../exp-panel/expansion-panel';
 import { TileGridComponent, type Tile } from '../tile-grid/tile-grid';
 

@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import type { EntityMetadata } from '@theory-fighter-network/data';
+import type { EntityMetadata } from '@tfn/app-shell/data';
 import { EntityMetadataView } from '../entity-metadata/entity-metadata';
 import { ExpansionPanel } from '../exp-panel/expansion-panel';
 import { TfnLink } from '../link/link';

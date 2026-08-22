@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import type { EntityMetadata } from '@theory-fighter-network/data';
+import type { EntityMetadata } from '@tfn/app-shell/data';
 
 @Component({
   selector: 'tfn-entity-metadata',

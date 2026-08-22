@@ -8,7 +8,7 @@ import {
   RecentGuidePermissionError,
   RecentGuidesService,
   type RecentGuide,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { Feature } from './feature';
 
 describe('Feature', () => {

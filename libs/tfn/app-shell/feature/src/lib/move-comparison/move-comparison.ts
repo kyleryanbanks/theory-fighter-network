@@ -8,8 +8,8 @@ import {
   MoveDocument,
   MovePhase,
   DataValue,
-} from '@theory-fighter-network/data';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { ComparisonAxis, TfnLink } from '@theory-fighter-network/ui';
 
 type OutcomeKey = 'onHit' | 'onBlock' | 'onCounterHit' | 'onWhiff' | 'onSecondaryTrigger';

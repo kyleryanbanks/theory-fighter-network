@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { LocalGuideFacadeStore, type NoteEntry } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore, type NoteEntry } from '@tfn/app-shell/data';
 import { vi } from 'vitest';
 import { EntityNotes } from './entity-notes';
 

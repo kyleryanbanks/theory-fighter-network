@@ -1,8 +1,8 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
-import type { EntityMetadata } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
+import type { EntityMetadata } from '@tfn/app-shell/data';
 import { ExpansionPanel, EntityDetailShell } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 

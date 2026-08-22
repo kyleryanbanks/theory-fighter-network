@@ -8,7 +8,7 @@ import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
   type Step,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';
 

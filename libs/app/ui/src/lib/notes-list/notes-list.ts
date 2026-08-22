@@ -3,7 +3,7 @@ import { RouterLink, type UrlTree } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import type { NoteEntry } from '@theory-fighter-network/data';
+import type { NoteEntry } from '@tfn/app-shell/data';
 import { DeleteButton } from '../delete-button/delete-button';
 
 @Component({

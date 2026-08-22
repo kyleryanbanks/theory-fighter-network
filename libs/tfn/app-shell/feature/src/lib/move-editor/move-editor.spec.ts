@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { vi } from 'vitest';
 import { MoveEditor } from './move-editor';
 

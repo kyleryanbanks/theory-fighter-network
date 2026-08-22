@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
-import { LocalGuideFacadeStore } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { EntityDetail } from './entity-detail';
 
 describe('EntityDetail', () => {

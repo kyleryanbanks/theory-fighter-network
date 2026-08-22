@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { NoteEntry } from '@theory-fighter-network/data';
+import type { NoteEntry } from '@tfn/app-shell/data';
 import { NotesList } from './notes-list';
 
 function buildNote(overrides: Partial<NoteEntry> = {}): NoteEntry {

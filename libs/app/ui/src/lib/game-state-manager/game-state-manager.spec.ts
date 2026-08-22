@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GameStateManagerComponent } from './game-state-manager';
-import type { StateModel } from '@theory-fighter-network/data';
+import type { StateModel } from '@tfn/app-shell/data';
 
 function buildStateModel(): StateModel {
   return {

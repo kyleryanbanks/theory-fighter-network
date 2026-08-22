@@ -15,7 +15,7 @@ import {
   RecentGuidesService,
   type RecentFileHandle,
   type RecentGuide,
-} from '@theory-fighter-network/data';
+} from '@tfn/app-shell/data';
 import { GuideNav, Ui } from '@theory-fighter-network/ui';
 import { GameRoot } from '../game-root/game-root';
 

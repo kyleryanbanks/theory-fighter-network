@@ -10,7 +10,7 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { normalizeGameName, type StateModel } from '@theory-fighter-network/data';
+import { normalizeGameName, type StateModel } from '@tfn/app-shell/data';
 
 export interface StateCreateDialogData {
   existingStates: StateModel;

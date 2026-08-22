@@ -4,7 +4,7 @@ import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { LocalGuideFacadeStore, buildCharacterMoveList } from '@theory-fighter-network/data';
+import { LocalGuideFacadeStore, buildCharacterMoveList } from '@tfn/app-shell/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@theory-fighter-network/ui';
 import type { Tile } from '@theory-fighter-network/ui';
 import { EntityNotes } from '../entity-notes/entity-notes';

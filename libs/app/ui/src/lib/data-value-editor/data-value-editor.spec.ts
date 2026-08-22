@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { DataValue } from '@theory-fighter-network/data';
+import type { DataValue } from '@tfn/app-shell/data';
 import { DataValueEditor } from './data-value-editor';
 
 @Component({

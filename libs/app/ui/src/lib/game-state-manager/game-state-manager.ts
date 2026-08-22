@@ -1,6 +1,6 @@
 import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { StateDocument, StateModel } from '@theory-fighter-network/data';
+import { StateDocument, StateModel } from '@tfn/app-shell/data';
 import { DeleteButton } from '../delete-button/delete-button';
 import { ExpansionPanel } from '../exp-panel/expansion-panel';
 

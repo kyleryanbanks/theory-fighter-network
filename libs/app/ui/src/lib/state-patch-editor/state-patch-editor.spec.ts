@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import type { StateModel, StatePatch } from '@theory-fighter-network/data';
+import type { StateModel, StatePatch } from '@tfn/app-shell/data';
 import { StatePatchEditorComponent } from './state-patch-editor';
 
 @Component({
