@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { featureRoutes } from '@theory-fighter-network/feature';
+import { featureRoutes } from '@tfn/app-shell/feature';
 import { App } from './app';
 
 describe('App', () => {
