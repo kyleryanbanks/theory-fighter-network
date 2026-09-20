@@ -38,6 +38,9 @@
       ],
       "@tfn/stage/feature": [
         "./libs/tfn/stage/feature/src/index.ts"
+      ],
+      "@tfn/shared/ui": [
+        "./libs/tfn/shared/ui/src/index.ts"
       ]
     }
   },
