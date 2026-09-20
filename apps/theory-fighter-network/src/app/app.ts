@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { AppShell } from '@tfn/app-shell/feature';
 
 @Component({
-  imports: [RouterOutlet],
-  selector: 'app-root',
+  imports: [AppShell],
+  selector: 'tfn-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {}
+export class TheoryFighterNetwork {}

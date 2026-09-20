@@ -1,6 +1,5 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   normalizeGameName,
@@ -10,12 +9,12 @@ import {
   type RecentFileHandle,
   type RecentGuide,
 } from '@tfn/app-shell/data';
-import { GuideNav, Ui } from '@tfn/app-shell/ui';
 import { GameRoot } from './game-root/game-root';
+import { GuideShell } from './guide-shell/guide-shell';
 
 @Component({
   selector: 'tfn-app-shell',
-  imports: [RouterOutlet, GameRoot, GuideNav, Ui],
+  imports: [GuideShell, GameRoot],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.css',
 })

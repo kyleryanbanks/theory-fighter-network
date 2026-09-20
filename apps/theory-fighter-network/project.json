@@ -2,7 +2,7 @@
   "name": "theory-fighter-network",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "prefix": "app",
+  "prefix": "tfn",
   "sourceRoot": "apps/theory-fighter-network/src",
   "tags": [],
   "targets": {

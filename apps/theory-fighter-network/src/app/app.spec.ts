@@ -1,24 +1,19 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
-import { featureRoutes } from '@tfn/app-shell/feature';
-import { App } from './app';
+import { TheoryFighterNetwork } from './app';
 
-describe('App', () => {
+describe('TheoryFighterNetwork', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
-      providers: [provideRouter(featureRoutes)],
+      imports: [TheoryFighterNetwork],
     }).compileComponents();
   });
 
   it('should render the Guide feature shell through the router', async () => {
-    const fixture = TestBed.createComponent(App);
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/');
-    fixture.detectChanges();
+    const fixture = TestBed.createComponent(TheoryFighterNetwork);
+
     await fixture.whenStable();
-    fixture.detectChanges();
+
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('tfn-feature')).not.toBeNull();
+    expect(compiled.querySelector('tfn-app-shell')).not.toBeNull();
   });
 });
