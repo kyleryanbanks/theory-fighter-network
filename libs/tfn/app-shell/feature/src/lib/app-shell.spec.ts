@@ -9,11 +9,11 @@ import {
   RecentGuidesService,
   type RecentGuide,
 } from '@tfn/app-shell/data';
-import { Feature } from './feature';
+import { AppShell } from './app-shell';
 
-describe('Feature', () => {
-  let component: Feature;
-  let fixture: ComponentFixture<Feature>;
+describe('AppShell', () => {
+  let component: AppShell;
+  let fixture: ComponentFixture<AppShell>;
   const recentGuides = signal<RecentGuide[]>([]);
   const mockRecentGuides = {
     recentGuides,
@@ -61,7 +61,7 @@ describe('Feature', () => {
     mockRecentGuides.initialized.set(true);
 
     await TestBed.configureTestingModule({
-      imports: [Feature],
+      imports: [AppShell],
       providers: [
         provideRouter([]),
         {
@@ -75,7 +75,7 @@ describe('Feature', () => {
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     await fixture.whenStable();
     fixture.detectChanges();
@@ -124,7 +124,7 @@ describe('Feature', () => {
           })
       );
 
-      fixture = TestBed.createComponent(Feature);
+      fixture = TestBed.createComponent(AppShell);
       component = fixture.componentInstance;
       fixture.detectChanges();
 
@@ -178,7 +178,7 @@ describe('Feature', () => {
       return { status: 'success' };
     });
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     await fixture.whenStable();
     fixture.detectChanges();
@@ -212,7 +212,7 @@ describe('Feature', () => {
         })
     );
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     fixture.detectChanges();
     await Promise.resolve();
@@ -245,7 +245,7 @@ describe('Feature', () => {
       new RecentGuideUnavailableError('missing-fighter.tfn')
     );
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     await fixture.whenStable();
     fixture.detectChanges();
@@ -275,7 +275,7 @@ describe('Feature', () => {
       new RecentGuidePermissionError('permission-fighter.tfn')
     );
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     await fixture.whenStable();
     fixture.detectChanges();
@@ -303,7 +303,7 @@ describe('Feature', () => {
       },
     ]);
 
-    fixture = TestBed.createComponent(Feature);
+    fixture = TestBed.createComponent(AppShell);
     component = fixture.componentInstance;
     await fixture.whenStable();
     fixture.detectChanges();

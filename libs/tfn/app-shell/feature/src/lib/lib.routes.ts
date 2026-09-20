@@ -3,7 +3,7 @@ import { Route } from '@angular/router';
 export const featureRoutes: Route[] = [
   {
     path: '',
-    loadComponent: () => import('./feature/feature').then((m) => m.Feature),
+    loadComponent: () => import('./app-shell').then((m) => m.AppShell),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'game' },
       { path: 'game', loadComponent: () => import('./game-root/game-root').then((m) => m.GameRoot) },

@@ -1,31 +1,25 @@
-import {
-  Component,
-  OnInit,
-  PLATFORM_ID,
-  inject,
-  signal,
-} from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { Component, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   normalizeGameName,
-  RecentGuideUnavailableError,
   RecentGuidePermissionError,
   RecentGuidesService,
+  RecentGuideUnavailableError,
   type RecentFileHandle,
   type RecentGuide,
 } from '@tfn/app-shell/data';
 import { GuideNav, Ui } from '@tfn/app-shell/ui';
-import { GameRoot } from '../game-root/game-root';
+import { GameRoot } from './game-root/game-root';
 
 @Component({
-  selector: 'tfn-feature',
+  selector: 'tfn-app-shell',
   imports: [RouterOutlet, GameRoot, GuideNav, Ui],
-  templateUrl: './feature.html',
-  styleUrl: './feature.css',
+  templateUrl: './app-shell.html',
+  styleUrl: './app-shell.css',
 })
-export class Feature implements OnInit {
+export class AppShell implements OnInit {
   private static readonly LOADING_DELAY_MS = 200;
   private static readonly LOADING_MINIMUM_MS = 400;
   private readonly platformId = inject(PLATFORM_ID);
@@ -48,7 +42,7 @@ export class Feature implements OnInit {
     const loadingTimer = globalThis.setTimeout(() => {
       loadingShownAt = Date.now();
       this.showStartupLoading.set(true);
-    }, Feature.LOADING_DELAY_MS);
+    }, AppShell.LOADING_DELAY_MS);
 
     try {
       await this.recentGuides.initialize();
@@ -65,7 +59,7 @@ export class Feature implements OnInit {
 
       if (loadingShownAt !== undefined) {
         const elapsed = Date.now() - loadingShownAt;
-        const remaining = Feature.LOADING_MINIMUM_MS - elapsed;
+        const remaining = AppShell.LOADING_MINIMUM_MS - elapsed;
         if (remaining > 0) {
           await delay(remaining);
         }
@@ -137,7 +131,7 @@ export class Feature implements OnInit {
   async openRecentGuide(
     recentGuide: RecentGuide,
     requestPermission = true,
-    useSnapshot = false
+    useSnapshot = false,
   ): Promise<void> {
     try {
       const file = await this.recentGuides.open(recentGuide, {
@@ -159,7 +153,7 @@ export class Feature implements OnInit {
         error instanceof RecentGuideUnavailableError ||
           error instanceof RecentGuidePermissionError
           ? error.message
-          : 'The guide could not be opened.'
+          : 'The guide could not be opened.',
       );
     }
   }
@@ -213,7 +207,7 @@ export class Feature implements OnInit {
         await this.recentGuides.remember(
           await fileHandle.getFile(),
           gameName,
-          fileHandle
+          fileHandle,
         );
       } catch {
         await this.recentGuides.remember(result.value, gameName);
@@ -240,13 +234,12 @@ export class Feature implements OnInit {
 
   private async loadGuide(
     file: File,
-    handle?: RecentFileHandle
+    handle?: RecentFileHandle,
   ): Promise<void> {
     const result = await this.facade.importArchive(file);
 
     if (result.status === 'success') {
-      const gameName =
-        this.facade.guide()?.entities.game.name || file.name;
+      const gameName = this.facade.guide()?.entities.game.name || file.name;
       await this.recentGuides.remember(file, gameName, handle);
       this.recentGuideError.set('');
       this.isCreatingGuide.set(false);
@@ -256,7 +249,7 @@ export class Feature implements OnInit {
 
 interface OpenFilePickerGlobal {
   showOpenFilePicker?: (
-    options: OpenFilePickerOptions
+    options: OpenFilePickerOptions,
   ) => Promise<RecentFileHandle[]>;
 }
 
@@ -270,7 +263,7 @@ interface OpenFilePickerOptions {
 
 interface SaveFilePickerGlobal {
   showSaveFilePicker?: (
-    options: SaveFilePickerOptions
+    options: SaveFilePickerOptions,
   ) => Promise<SaveFileHandle>;
 }
 
