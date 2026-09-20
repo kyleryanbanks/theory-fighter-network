@@ -41,6 +41,9 @@
       ],
       "@tfn/shared/ui": [
         "./libs/tfn/shared/ui/src/index.ts"
+      ],
+      "@tfn/shared/feature": [
+        "./libs/tfn/shared/feature/src/index.ts"
       ]
     }
   },
