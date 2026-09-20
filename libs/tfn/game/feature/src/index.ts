@@ -1,1 +1,1 @@
-export * from './lib/tfn-game-feature';
+export * from './lib/game-root/game-root';
