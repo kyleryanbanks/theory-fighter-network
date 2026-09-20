@@ -1,8 +1,9 @@
 import { Route } from '@angular/router';
+import { GameRoot } from '@tfn/game/feature';
 
 export const appShellRoutes: Route[] = [
   { path: '', pathMatch: 'full', redirectTo: 'game' },
-  { path: 'game', loadComponent: () => import('@tfn/game/feature').then((m) => m.GameRoot) },
+  { path: 'game', component: GameRoot },
   { path: 'game/:entityKey', loadComponent: () => import('@tfn/shared/feature').then((m) => m.EntityDetail), data: { entityType: 'game' } },
   { path: 'stages', loadComponent: () => import('@tfn/stage/feature').then((m) => m.StageEditor) },
   { path: 'stages/:entityKey', loadComponent: () => import('@tfn/shared/feature').then((m) => m.EntityDetail), data: { entityType: 'stage' } },
