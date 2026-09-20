@@ -50,6 +50,9 @@
       ],
       "@tfn/move/feature": [
         "./libs/tfn/move/feature/src/index.ts"
+      ],
+      "@tfn/sequence/feature": [
+        "./libs/tfn/sequence/feature/src/index.ts"
       ]
     }
   },
