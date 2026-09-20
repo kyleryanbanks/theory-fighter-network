@@ -17,6 +17,6 @@ export const appShellRoutes: Route[] = [
   { path: 'teams', loadComponent: () => import('@tfn/team/feature').then((m) => m.TeamEditor) },
   { path: 'teams/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'team' } },
   { path: 'projectiles/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'projectile' } },
-  { path: 'matchups', loadComponent: () => import('../matchup-editor/matchup-editor').then((m) => m.MatchupEditor) },
+  { path: 'matchups', loadComponent: () => import('@tfn/matchup/feature').then((m) => m.MatchupEditor) },
   { path: 'matchups/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'matchup' } },
 ]

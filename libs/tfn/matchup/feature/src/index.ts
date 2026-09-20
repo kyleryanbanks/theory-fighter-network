@@ -1,1 +1,1 @@
-export * from './lib/tfn-matchup-feature';
+export * from './lib/matchup-editor/matchup-editor';
