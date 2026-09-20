@@ -13,8 +13,8 @@ import {
   type StateModel,
   type StatePatch,
 } from '@tfn/app-shell/data';
+import { ExpansionPanel } from '@tfn/shared/ui';
 import { DataValueEditor } from '../data-value-editor/data-value-editor';
-import { ExpansionPanel } from '@tfn/app-shell/ui';
 
 const PATCH_OPERATORS: {
   value: PatchOperator;

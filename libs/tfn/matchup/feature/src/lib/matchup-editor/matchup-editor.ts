@@ -1,16 +1,30 @@
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import {
+  Component,
+  computed,
+  HostListener,
+  inject,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { RouterLink } from '@angular/router';
+import type { NoteEntry } from '@tfn/app-shell/data';
 import {
   createMatchupScenarioSemanticKey,
   LocalGuideFacadeStore,
 } from '@tfn/app-shell/data';
-import type { NoteEntry } from '@tfn/app-shell/data';
-import { EntityNotes } from '@tfn/shared/ui';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@tfn/app-shell/ui';
+import {
+  DeleteButton,
+  EntityMetadataView,
+  EntityNotes,
+  ExpansionPanel,
+  TfnLink,
+  Tile,
+  TileChoice,
+  TileGridComponent,
+} from '@tfn/shared/ui';
 
 const UNSCOPED_STAGE = '';
 
@@ -35,13 +49,11 @@ const UNSCOPED_STAGE = '';
 export class MatchupEditor {
   readonly facade = inject(LocalGuideFacadeStore);
   readonly characters = computed(
-    () => this.facade.guide()?.entities.characters ?? []
+    () => this.facade.guide()?.entities.characters ?? [],
   );
-  readonly stages = computed(
-    () => this.facade.guide()?.entities.stages ?? []
-  );
+  readonly stages = computed(() => this.facade.guide()?.entities.stages ?? []);
   readonly matchups = computed(
-    () => this.facade.guide()?.entities.matchups ?? []
+    () => this.facade.guide()?.entities.matchups ?? [],
   );
 
   readonly attackerKey = signal('');
@@ -50,7 +62,7 @@ export class MatchupEditor {
 
   readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
   readonly sequences = computed(
-    () => this.facade.guide()?.entities.sequences ?? []
+    () => this.facade.guide()?.entities.sequences ?? [],
   );
   readonly expandedMatchupKey = signal<string | null>(null);
   readonly selectedMatchupKey = signal<string | null>(null);
@@ -77,7 +89,7 @@ export class MatchupEditor {
   characterName(characterKey: string): string {
     return (
       this.characters().find(
-        (character) => character.semanticKey === characterKey
+        (character) => character.semanticKey === characterKey,
       )?.name ?? characterKey
     );
   }
@@ -91,21 +103,21 @@ export class MatchupEditor {
 
   optionLabel(optionKey: string): string {
     const move = this.moves().find(
-      (candidate) => candidate.semanticKey === optionKey
+      (candidate) => candidate.semanticKey === optionKey,
     );
     if (move) {
       return move.name;
     }
 
     const sequence = this.sequences().find(
-      (candidate) => candidate.semanticKey === optionKey
+      (candidate) => candidate.semanticKey === optionKey,
     );
     if (sequence) {
       return sequence.sequence
         .map(
           (step) =>
             this.moves().find((move) => move.semanticKey === step.moveKey)
-              ?.name ?? step.moveKey
+              ?.name ?? step.moveKey,
         )
         .join(' → ');
     }
@@ -117,7 +129,7 @@ export class MatchupEditor {
     return this.moves().filter(
       (move) =>
         !move.characterKey ||
-        (move.characterKey === matchup.attackerKey && Boolean(move.parentKey))
+        (move.characterKey === matchup.attackerKey && Boolean(move.parentKey)),
     );
   }
 
@@ -125,7 +137,7 @@ export class MatchupEditor {
     return this.sequences().filter(
       (sequence) =>
         (!sequence.characterKey && !sequence.teamKey) ||
-        sequence.characterKey === matchup.attackerKey
+        sequence.characterKey === matchup.attackerKey,
     );
   }
 
@@ -172,7 +184,7 @@ export class MatchupEditor {
   toggleScenarios(matchupKey: string): void {
     this.expandedMatchupKey.set(matchupKey);
     this.selectedMatchupKey.set(
-      this.selectedMatchupKey() === matchupKey ? null : matchupKey
+      this.selectedMatchupKey() === matchupKey ? null : matchupKey,
     );
     this.draftOpponentOptionKey.set('');
     this.draftScenarioName.set('');
@@ -208,7 +220,7 @@ export class MatchupEditor {
       const scenarioKey = createMatchupScenarioSemanticKey(
         matchupKey,
         opponentOptionKey,
-        stageKey
+        stageKey,
       );
       await this.facade.promoteEntityNote({
         entityType: 'matchup',
@@ -261,7 +273,7 @@ export class MatchupEditor {
   async removeResponse(
     matchupKey: string,
     scenarioKey: string,
-    responseKey: string
+    responseKey: string,
   ): Promise<void> {
     const result = await this.facade.removeScenarioResponse({
       matchupKey,
@@ -277,7 +289,7 @@ export class MatchupEditor {
 
   toggleResponseMenu(responseKey: string): void {
     this.editingResponseKey.set(
-      this.editingResponseKey() === responseKey ? null : responseKey
+      this.editingResponseKey() === responseKey ? null : responseKey,
     );
   }
 
@@ -285,7 +297,7 @@ export class MatchupEditor {
     matchupKey: string,
     scenarioKey: string,
     responseKey: string,
-    outcome: -1 | 0 | 1
+    outcome: -1 | 0 | 1,
   ): Promise<void> {
     const result = await this.facade.updateScenarioResponse({
       matchupKey,
@@ -304,7 +316,7 @@ export class MatchupEditor {
   async resetResponse(
     matchupKey: string,
     scenarioKey: string,
-    responseKey: string
+    responseKey: string,
   ): Promise<void> {
     const result = await this.facade.removeScenarioResponse({
       matchupKey,
@@ -327,8 +339,19 @@ export class MatchupEditor {
     return outcome === 1 ? 'Win' : outcome === -1 ? 'Loss' : 'Trade';
   }
 
-  responseFor(scenario: { responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> }, optionKey: string) {
-    return scenario.responses?.find((response) => response.playerOptionKey === optionKey);
+  responseFor(
+    scenario: {
+      responses?: Array<{
+        playerOptionKey: string;
+        outcome: -1 | 0 | 1;
+        semanticKey: string;
+      }>;
+    },
+    optionKey: string,
+  ) {
+    return scenario.responses?.find(
+      (response) => response.playerOptionKey === optionKey,
+    );
   }
 
   responseTileKey(scenarioKey: string, optionKey: string): string {
@@ -337,17 +360,24 @@ export class MatchupEditor {
 
   /** Shared outcome choices for all response tiles. */
   readonly responseChoices: Record<string, TileChoice> = {
-    win:   { label: 'Win',   value: 1,  color: '#4caf50' },
-    trade: { label: 'Trade', value: 0,  color: '#ff9800' },
+    win: { label: 'Win', value: 1, color: '#4caf50' },
+    trade: { label: 'Trade', value: 0, color: '#ff9800' },
     reset: { label: 'Reset', value: undefined },
-    lose:  { label: 'Lose',  value: -1, color: '#e53935' },
+    lose: { label: 'Lose', value: -1, color: '#e53935' },
   };
 
   /** Build a Tile for one response option within a scenario. */
   responseTile(
-    scenario: { semanticKey: string; responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> },
+    scenario: {
+      semanticKey: string;
+      responses?: Array<{
+        playerOptionKey: string;
+        outcome: -1 | 0 | 1;
+        semanticKey: string;
+      }>;
+    },
     optionKey: string,
-    label: string
+    label: string,
   ): Tile {
     const response = this.responseFor(scenario, optionKey);
     const outcomeToChoice: Record<number, TileChoice> = {
@@ -366,18 +396,33 @@ export class MatchupEditor {
   /** Build the full tile list for a scenario's response grid. */
   responseTiles(
     matchup: { attackerKey: string },
-    scenario: { semanticKey: string; responses?: Array<{ playerOptionKey: string; outcome: -1 | 0 | 1; semanticKey: string }> }
+    scenario: {
+      semanticKey: string;
+      responses?: Array<{
+        playerOptionKey: string;
+        outcome: -1 | 0 | 1;
+        semanticKey: string;
+      }>;
+    },
   ): Tile[] {
     return [
-      ...this.responseMoves(matchup).map((m) => this.responseTile(scenario, m.semanticKey, m.name)),
-      ...this.responseSequences(matchup).map((s) => this.responseTile(scenario, s.semanticKey, this.optionLabel(s.semanticKey))),
+      ...this.responseMoves(matchup).map((m) =>
+        this.responseTile(scenario, m.semanticKey, m.name),
+      ),
+      ...this.responseSequences(matchup).map((s) =>
+        this.responseTile(
+          scenario,
+          s.semanticKey,
+          this.optionLabel(s.semanticKey),
+        ),
+      ),
     ];
   }
 
   async onResponseTileUpdate(
     matchupKey: string,
     scenarioKey: string,
-    { tile }: { tile: Tile; selection: string[] }
+    { tile }: { tile: Tile; selection: string[] },
   ): Promise<void> {
     if (typeof tile.value === 'boolean') return;
 
@@ -386,28 +431,42 @@ export class MatchupEditor {
       const scenario = this.matchups()
         .flatMap((m) => m.scenarios)
         .find((s) => s.semanticKey === scenarioKey);
-      const existing = scenario ? this.responseFor(scenario, tile.key) : undefined;
+      const existing = scenario
+        ? this.responseFor(scenario, tile.key)
+        : undefined;
       if (existing) {
         await this.resetResponse(matchupKey, scenarioKey, existing.semanticKey);
       }
       return;
     }
 
-    await this.chooseResponseOutcome(matchupKey, scenarioKey, tile.key, tile.value.value as -1 | 0 | 1);
+    await this.chooseResponseOutcome(
+      matchupKey,
+      scenarioKey,
+      tile.key,
+      tile.value.value as -1 | 0 | 1,
+    );
   }
 
   async chooseResponseOutcome(
     matchupKey: string,
     scenarioKey: string,
     optionKey: string,
-    outcome: -1 | 0 | 1
+    outcome: -1 | 0 | 1,
   ): Promise<void> {
     const scenario = this.matchups()
       .flatMap((matchup) => matchup.scenarios)
       .find((candidate) => candidate.semanticKey === scenarioKey);
-    const existing = scenario ? this.responseFor(scenario, optionKey) : undefined;
+    const existing = scenario
+      ? this.responseFor(scenario, optionKey)
+      : undefined;
     if (existing) {
-      await this.updateResponseOutcome(matchupKey, scenarioKey, existing.semanticKey, outcome);
+      await this.updateResponseOutcome(
+        matchupKey,
+        scenarioKey,
+        existing.semanticKey,
+        outcome,
+      );
     } else {
       this.draftResponseOptionKey.set(optionKey);
       this.draftResponseOutcome.set(outcome);
@@ -426,7 +485,6 @@ export class MatchupEditor {
     this.promotingNote.set({ matchupKey, noteId: note.id });
   }
 }
-
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

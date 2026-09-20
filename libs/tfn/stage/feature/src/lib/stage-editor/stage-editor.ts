@@ -1,16 +1,21 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { RouterLink } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   createStageZoneSemanticKey,
   type NoteEntry,
 } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+import {
+  DeleteButton,
+  EntityMetadataView,
+  EntityNotes,
+  ExpansionPanel,
+  TfnLink,
+} from '@tfn/shared/ui';
 
 interface StageDraft {
   name: string;
@@ -22,20 +27,29 @@ interface ZoneDraft {
 
 @Component({
   selector: 'tfn-stage-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
+  imports: [
+    FormField,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    RouterLink,
+    EntityNotes,
+    EntityMetadataView,
+    ExpansionPanel,
+    DeleteButton,
+    TfnLink,
+  ],
   templateUrl: './stage-editor.html',
   styleUrl: './stage-editor.css',
 })
 export class StageEditor {
   readonly facade = inject(LocalGuideFacadeStore);
-  readonly stages = computed(
-    () => this.facade.guide()?.entities.stages ?? []
-  );
+  readonly stages = computed(() => this.facade.guide()?.entities.stages ?? []);
   readonly stageZones = computed(
-    () => this.facade.guide()?.entities.stageZones ?? []
+    () => this.facade.guide()?.entities.stageZones ?? [],
   );
   readonly universalZones = computed(() =>
-    this.stageZones().filter((zone) => !zone.stageKey)
+    this.stageZones().filter((zone) => !zone.stageKey),
   );
   readonly stageModel = signal<StageDraft>({ name: '' });
   readonly stageError = signal('');
@@ -104,7 +118,7 @@ export class StageEditor {
           promotedToKey: createStageZoneSemanticKey(
             game.semanticKey,
             undefined,
-            zoneName
+            zoneName,
           ),
         });
         if (linked.status === 'error') {
@@ -127,11 +141,14 @@ export class StageEditor {
 
   isOverridden(stageKey: string, universalZoneKey: string): boolean {
     return this.localZonesFor(stageKey).some(
-      (zone) => zone.inheritedFromZoneKey === universalZoneKey
+      (zone) => zone.inheritedFromZoneKey === universalZoneKey,
     );
   }
 
-  async overrideZone(stageKey: string, universalZoneKey: string): Promise<void> {
+  async overrideZone(
+    stageKey: string,
+    universalZoneKey: string,
+  ): Promise<void> {
     const result = await this.facade.overrideStageZone({
       stageKey,
       universalZoneKey,
@@ -168,7 +185,8 @@ export class StageEditor {
   }
 }
 
-
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'The Stage could not be updated.';
+  return error instanceof Error
+    ? error.message
+    : 'The Stage could not be updated.';
 }

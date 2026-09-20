@@ -1,34 +1,50 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { RouterLink } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
   type Step,
 } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+import {
+  DeleteButton,
+  EntityMetadataView,
+  EntityNotes,
+  ExpansionPanel,
+  TfnLink,
+} from '@tfn/shared/ui';
 
 const UNIVERSAL_SCOPE = '';
 
 @Component({
   selector: 'tfn-sequence-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink],
+  imports: [
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    RouterLink,
+    EntityNotes,
+    EntityMetadataView,
+    ExpansionPanel,
+    DeleteButton,
+    TfnLink,
+  ],
   templateUrl: './sequence-editor.html',
   styleUrl: './sequence-editor.css',
 })
 export class SequenceEditor {
   readonly facade = inject(LocalGuideFacadeStore);
   readonly characters = computed(
-    () => this.facade.guide()?.entities.characters ?? []
+    () => this.facade.guide()?.entities.characters ?? [],
   );
   readonly teams = computed(() => this.facade.guide()?.entities.teams ?? []);
   readonly scopeKey = signal(UNIVERSAL_SCOPE);
   private readonly team = computed(() =>
-    this.teams().find((team) => team.semanticKey === this.scopeKey())
+    this.teams().find((team) => team.semanticKey === this.scopeKey()),
   );
   readonly scopedMoves = computed(() => {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
@@ -42,7 +58,7 @@ export class SequenceEditor {
     const team = this.team();
     const members = team ? team.orderedCharacterKeys : [scope];
     const ownMoves = allMoves.filter(
-      (move) => move.characterKey && members.includes(move.characterKey)
+      (move) => move.characterKey && members.includes(move.characterKey),
     );
 
     // Only hide a universal Move once every member of the scope (the single
@@ -51,13 +67,15 @@ export class SequenceEditor {
     // haven't overridden it.
     const visibleUniversalMoves = universalMoves.filter((move) => {
       const overriderCount = ownMoves.filter(
-        (m) => m.parentKey === move.semanticKey
+        (m) => m.parentKey === move.semanticKey,
       ).length;
       return overriderCount < members.length;
     });
 
     return [
-      ...visibleUniversalMoves.map((move) => resolveEffectiveMove(move, allMoves)),
+      ...visibleUniversalMoves.map((move) =>
+        resolveEffectiveMove(move, allMoves),
+      ),
       ...ownMoves.map((move) => resolveEffectiveMove(move, allMoves)),
     ];
   });
@@ -67,7 +85,7 @@ export class SequenceEditor {
 
     if (scope === UNIVERSAL_SCOPE) {
       return allSequences.filter(
-        (sequence) => !sequence.characterKey && !sequence.teamKey
+        (sequence) => !sequence.characterKey && !sequence.teamKey,
       );
     }
     if (this.team()) {
@@ -80,7 +98,11 @@ export class SequenceEditor {
 
   moveName(moveKey: string | undefined): string {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
-    return allMoves.find((move) => move.semanticKey === moveKey)?.name ?? moveKey ?? '';
+    return (
+      allMoves.find((move) => move.semanticKey === moveKey)?.name ??
+      moveKey ??
+      ''
+    );
   }
 
   sequenceLabel(sequence: Step[]): string {
@@ -107,9 +129,10 @@ export class SequenceEditor {
     const team = this.teams().find((t) => t.semanticKey === teamKey);
     return team
       ? team.orderedCharacterKeys
-          .map((characterKey) =>
-            this.characters().find((c) => c.semanticKey === characterKey)
-              ?.name ?? characterKey
+          .map(
+            (characterKey) =>
+              this.characters().find((c) => c.semanticKey === characterKey)
+                ?.name ?? characterKey,
           )
           .join(' + ')
       : teamKey;
@@ -186,7 +209,6 @@ export class SequenceEditor {
     this.sequenceError.set('');
   }
 }
-
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

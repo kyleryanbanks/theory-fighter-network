@@ -1,21 +1,34 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { LocalGuideFacadeStore, buildCharacterMoveList, type StateModel } from '@tfn/app-shell/data';
+import { ActivatedRoute } from '@angular/router';
 import {
+  LocalGuideFacadeStore,
+  buildCharacterMoveList,
+  type StateModel,
+} from '@tfn/app-shell/data';
+
+import {
+  CancelGroupsEditorComponent,
   EntityDetailShell,
+  EntityNotes,
   ExpansionPanel,
   GameStateManagerComponent,
   StateCreateDialogComponent,
-  type StateCreateDialogResult,
-} from '@tfn/app-shell/ui';
-import type { Tile } from '@tfn/app-shell/ui';
-import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
+  StateCreateDialogResult,
+  Tile,
+} from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-character-detail',
-  imports: [JsonPipe, EntityDetailShell, EntityNotes, ExpansionPanel, GameStateManagerComponent, CancelGroupsEditorComponent],
+  imports: [
+    JsonPipe,
+    EntityDetailShell,
+    EntityNotes,
+    ExpansionPanel,
+    GameStateManagerComponent,
+    CancelGroupsEditorComponent,
+  ],
   templateUrl: './character-detail.html',
 })
 export class CharacterDetail {
@@ -27,14 +40,14 @@ export class CharacterDetail {
 
   readonly character = computed(() =>
     (this.facade.guide()?.entities.characters ?? []).find(
-      (c) => c.semanticKey === this.entityKey
-    )
+      (c) => c.semanticKey === this.entityKey,
+    ),
   );
 
   readonly states = computed((): StateModel => this.character()?.states ?? {});
 
   readonly gameStateCategories = computed(() =>
-    Object.keys(this.facade.guide()?.entities.game.states ?? {})
+    Object.keys(this.facade.guide()?.entities.game.states ?? {}),
   );
 
   readonly cancelGroups = computed(() => this.character()?.cancelGroups ?? {});
@@ -45,12 +58,17 @@ export class CharacterDetail {
     const character = this.character();
     const universalMoveKeys = guide.entities.game.universal.moveKeys;
     const characterMoveKeys = character?.hierarchy?.moveKeys ?? [];
-    return buildCharacterMoveList(universalMoveKeys, characterMoveKeys, guide.entities.moves)
-      .map((entry) => ({
-        key: entry.semanticKey,
-        label: entry.name,
-        tags: entry.isUniversal ? [{ label: 'Universal', color: 'info' as const }] : undefined,
-      }));
+    return buildCharacterMoveList(
+      universalMoveKeys,
+      characterMoveKeys,
+      guide.entities.moves,
+    ).map((entry) => ({
+      key: entry.semanticKey,
+      label: entry.name,
+      tags: entry.isUniversal
+        ? [{ label: 'Universal', color: 'info' as const }]
+        : undefined,
+    }));
   });
 
   openStateDialog(): void {
@@ -71,15 +89,24 @@ export class CharacterDetail {
     });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
-      void this.facade.createCharacterState({ characterKey: this.entityKey, ...result });
+      void this.facade.createCharacterState({
+        characterKey: this.entityKey,
+        ...result,
+      });
     });
   }
 
   deleteState(event: { category: string; semanticKey: string }): void {
-    void this.facade.deleteCharacterState({ characterKey: this.entityKey, ...event });
+    void this.facade.deleteCharacterState({
+      characterKey: this.entityKey,
+      ...event,
+    });
   }
 
-  async saveCancelGroup(rule: { name?: string; moveList: string[] }): Promise<void> {
+  async saveCancelGroup(rule: {
+    name?: string;
+    moveList: string[];
+  }): Promise<void> {
     await this.facade.createCancelGroup({
       scopeKey: this.entityKey,
       isGameLevel: false,
@@ -88,7 +115,10 @@ export class CharacterDetail {
     });
   }
 
-  async renameCancelGroup(event: { oldName: string; newName: string }): Promise<void> {
+  async renameCancelGroup(event: {
+    oldName: string;
+    newName: string;
+  }): Promise<void> {
     await this.facade.renameCancelGroup({
       scopeKey: this.entityKey,
       isGameLevel: false,
@@ -105,4 +135,3 @@ export class CharacterDetail {
     });
   }
 }
-

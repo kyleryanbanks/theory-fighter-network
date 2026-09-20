@@ -5,7 +5,7 @@ import {
   type EntityType,
   type NoteEntry,
 } from '@tfn/app-shell/data';
-import { NotesList } from '@tfn/app-shell/ui';
+import { NotesList } from '../notes-list/notes-list';
 
 @Component({
   selector: 'tfn-entity-notes',
@@ -53,7 +53,7 @@ export class EntityNotes {
         ? result.error instanceof Error
           ? result.error.message
           : 'The note could not be updated.'
-        : ''
+        : '',
     );
   }
 }

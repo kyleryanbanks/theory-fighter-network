@@ -1,11 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { ActivatedRoute } from '@angular/router';
 import { LocalGuideFacadeStore, type Step } from '@tfn/app-shell/data';
-import { ExpansionPanel, EntityDetailShell } from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+import { EntityDetailShell, EntityNotes, ExpansionPanel } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-sequence-detail',
@@ -26,7 +25,7 @@ export class SequenceDetail {
   readonly sequence = computed(() => {
     const key = this.route.snapshot.paramMap.get('sequenceKey');
     return (this.facade.guide()?.entities.sequences ?? []).find(
-      (candidate) => candidate.semanticKey === key
+      (candidate) => candidate.semanticKey === key,
     );
   });
 
@@ -59,9 +58,7 @@ export class SequenceDetail {
 
   moveName(moveKey: string | undefined): string {
     if (!moveKey) return '(Unknown)';
-    return (
-      this.moves().find((m) => m.semanticKey === moveKey)?.name ?? moveKey
-    );
+    return this.moves().find((m) => m.semanticKey === moveKey)?.name ?? moveKey;
   }
 
   async saveSequence(): Promise<void> {
@@ -78,7 +75,7 @@ export class SequenceDetail {
       this.editError.set(
         result.error instanceof Error
           ? result.error.message
-          : 'Failed to update sequence'
+          : 'Failed to update sequence',
       );
       return;
     }

@@ -1,10 +1,9 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import type { EntityMetadata } from '@tfn/app-shell/data';
-import { ExpansionPanel, EntityDetailShell } from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
+import { EntityDetailShell, EntityNotes, ExpansionPanel } from '@tfn/shared/ui';
 
 type EntityType =
   | 'game'
@@ -29,7 +28,10 @@ export class EntityDetail {
   readonly entity = computed(() => {
     const entities = this.facade.guide()?.entities;
     if (!entities) return undefined;
-    if (this.entityType === 'game') return entities.game.semanticKey === this.entityKey ? entities.game : undefined;
+    if (this.entityType === 'game')
+      return entities.game.semanticKey === this.entityKey
+        ? entities.game
+        : undefined;
     const collection = {
       stage: entities.stages,
       stageZone: entities.stageZones,
@@ -38,25 +40,33 @@ export class EntityDetail {
       projectile: entities.projectiles,
       matchup: entities.matchups,
     }[this.entityType];
-    return collection?.find(candidate => candidate.semanticKey === this.entityKey);
+    return collection?.find(
+      (candidate) => candidate.semanticKey === this.entityKey,
+    );
   });
 
   readonly title = computed(() => {
-    const entity = this.entity() as { name?: string; version?: string } | undefined;
-    if (this.entityType === 'game' && entity) return `${entity.name ?? 'Game'} ${entity.version ?? ''}`.trim();
+    const entity = this.entity() as
+      | { name?: string; version?: string }
+      | undefined;
+    if (this.entityType === 'game' && entity)
+      return `${entity.name ?? 'Game'} ${entity.version ?? ''}`.trim();
     if (this.entityType === 'matchup') return 'Matchup';
     return entity?.name ?? this.entityTypeLabel();
   });
 
-  readonly backRoute = computed(() => ({
-    game: ['/game'],
-    stage: ['/stages'],
-    stageZone: ['/stages'],
-    character: ['/characters'],
-    team: ['/teams'],
-    projectile: ['/game'],
-    matchup: ['/matchups'],
-  }[this.entityType]));
+  readonly backRoute = computed(
+    () =>
+      ({
+        game: ['/game'],
+        stage: ['/stages'],
+        stageZone: ['/stages'],
+        character: ['/characters'],
+        team: ['/teams'],
+        projectile: ['/game'],
+        matchup: ['/matchups'],
+      })[this.entityType],
+  );
 
   entityTypeLabel(): string {
     return this.entityType === 'stageZone' ? 'Stage Zone' : this.entityType;
@@ -67,4 +77,3 @@ export class EntityDetail {
     return entity?.meta ? { meta: entity.meta } : undefined;
   }
 }
-

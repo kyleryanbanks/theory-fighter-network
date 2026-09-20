@@ -8,15 +8,11 @@ import { MatSelectModule } from '@angular/material/select';
 import {
   type ComparisonOperator,
   type MovePreconditions,
-  type StatePrecondition,
   type StateDocument,
   type StateModel,
+  type StatePrecondition,
 } from '@tfn/app-shell/data';
-import {
-  ExpansionPanel,
-  TileGridComponent,
-  type Tile,
-} from '@tfn/app-shell/ui';
+import { ExpansionPanel, Tile, TileGridComponent } from '@tfn/shared/ui';
 
 export const COMPARISON_OPERATORS: {
   value: ComparisonOperator;

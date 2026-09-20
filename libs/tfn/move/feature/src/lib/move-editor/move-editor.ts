@@ -12,10 +12,10 @@ import {
 import {
   DeleteButton,
   EntityMetadataView,
+  EntityNotes,
   ExpansionPanel,
   TfnLink,
-} from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+} from '@tfn/shared/ui';
 
 interface MoveDraft {
   name: string;

@@ -1,5 +1,4 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import {
   FormField,
   form,
@@ -13,20 +12,21 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { RouterLink } from '@angular/router';
 import {
   type Input,
   type Inputs,
   LocalGuideFacadeStore,
 } from '@tfn/app-shell/data';
-import { EntityNotes } from '@tfn/shared/ui';
 import {
+  CancelGroupsEditorComponent,
+  EntityNotes,
   GameStateManagerComponent,
   StateCreateDialogComponent,
-  type StateCreateDialogResult,
+  StateCreateDialogResult,
   TfnLink,
-  type Tile,
-} from '@tfn/app-shell/ui';
-import { CancelGroupsEditorComponent } from '@tfn/shared/ui';
+  Tile,
+} from '@tfn/shared/ui';
 import { firstValueFrom } from 'rxjs';
 
 interface GameFormModel {
@@ -82,7 +82,6 @@ export class GameRoot {
   });
   readonly vocabularyError = signal('');
 
-
   // Computed: existing universal cancel groups keyed by name → move keys (passed to editor)
   readonly universalCancelGroups = computed(() => {
     const guide = this.facade.guide();
@@ -96,11 +95,13 @@ export class GameRoot {
     if (!guide) return [];
     const moveKeys = guide.entities.game.universal.moveKeys;
     const moves = guide.entities.moves;
-    return moveKeys.map((key): Tile => ({
-      key,
-      label: moves.find(m => m.semanticKey === key)?.name ?? key,
-      value: false,
-    }));
+    return moveKeys.map(
+      (key): Tile => ({
+        key,
+        label: moves.find((m) => m.semanticKey === key)?.name ?? key,
+        value: false,
+      }),
+    );
   });
 
   readonly gameForm = form(this.gameModel, (path) => {
@@ -128,15 +129,19 @@ export class GameRoot {
         is3d: game.config.is3d,
         teamSize: game.config.teamSize,
         inputs: {
-          directions: game.config.inputs.directions.map((input) => ({ ...input })),
+          directions: game.config.inputs.directions.map((input) => ({
+            ...input,
+          })),
           buttons: game.config.inputs.buttons.map((input) => ({ ...input })),
         },
       });
     });
-
   }
 
-  async saveUniversalCancelGroup(rule: { name?: string; moveList: string[] }): Promise<void> {
+  async saveUniversalCancelGroup(rule: {
+    name?: string;
+    moveList: string[];
+  }): Promise<void> {
     await this.facade.createCancelGroup({
       scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
       isGameLevel: true,
@@ -145,7 +150,10 @@ export class GameRoot {
     });
   }
 
-  async renameUniversalCancelGroup(event: { oldName: string; newName: string }): Promise<void> {
+  async renameUniversalCancelGroup(event: {
+    oldName: string;
+    newName: string;
+  }): Promise<void> {
     await this.facade.renameCancelGroup({
       scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
       isGameLevel: true,
@@ -154,7 +162,9 @@ export class GameRoot {
     });
   }
 
-  async deleteUniversalCancelGroup(event: { groupName: string }): Promise<void> {
+  async deleteUniversalCancelGroup(event: {
+    groupName: string;
+  }): Promise<void> {
     await this.facade.deleteCancelGroup({
       scopeKey: this.facade.guide()?.entities.game.semanticKey ?? '',
       isGameLevel: true,
@@ -170,16 +180,17 @@ export class GameRoot {
 
     const result = await firstValueFrom(
       this.dialog
-        .open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+        .open<
           StateCreateDialogComponent,
-          {
-            data: {
-              existingStates: guide.entities.game.states,
-              existingCategories: Object.keys(guide.entities.game.states),
-            },
-          }
-        )
-        .afterClosed()
+          unknown,
+          StateCreateDialogResult | undefined
+        >(StateCreateDialogComponent, {
+          data: {
+            existingStates: guide.entities.game.states,
+            existingCategories: Object.keys(guide.entities.game.states),
+          },
+        })
+        .afterClosed(),
     );
 
     if (!result) {
@@ -189,7 +200,10 @@ export class GameRoot {
     await this.facade.createGameState(result);
   }
 
-  async deleteGameState(event: { category: string; semanticKey: string }): Promise<void> {
+  async deleteGameState(event: {
+    category: string;
+    semanticKey: string;
+  }): Promise<void> {
     await this.facade.deleteGameState(event);
   }
 
@@ -237,7 +251,7 @@ export class GameRoot {
 
   private addInput(
     collection: 'directions' | 'buttons',
-    draftModel: typeof this.directionDraftModel
+    draftModel: typeof this.directionDraftModel,
   ): void {
     const label = draftModel().label.trim();
     const value = draftModel().value.trim();
@@ -253,11 +267,14 @@ export class GameRoot {
       ...this.gameModel().inputs.buttons,
     ];
     const isDuplicate = allInputs.some(
-      (input) => (input.value ?? input.label).trim().toLowerCase() === normalizedValue
+      (input) =>
+        (input.value ?? input.label).trim().toLowerCase() === normalizedValue,
     );
 
     if (isDuplicate) {
-      this.vocabularyError.set(`Input value "${value || label}" is already used.`);
+      this.vocabularyError.set(
+        `Input value "${value || label}" is already used.`,
+      );
       return;
     }
 
@@ -275,14 +292,14 @@ export class GameRoot {
 
   private removeInput(
     collection: 'directions' | 'buttons',
-    index: number
+    index: number,
   ): void {
     this.gameModel.update((model) => ({
       ...model,
       inputs: {
         ...model.inputs,
         [collection]: model.inputs[collection].filter(
-          (_input, inputIndex) => inputIndex !== index
+          (_input, inputIndex) => inputIndex !== index,
         ),
       },
     }));

@@ -1,8 +1,19 @@
-import { booleanAttribute, Component, computed, input, linkedSignal, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  booleanAttribute,
+  Component,
+  computed,
+  input,
+  linkedSignal,
+  output,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { TileGridComponent, Tile, ExpansionPanel, DeleteButton } from '@tfn/app-shell/ui';
+import { DeleteButton } from '../delete-button/delete-button';
+import { ExpansionPanel } from '../exp-panel/expansion-panel';
+import { TileGridComponent } from '../tile-grid/tile-grid';
+import { Tile } from '../tile-grid/tile-grid.models';
 
 /**
  * CancelGroupsEditor - Displays and edits cancel group selections at game, character, or phase level.
@@ -19,10 +30,16 @@ import { TileGridComponent, Tile, ExpansionPanel, DeleteButton } from '@tfn/app-
   templateUrl: './cancel-groups-editor.html',
   styleUrls: ['./cancel-groups-editor.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, TileGridComponent, ExpansionPanel, DeleteButton],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatButtonModule,
+    TileGridComponent,
+    ExpansionPanel,
+    DeleteButton,
+  ],
 })
 export class CancelGroupsEditorComponent {
-
   // ── Inputs ────────────────────────────────────────────────────────────────
 
   readonly characterName = input<string>('');
@@ -41,13 +58,17 @@ export class CancelGroupsEditorComponent {
   readonly universalGroups = input<Record<string, string[]>>({});
   /** Initially selected game-level group names */
   readonly overrideUniversalGroups = input<Set<string>>(new Set());
-  readonly selectedUniversalGroups = linkedSignal(() => this.overrideUniversalGroups());
+  readonly selectedUniversalGroups = linkedSignal(() =>
+    this.overrideUniversalGroups(),
+  );
 
   /** Available character-level cancel groups: group name → move keys */
   readonly characterGroups = input<Record<string, string[]>>({});
   /** Initially selected character-level group names */
   readonly overrideCharacterGroups = input<Set<string>>(new Set());
-  readonly selectedCharacterGroups = linkedSignal(() => this.overrideCharacterGroups());
+  readonly selectedCharacterGroups = linkedSignal(() =>
+    this.overrideCharacterGroups(),
+  );
 
   /** Full move pool for the tile grid */
   readonly moveList = input<Tile[]>([]);
@@ -95,10 +116,14 @@ export class CancelGroupsEditorComponent {
    */
   readonly activeMoveList = computed(() => {
     const inUniversalGroup = (key: string): boolean =>
-      [...this.selectedUniversalGroups()].some(g => this.universalGroups()[g]?.includes(key));
+      [...this.selectedUniversalGroups()].some((g) =>
+        this.universalGroups()[g]?.includes(key),
+      );
 
     const inCharacterGroup = (key: string): boolean =>
-      [...this.selectedCharacterGroups()].some(g => this.characterGroups()[g]?.includes(key));
+      [...this.selectedCharacterGroups()].some((g) =>
+        this.characterGroups()[g]?.includes(key),
+      );
 
     const tileShouldBeSelected = (key: string): boolean => {
       const groupSelected = inUniversalGroup(key) || inCharacterGroup(key);
@@ -110,20 +135,30 @@ export class CancelGroupsEditorComponent {
       return overrideValue;
     };
 
-    return this.moveList().map(tile => ({
+    return this.moveList().map((tile) => ({
       ...tile,
       value: tileShouldBeSelected(tile.key),
       tags: [
-        inUniversalGroup(tile.key) ? { label: 'Universal', color: 'info' } : null,
-        inCharacterGroup(tile.key) ? { label: this.characterName(), color: 'primary' } : null,
+        inUniversalGroup(tile.key)
+          ? { label: 'Universal', color: 'info' }
+          : null,
+        inCharacterGroup(tile.key)
+          ? { label: this.characterName(), color: 'primary' }
+          : null,
       ].filter((tag): tag is { label: string; color: string } => tag !== null),
     }));
   });
 
-  readonly hasGameGroups = computed(() => Object.keys(this.universalGroups()).length > 0);
-  readonly hasCharacterGroups = computed(() => Object.keys(this.characterGroups()).length > 0);
+  readonly hasGameGroups = computed(
+    () => Object.keys(this.universalGroups()).length > 0,
+  );
+  readonly hasCharacterGroups = computed(
+    () => Object.keys(this.characterGroups()).length > 0,
+  );
   readonly gameGroupNames = computed(() => Object.keys(this.universalGroups()));
-  readonly characterGroupNames = computed(() => Object.keys(this.characterGroups()));
+  readonly characterGroupNames = computed(() =>
+    Object.keys(this.characterGroups()),
+  );
 
   /**
    * True when editing a named parent cancel group (name input visible, cancel window hidden).
@@ -140,10 +175,14 @@ export class CancelGroupsEditorComponent {
       characterGroups: Array.from(this.selectedCharacterGroups()),
       overrides: { ...this.selectedOverrides() },
       moveList: this.activeMoveList()
-        .filter(tile => tile.value === true)
-        .map(tile => tile.key),
-      cancelWindowStart: this.isParentGroupMode() ? undefined : this.cancelWindowStart(),
-      cancelWindowEnd: this.isParentGroupMode() ? undefined : this.cancelWindowEnd(),
+        .filter((tile) => tile.value === true)
+        .map((tile) => tile.key),
+      cancelWindowStart: this.isParentGroupMode()
+        ? undefined
+        : this.cancelWindowStart(),
+      cancelWindowEnd: this.isParentGroupMode()
+        ? undefined
+        : this.cancelWindowEnd(),
     });
   }
 
@@ -151,7 +190,13 @@ export class CancelGroupsEditorComponent {
 
   onUniversalGroupChange(groupName: string, isChecked: boolean): void {
     const updated = new Set(this.selectedUniversalGroups());
-    isChecked ? updated.add(groupName) : updated.delete(groupName);
+
+    if (isChecked) {
+      updated.add(groupName);
+    } else {
+      updated.delete(groupName);
+    }
+
     this.selectedUniversalGroups.set(updated);
 
     // When adding a group, clear any false overrides for its moves so the group
@@ -163,7 +208,13 @@ export class CancelGroupsEditorComponent {
 
   onCharacterGroupChange(groupName: string, isChecked: boolean): void {
     const updated = new Set(this.selectedCharacterGroups());
-    isChecked ? updated.add(groupName) : updated.delete(groupName);
+
+    if (isChecked) {
+      updated.add(groupName);
+    } else {
+      updated.delete(groupName);
+    }
+
     this.selectedCharacterGroups.set(updated);
 
     if (isChecked) {
@@ -173,10 +224,12 @@ export class CancelGroupsEditorComponent {
 
   private _clearFalseOverridesFor(keys: string[]): void {
     const current = this.selectedOverrides();
-    const hasFalse = keys.some(k => current[k] === false);
+    const hasFalse = keys.some((k) => current[k] === false);
     if (!hasFalse) return;
     const updated = { ...current };
-    keys.forEach(k => { if (updated[k] === false) delete updated[k]; });
+    keys.forEach((k) => {
+      if (updated[k] === false) delete updated[k];
+    });
     this.selectedOverrides.set(updated);
   }
 

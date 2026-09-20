@@ -1,14 +1,29 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
+import { Router, RouterLink } from '@angular/router';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile } from '@tfn/app-shell/ui';
-import { EntityNotes } from '@tfn/shared/ui';
+import {
+  DeleteButton,
+  EntityMetadataView,
+  EntityNotes,
+  ExpansionPanel,
+  TfnLink,
+  Tile,
+  TileGridComponent,
+} from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-team-editor',
-  imports: [MatButtonModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink, TileGridComponent],
+  imports: [
+    MatButtonModule,
+    RouterLink,
+    EntityNotes,
+    EntityMetadataView,
+    ExpansionPanel,
+    DeleteButton,
+    TfnLink,
+    TileGridComponent,
+  ],
   templateUrl: './team-editor.html',
   styleUrl: './team-editor.css',
 })
@@ -16,21 +31,21 @@ export class TeamEditor {
   readonly facade = inject(LocalGuideFacadeStore);
   private readonly router = inject(Router);
   readonly characters = computed(
-    () => this.facade.guide()?.entities.characters ?? []
+    () => this.facade.guide()?.entities.characters ?? [],
   );
   readonly teams = computed(() => this.facade.guide()?.entities.teams ?? []);
   readonly teamSize = computed(
-    () => this.facade.guide()?.entities.game?.config?.teamSize ?? 0
+    () => this.facade.guide()?.entities.game?.config?.teamSize ?? 0,
   );
   readonly draftCharacterKeys = signal<string[]>([]);
   readonly teamError = signal('');
   readonly atTeamSizeLimit = computed(
-    () => this.draftCharacterKeys().length >= this.teamSize()
+    () => this.draftCharacterKeys().length >= this.teamSize(),
   );
 
   /** Characters as Tiles for TileGridComponent selection mode. */
   readonly characterTiles = computed((): Tile[] =>
-    this.characters().map((c) => ({ key: c.semanticKey, label: c.name }))
+    this.characters().map((c) => ({ key: c.semanticKey, label: c.name })),
   );
 
   /** Currently selected character Tiles (drives tile-grid [selections]). */
@@ -38,7 +53,7 @@ export class TeamEditor {
     this.draftCharacterKeys().map((key) => ({
       key,
       label: this.characterName(key),
-    }))
+    })),
   );
   // Persistent status explaining team size requirement.
   readonly rosterStatus = computed(() => {
@@ -51,7 +66,7 @@ export class TeamEditor {
   characterName(characterKey: string): string {
     return (
       this.characters().find(
-        (character) => character.semanticKey === characterKey
+        (character) => character.semanticKey === characterKey,
       )?.name ?? characterKey
     );
   }
@@ -60,7 +75,12 @@ export class TeamEditor {
     return characterKeys.map((key) => this.characterName(key)).join(' + ');
   }
 
-  onCharacterTileUpdate({ selection }: { tile: Tile; selection: string[] }): void {
+  onCharacterTileUpdate({
+    selection,
+  }: {
+    tile: Tile;
+    selection: string[];
+  }): void {
     this.draftCharacterKeys.set(selection);
     this.teamError.set('');
   }
@@ -101,7 +121,8 @@ export class TeamEditor {
   }
 }
 
-
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'The Team could not be updated.';
+  return error instanceof Error
+    ? error.message
+    : 'The Team could not be updated.';
 }

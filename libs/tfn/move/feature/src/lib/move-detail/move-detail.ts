@@ -14,19 +14,20 @@ import {
   StatePatch,
 } from '@tfn/app-shell/data';
 import {
-  DeleteButton,
-  EntityDetailShell,
-  ExpansionPanel,
-  StateCreateDialogComponent,
-  StateCreateDialogResult,
-  Tile,
-} from '@tfn/app-shell/ui';
-import {
   DataValueEditor,
   MovePreconditionEditorComponent,
   StatePatchEditorComponent,
 } from '@tfn/move/ui';
-import { CancelGroupsEditorComponent, EntityNotes } from '@tfn/shared/ui';
+import {
+  CancelGroupsEditorComponent,
+  DeleteButton,
+  EntityDetailShell,
+  EntityNotes,
+  ExpansionPanel,
+  StateCreateDialogComponent,
+  StateCreateDialogResult,
+  Tile,
+} from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-move-detail',

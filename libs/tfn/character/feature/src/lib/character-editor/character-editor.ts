@@ -1,13 +1,22 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { LocalGuideFacadeStore, buildCharacterMoveList } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
-import type { Tile } from '@tfn/app-shell/ui';
-import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
+import { Router, RouterLink } from '@angular/router';
+import {
+  LocalGuideFacadeStore,
+  buildCharacterMoveList,
+} from '@tfn/app-shell/data';
+import {
+  CancelGroupsEditorComponent,
+  DeleteButton,
+  EntityMetadataView,
+  EntityNotes,
+  ExpansionPanel,
+  TfnLink,
+  Tile,
+} from '@tfn/shared/ui';
 
 interface CharacterDraft {
   name: string;
@@ -15,7 +24,19 @@ interface CharacterDraft {
 
 @Component({
   selector: 'tfn-character-editor',
-  imports: [FormField, MatButtonModule, MatFormFieldModule, MatInputModule, RouterLink, EntityNotes, EntityMetadataView, ExpansionPanel, DeleteButton, TfnLink, CancelGroupsEditorComponent],
+  imports: [
+    FormField,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    RouterLink,
+    EntityNotes,
+    EntityMetadataView,
+    ExpansionPanel,
+    DeleteButton,
+    TfnLink,
+    CancelGroupsEditorComponent,
+  ],
   templateUrl: './character-editor.html',
   styleUrl: './character-editor.css',
 })
@@ -23,11 +44,11 @@ export class CharacterEditor {
   readonly facade = inject(LocalGuideFacadeStore);
   private readonly router = inject(Router);
   readonly characters = computed(
-    () => this.facade.guide()?.entities.characters ?? []
+    () => this.facade.guide()?.entities.characters ?? [],
   );
   readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
   readonly sequences = computed(
-    () => this.facade.guide()?.entities.sequences ?? []
+    () => this.facade.guide()?.entities.sequences ?? [],
   );
   readonly characterModel = signal<CharacterDraft>({ name: '' });
   readonly characterError = signal('');
@@ -36,25 +57,37 @@ export class CharacterEditor {
   });
 
   characterCancelGroups(characterKey: string): Record<string, string[]> {
-    const character = this.characters().find(c => c.semanticKey === characterKey);
+    const character = this.characters().find(
+      (c) => c.semanticKey === characterKey,
+    );
     return character?.cancelGroups ?? {};
   }
 
   characterMoveList(characterKey: string): Tile[] {
     const guide = this.facade.guide();
     if (!guide) return [];
-    const character = guide.entities.characters.find((c) => c.semanticKey === characterKey);
+    const character = guide.entities.characters.find(
+      (c) => c.semanticKey === characterKey,
+    );
     const universalMoveKeys = guide.entities.game.universal.moveKeys;
     const characterMoveKeys = character?.hierarchy?.moveKeys ?? [];
-    return buildCharacterMoveList(universalMoveKeys, characterMoveKeys, guide.entities.moves)
-      .map((entry) => ({
-        key: entry.semanticKey,
-        label: entry.name,
-        tags: entry.isUniversal ? [{ label: 'Universal', color: 'info' as const }] : undefined,
-      }));
+    return buildCharacterMoveList(
+      universalMoveKeys,
+      characterMoveKeys,
+      guide.entities.moves,
+    ).map((entry) => ({
+      key: entry.semanticKey,
+      label: entry.name,
+      tags: entry.isUniversal
+        ? [{ label: 'Universal', color: 'info' as const }]
+        : undefined,
+    }));
   }
 
-  async saveCharacterCancelGroup(characterKey: string, rule: { name?: string; moveList: string[] }): Promise<void> {
+  async saveCharacterCancelGroup(
+    characterKey: string,
+    rule: { name?: string; moveList: string[] },
+  ): Promise<void> {
     await this.facade.createCancelGroup({
       scopeKey: characterKey,
       isGameLevel: false,
@@ -63,7 +96,10 @@ export class CharacterEditor {
     });
   }
 
-  async renameCharacterCancelGroup(characterKey: string, event: { oldName: string; newName: string }): Promise<void> {
+  async renameCharacterCancelGroup(
+    characterKey: string,
+    event: { oldName: string; newName: string },
+  ): Promise<void> {
     await this.facade.renameCancelGroup({
       scopeKey: characterKey,
       isGameLevel: false,
@@ -72,7 +108,10 @@ export class CharacterEditor {
     });
   }
 
-  async deleteCharacterCancelGroup(characterKey: string, event: { groupName: string }): Promise<void> {
+  async deleteCharacterCancelGroup(
+    characterKey: string,
+    event: { groupName: string },
+  ): Promise<void> {
     await this.facade.deleteCancelGroup({
       scopeKey: characterKey,
       isGameLevel: false,
@@ -82,7 +121,7 @@ export class CharacterEditor {
 
   characterMoves(characterKey: string) {
     const character = this.characters().find(
-      (candidate) => candidate.semanticKey === characterKey
+      (candidate) => candidate.semanticKey === characterKey,
     );
     const keys = character?.hierarchy?.moveKeys ?? [];
     return keys
@@ -92,21 +131,24 @@ export class CharacterEditor {
 
   characterSequences(characterKey: string) {
     const character = this.characters().find(
-      (candidate) => candidate.semanticKey === characterKey
+      (candidate) => candidate.semanticKey === characterKey,
     );
     const keys = character?.hierarchy?.sequenceKeys ?? [];
     return keys
       .map((key) =>
-        this.sequences().find((sequence) => sequence.semanticKey === key)
+        this.sequences().find((sequence) => sequence.semanticKey === key),
       )
-      .filter((sequence): sequence is NonNullable<typeof sequence> => Boolean(sequence));
+      .filter((sequence): sequence is NonNullable<typeof sequence> =>
+        Boolean(sequence),
+      );
   }
 
   sequenceLabel(sequence: { sequence: Array<{ moveKey?: string }> }): string {
     return sequence.sequence
-      .map((step) =>
-        this.moves().find((move) => move.semanticKey === step.moveKey)?.name ??
-        step.moveKey
+      .map(
+        (step) =>
+          this.moves().find((move) => move.semanticKey === step.moveKey)
+            ?.name ?? step.moveKey,
       )
       .join(' → ');
   }
@@ -144,7 +186,6 @@ export class CharacterEditor {
     });
   }
 }
-
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error

@@ -10,8 +10,8 @@ import {
   MoveDocument,
   MovePhase,
 } from '@tfn/app-shell/data';
-import { TfnLink } from '@tfn/app-shell/ui';
 import { ComparisonAxis } from '@tfn/move/ui';
+import { TfnLink } from '@tfn/shared/ui';
 
 type OutcomeKey =
   | 'onHit'
