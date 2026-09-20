@@ -53,6 +53,9 @@
       ],
       "@tfn/sequence/feature": [
         "./libs/tfn/sequence/feature/src/index.ts"
+      ],
+      "@tfn/team/feature": [
+        "./libs/tfn/team/feature/src/index.ts"
       ]
     }
   },
