@@ -10,18 +10,39 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2020", "dom"],
+    "lib": [
+      "es2020",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "strict": false,
     "paths": {
-      "@tfn/app-shell/ui": ["./libs/tfn/app-shell/ui/src/index.ts"],
-      "@tfn/app-shell/feature": ["./libs/tfn/app-shell/feature/src/index.ts"],
-      "@tfn/app-shell/data": ["./libs/tfn/app-shell/data/src/index.ts"],
-      "@tfn/game/data": ["./libs/tfn/game/data/src/index.ts"],
-      "@tfn/game/feature": ["./libs/tfn/game/feature/src/index.ts"],
-      "@tfn/game/ui": ["./libs/tfn/game/ui/src/index.ts"]
+      "@tfn/app-shell/ui": [
+        "./libs/tfn/app-shell/ui/src/index.ts"
+      ],
+      "@tfn/app-shell/feature": [
+        "./libs/tfn/app-shell/feature/src/index.ts"
+      ],
+      "@tfn/app-shell/data": [
+        "./libs/tfn/app-shell/data/src/index.ts"
+      ],
+      "@tfn/game/data": [
+        "./libs/tfn/game/data/src/index.ts"
+      ],
+      "@tfn/game/feature": [
+        "./libs/tfn/game/feature/src/index.ts"
+      ],
+      "@tfn/game/ui": [
+        "./libs/tfn/game/ui/src/index.ts"
+      ],
+      "@tfn/stage/feature": [
+        "./libs/tfn/stage/feature/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
