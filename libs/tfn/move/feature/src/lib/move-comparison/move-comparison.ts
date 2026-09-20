@@ -5,12 +5,13 @@ import {
   createFrameStage,
   createMoveOutcomeEffect,
   createMovePhase,
+  DataValue,
+  LocalGuideFacadeStore,
   MoveDocument,
   MovePhase,
-  DataValue,
 } from '@tfn/app-shell/data';
-import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
-import { ComparisonAxis, TfnLink } from '@tfn/app-shell/ui';
+import { TfnLink } from '@tfn/app-shell/ui';
+import { ComparisonAxis } from '@tfn/move/ui';
 
 type OutcomeKey =
   | 'onHit'

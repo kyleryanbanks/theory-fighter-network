@@ -21,16 +21,15 @@
       "@tfn/game/data": ["./libs/tfn/game/data/src/index.ts"],
       "@tfn/game/feature": ["./libs/tfn/game/feature/src/index.ts"],
       "@tfn/game/ui": ["./libs/tfn/game/ui/src/index.ts"],
-      "@tfn/stage/feature": ["./libs/tfn/stage/feature/src/index.ts"],
-      "@tfn/shared/ui": ["./libs/tfn/shared/ui/src/index.ts"],
-      "@tfn/shared/feature": ["./libs/tfn/shared/feature/src/index.ts"],
-      "@tfn/character/feature": ["./libs/tfn/character/feature/src/index.ts"],
       "@tfn/move/feature": ["./libs/tfn/move/feature/src/index.ts"],
+      "@tfn/move/ui": ["./libs/tfn/move/ui/src/index.ts"],
+      "@tfn/stage/feature": ["./libs/tfn/stage/feature/src/index.ts"],
+      "@tfn/character/feature": ["./libs/tfn/character/feature/src/index.ts"],
       "@tfn/sequence/feature": ["./libs/tfn/sequence/feature/src/index.ts"],
       "@tfn/team/feature": ["./libs/tfn/team/feature/src/index.ts"],
       "@tfn/matchup/feature": ["./libs/tfn/matchup/feature/src/index.ts"],
-      "@tfn/": ["./tfn/move/ui/src/index.ts"],
-      "@tfn/move/ui": ["./libs/tfn/move/ui/src/index.ts"]
+      "@tfn/shared/ui": ["./libs/tfn/shared/ui/src/index.ts"],
+      "@tfn/shared/feature": ["./libs/tfn/shared/feature/src/index.ts"],
     }
   },
   "exclude": ["node_modules", "tmp"]

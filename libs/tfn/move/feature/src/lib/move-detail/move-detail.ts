@@ -1,22 +1,61 @@
-import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule, JsonPipe, TitleCasePipe } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
-import { LocalGuideFacadeStore, resolveEffectiveMove, buildCharacterMoveList } from '@tfn/app-shell/data';
-import type { DataValue, PhaseCancelRule, StatePatch, StateModel, MovePreconditions } from '@tfn/app-shell/data';
+import { Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@tfn/app-shell/ui';
-import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute } from '@angular/router';
+import {
+  buildCharacterMoveList,
+  DataValue,
+  LocalGuideFacadeStore,
+  MovePreconditions,
+  PhaseCancelRule,
+  resolveEffectiveMove,
+  StateModel,
+  StatePatch,
+} from '@tfn/app-shell/data';
+import {
+  DeleteButton,
+  EntityDetailShell,
+  ExpansionPanel,
+  StateCreateDialogComponent,
+  StateCreateDialogResult,
+  Tile,
+} from '@tfn/app-shell/ui';
+import {
+  DataValueEditor,
+  MovePreconditionEditorComponent,
+  StatePatchEditorComponent,
+} from '@tfn/move/ui';
+import { CancelGroupsEditorComponent, EntityNotes } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-move-detail',
-  imports: [CommonModule, JsonPipe, TitleCasePipe, MatButtonModule, DataValueEditor, DeleteButton, ExpansionPanel, EntityDetailShell, EntityNotes, CancelGroupsEditorComponent, StatePatchEditorComponent, MovePreconditionEditorComponent],
+  imports: [
+    CommonModule,
+    JsonPipe,
+    TitleCasePipe,
+    MatButtonModule,
+    DataValueEditor,
+    DeleteButton,
+    ExpansionPanel,
+    EntityDetailShell,
+    EntityNotes,
+    CancelGroupsEditorComponent,
+    StatePatchEditorComponent,
+    MovePreconditionEditorComponent,
+  ],
   templateUrl: './move-detail.html',
   styleUrl: './move-detail.css',
 })
 export class MoveDetail {
   readonly phaseNames = ['startup', 'active', 'recovery'] as const;
-  readonly outcomeNames = ['onHit', 'onBlock', 'onCounterHit', 'onWhiff', 'onSecondaryTrigger'] as const;
+  readonly outcomeNames = [
+    'onHit',
+    'onBlock',
+    'onCounterHit',
+    'onWhiff',
+    'onSecondaryTrigger',
+  ] as const;
   private readonly route = inject(ActivatedRoute);
   private readonly dialog = inject(MatDialog);
   readonly facade = inject(LocalGuideFacadeStore);
@@ -32,16 +71,17 @@ export class MoveDetail {
     return Array.from({ length: Math.max(1, count) }, (_, index) => index);
   });
 
-  readonly universalGroups = computed((): Record<string, string[]> =>
-    this.facade.guide()?.entities.game?.universal.cancelGroups ?? {}
+  readonly universalGroups = computed(
+    (): Record<string, string[]> =>
+      this.facade.guide()?.entities.game?.universal.cancelGroups ?? {},
   );
 
   readonly characterGroups = computed((): Record<string, string[]> => {
     const move = this.move();
     if (!move?.characterKey) return {};
-    const character = this.facade.guide()?.entities.characters.find(
-      (c) => c.semanticKey === move.characterKey
-    );
+    const character = this.facade
+      .guide()
+      ?.entities.characters.find((c) => c.semanticKey === move.characterKey);
     return character?.cancelGroups ?? {};
   });
 
@@ -51,14 +91,21 @@ export class MoveDetail {
     const move = this.move();
     const universalMoveKeys = guide.entities.game.universal.moveKeys;
     const characterMoveKeys = move?.characterKey
-      ? (guide.entities.characters.find((c) => c.semanticKey === move.characterKey)?.hierarchy?.moveKeys ?? [])
+      ? (guide.entities.characters.find(
+          (c) => c.semanticKey === move.characterKey,
+        )?.hierarchy?.moveKeys ?? [])
       : [];
-    return buildCharacterMoveList(universalMoveKeys, characterMoveKeys, guide.entities.moves)
-      .map((entry) => ({
-        key: entry.semanticKey,
-        label: entry.name,
-        tags: entry.isUniversal ? [{ label: 'Universal', color: 'info' as const }] : undefined,
-      }));
+    return buildCharacterMoveList(
+      universalMoveKeys,
+      characterMoveKeys,
+      guide.entities.moves,
+    ).map((entry) => ({
+      key: entry.semanticKey,
+      label: entry.name,
+      tags: entry.isUniversal
+        ? [{ label: 'Universal', color: 'info' as const }]
+        : undefined,
+    }));
   });
 
   readonly stateModel = computed((): StateModel => {
@@ -67,9 +114,9 @@ export class MoveDetail {
     const gameStates = guide.entities.game.states;
     const move = this.move();
     if (!move?.characterKey) return gameStates;
-    const characterStates = guide.entities.characters.find(
-      (c) => c.semanticKey === move.characterKey
-    )?.states ?? {};
+    const characterStates =
+      guide.entities.characters.find((c) => c.semanticKey === move.characterKey)
+        ?.states ?? {};
     const merged: StateModel = { ...gameStates };
     for (const [category, states] of Object.entries(characterStates)) {
       merged[category] = { ...(merged[category] ?? {}), ...states };
@@ -80,15 +127,16 @@ export class MoveDetail {
   openCreateGameStateDialog(): void {
     const guide = this.facade.guide();
     if (!guide) return;
-    const ref = this.dialog.open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+    const ref = this.dialog.open<
       StateCreateDialogComponent,
-      {
-        data: {
-          existingStates: guide.entities.game.states,
-          existingCategories: Object.keys(guide.entities.game.states),
-        },
-      }
-    );
+      unknown,
+      StateCreateDialogResult | undefined
+    >(StateCreateDialogComponent, {
+      data: {
+        existingStates: guide.entities.game.states,
+        existingCategories: Object.keys(guide.entities.game.states),
+      },
+    });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
       void this.facade.createGameState(result);
@@ -99,7 +147,9 @@ export class MoveDetail {
     const guide = this.facade.guide();
     const characterKey = this.move()?.characterKey;
     if (!guide || !characterKey) return;
-    const character = guide.entities.characters.find((c) => c.semanticKey === characterKey);
+    const character = guide.entities.characters.find(
+      (c) => c.semanticKey === characterKey,
+    );
     const characterStates: StateModel = character?.states ?? {};
     const existingCategories = [
       ...new Set([
@@ -107,10 +157,13 @@ export class MoveDetail {
         ...Object.keys(guide.entities.game.states),
       ]),
     ].sort();
-    const ref = this.dialog.open<StateCreateDialogComponent, unknown, StateCreateDialogResult | undefined>(
+    const ref = this.dialog.open<
       StateCreateDialogComponent,
-      { data: { existingStates: characterStates, existingCategories } }
-    );
+      unknown,
+      StateCreateDialogResult | undefined
+    >(StateCreateDialogComponent, {
+      data: { existingStates: characterStates, existingCategories },
+    });
     ref.afterClosed().subscribe((result) => {
       if (!result) return;
       void this.facade.createCharacterState({ characterKey, ...result });
@@ -130,21 +183,27 @@ export class MoveDetail {
 
   outcomeStatePatch(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    field: 'source' | 'target' | 'game'
+    outcome: (typeof this.outcomeNames)[number],
+    field: 'source' | 'target' | 'game',
   ): StatePatch {
     return this.move()?.phases?.[phaseIndex]?.effects?.[outcome]?.[field] ?? {};
   }
 
   async updateOutcomeStatePatch(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
+    outcome: (typeof this.outcomeNames)[number],
     field: 'source' | 'target' | 'game',
-    patch: StatePatch
+    patch: StatePatch,
   ): Promise<void> {
     const moveKey = this.move()?.semanticKey;
     if (moveKey) {
-      await this.facade.updateMoveOutcomeStatePatch({ moveKey, phaseIndex, outcome, field, patch });
+      await this.facade.updateMoveOutcomeStatePatch({
+        moveKey,
+        phaseIndex,
+        outcome,
+        field,
+        patch,
+      });
     }
   }
 
@@ -158,9 +217,14 @@ export class MoveDetail {
 
   async onCancelRuleSave(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
+    outcome: (typeof this.outcomeNames)[number],
     cancelIndex: number,
-    event: { universalGroups: string[]; overrides: Record<string, boolean>; cancelWindowStart?: number | null; cancelWindowEnd?: number | null }
+    event: {
+      universalGroups: string[];
+      overrides: Record<string, boolean>;
+      cancelWindowStart?: number | null;
+      cancelWindowEnd?: number | null;
+    },
   ): Promise<void> {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
     const cancel = currentCancels[cancelIndex];
@@ -175,11 +239,14 @@ export class MoveDetail {
     await this.updateOutcomeCancel(phaseIndex, outcome, cancelIndex, updated);
   }
 
-  phaseDuration(phaseIndex: number, phase: 'startup' | 'active' | 'recovery'): DataValue {
+  phaseDuration(
+    phaseIndex: number,
+    phase: 'startup' | 'active' | 'recovery',
+  ): DataValue {
     return this.move()?.phases?.[phaseIndex]?.[phase]?.duration ?? {};
   }
 
-  outcomeLabel(outcome: typeof this.outcomeNames[number]): string {
+  outcomeLabel(outcome: (typeof this.outcomeNames)[number]): string {
     return {
       onHit: 'On Hit',
       onBlock: 'On Block',
@@ -192,27 +259,32 @@ export class MoveDetail {
   async updatePhaseDuration(
     phaseIndex: number,
     phase: 'startup' | 'active' | 'recovery',
-    duration: DataValue
+    duration: DataValue,
   ): Promise<void> {
     const moveKey = this.move()?.semanticKey;
     if (moveKey) {
-      await this.facade.updateMovePhaseDuration({ moveKey, phaseIndex, phase, duration });
+      await this.facade.updateMovePhaseDuration({
+        moveKey,
+        phaseIndex,
+        phase,
+        duration,
+      });
     }
   }
 
   outcomeDataValue(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    field: 'hitStop' | 'stun'
+    outcome: (typeof this.outcomeNames)[number],
+    field: 'hitStop' | 'stun',
   ): DataValue {
     return this.move()?.phases?.[phaseIndex]?.effects?.[outcome]?.[field] ?? {};
   }
 
   async updateOutcomeDataValue(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
+    outcome: (typeof this.outcomeNames)[number],
     field: 'hitStop' | 'stun',
-    value: DataValue
+    value: DataValue,
   ): Promise<void> {
     const moveKey = this.move()?.semanticKey;
     if (moveKey) {
@@ -228,15 +300,15 @@ export class MoveDetail {
 
   outcomeCancels(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number]
+    outcome: (typeof this.outcomeNames)[number],
   ): PhaseCancelRule[] {
     return this.move()?.phases?.[phaseIndex]?.effects?.[outcome]?.cancels ?? [];
   }
 
   async updateOutcomeCancels(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    cancels: PhaseCancelRule[]
+    outcome: (typeof this.outcomeNames)[number],
+    cancels: PhaseCancelRule[],
   ): Promise<void> {
     const moveKey = this.move()?.semanticKey;
     if (moveKey) {
@@ -251,17 +323,20 @@ export class MoveDetail {
 
   async addOutcomeCancel(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    cancel: PhaseCancelRule
+    outcome: (typeof this.outcomeNames)[number],
+    cancel: PhaseCancelRule,
   ): Promise<void> {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
-    await this.updateOutcomeCancels(phaseIndex, outcome, [...currentCancels, cancel]);
+    await this.updateOutcomeCancels(phaseIndex, outcome, [
+      ...currentCancels,
+      cancel,
+    ]);
   }
 
   async removeOutcomeCancel(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
-    cancelIndex: number
+    outcome: (typeof this.outcomeNames)[number],
+    cancelIndex: number,
   ): Promise<void> {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
     const updated = currentCancels.filter((_, index) => index !== cancelIndex);
@@ -270,12 +345,14 @@ export class MoveDetail {
 
   async updateOutcomeCancel(
     phaseIndex: number,
-    outcome: typeof this.outcomeNames[number],
+    outcome: (typeof this.outcomeNames)[number],
     cancelIndex: number,
-    cancel: PhaseCancelRule
+    cancel: PhaseCancelRule,
   ): Promise<void> {
     const currentCancels = this.outcomeCancels(phaseIndex, outcome);
-    const updated = currentCancels.map((c, index) => (index === cancelIndex ? cancel : c));
+    const updated = currentCancels.map((c, index) =>
+      index === cancelIndex ? cancel : c,
+    );
     await this.updateOutcomeCancels(phaseIndex, outcome, updated);
   }
 

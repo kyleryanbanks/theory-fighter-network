@@ -14,9 +14,13 @@ import {
   type StatePatch,
 } from '@tfn/app-shell/data';
 import { DataValueEditor } from '../data-value-editor/data-value-editor';
-import { ExpansionPanel } from '../exp-panel/expansion-panel';
+import { ExpansionPanel } from '@tfn/app-shell/ui';
 
-const PATCH_OPERATORS: { value: PatchOperator; label: string; ariaLabel: string }[] = [
+const PATCH_OPERATORS: {
+  value: PatchOperator;
+  label: string;
+  ariaLabel: string;
+}[] = [
   { value: '=', label: '=', ariaLabel: 'Set to' },
   { value: '+', label: '+', ariaLabel: 'Add' },
   { value: '-', label: '−', ariaLabel: 'Subtract' },
@@ -56,11 +60,11 @@ export class StatePatchEditorComponent {
       .map(([category, states]) => ({
         category,
         states: Object.values(states).sort((left, right) =>
-          left.name.localeCompare(right.name)
+          left.name.localeCompare(right.name),
         ),
       }))
       .filter(({ states }) => states.length > 0)
-      .sort((left, right) => left.category.localeCompare(right.category))
+      .sort((left, right) => left.category.localeCompare(right.category)),
   );
 
   isAffected(category: string, semanticKey: string): boolean {
@@ -74,7 +78,7 @@ export class StatePatchEditorComponent {
   onAffectedChange(
     category: string,
     state: StateDocument,
-    affected: boolean
+    affected: boolean,
   ): void {
     if (!affected) {
       this.removeState(category, state.semanticKey);
@@ -91,7 +95,7 @@ export class StatePatchEditorComponent {
   onBooleanValueChange(
     category: string,
     semanticKey: string,
-    nextValue: boolean
+    nextValue: boolean,
   ): void {
     this.emitStateValue(category, semanticKey, nextValue);
   }
@@ -99,7 +103,7 @@ export class StatePatchEditorComponent {
   onNumericOpChange(
     category: string,
     semanticKey: string,
-    op: PatchOperator
+    op: PatchOperator,
   ): void {
     const current = this.numericPatch(category, semanticKey);
     this.emitStateValue(category, semanticKey, { ...current, op });
@@ -108,7 +112,7 @@ export class StatePatchEditorComponent {
   onNumericValueChange(
     category: string,
     semanticKey: string,
-    value: DataValue
+    value: DataValue,
   ): void {
     const current = this.numericPatch(category, semanticKey);
     this.emitStateValue(category, semanticKey, { ...current, value });
@@ -123,13 +127,16 @@ export class StatePatchEditorComponent {
     if (current && typeof current === 'object' && 'op' in current) {
       return current as NumericStatePatch;
     }
-    return { op: '=', value: createDataValue({ relative: 50, exact: undefined }) };
+    return {
+      op: '=',
+      value: createDataValue({ relative: 50, exact: undefined }),
+    };
   }
 
   private emitStateValue(
     category: string,
     semanticKey: string,
-    nextValue: boolean | NumericStatePatch
+    nextValue: boolean | NumericStatePatch,
   ): void {
     const nextPatch: StatePatch = {
       ...this.value(),

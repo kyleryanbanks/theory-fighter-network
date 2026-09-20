@@ -1,15 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { FormField, form, required, submit } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { RouterLink } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
 } from '@tfn/app-shell/data';
-import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
+import {
+  DeleteButton,
+  EntityMetadataView,
+  ExpansionPanel,
+  TfnLink,
+} from '@tfn/app-shell/ui';
 import { EntityNotes } from '@tfn/shared/ui';
 
 interface MoveDraft {
@@ -39,13 +44,13 @@ const UNIVERSAL_SCOPE = '';
 export class MoveEditor {
   readonly facade = inject(LocalGuideFacadeStore);
   readonly characters = computed(
-    () => this.facade.guide()?.entities.characters ?? []
+    () => this.facade.guide()?.entities.characters ?? [],
   );
   readonly scopeKey = signal(UNIVERSAL_SCOPE);
   readonly universalMoves = computed(() =>
     (this.facade.guide()?.entities.moves ?? []).filter(
-      (move) => !move.characterKey
-    )
+      (move) => !move.characterKey,
+    ),
   );
   readonly moves = computed(() => {
     const allMoves = this.facade.guide()?.entities.moves ?? [];
@@ -141,7 +146,8 @@ export class MoveEditor {
   }
 }
 
-
 function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'The Move could not be updated.';
+  return error instanceof Error
+    ? error.message
+    : 'The Move could not be updated.';
 }
