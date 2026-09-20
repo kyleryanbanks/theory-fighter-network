@@ -9,7 +9,7 @@ import {
   type RecentFileHandle,
   type RecentGuide,
 } from '@tfn/app-shell/data';
-import { GameRoot } from './game-root/game-root';
+import { GameRoot } from '@tfn/game/feature';
 import { GuideShell } from './guide-shell/guide-shell';
 
 @Component({
