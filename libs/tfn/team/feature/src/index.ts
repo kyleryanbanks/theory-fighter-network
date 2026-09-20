@@ -1,1 +1,1 @@
-export * from './lib/tfn-team-feature';
+export * from './lib/team-editor/team-editor';

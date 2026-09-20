@@ -14,7 +14,7 @@ export const appShellRoutes: Route[] = [
   { path: 'moves/:moveKey', loadComponent: () => import('@tfn/move/feature').then((m) => m.MoveDetail) },
   { path: 'sequences', loadComponent: () => import('@tfn/sequence/feature').then((m) => m.SequenceEditor) },
   { path: 'sequences/:sequenceKey', loadComponent: () => import('@tfn/sequence/feature').then((m) => m.SequenceDetail) },
-  { path: 'teams', loadComponent: () => import('../team-editor/team-editor').then((m) => m.TeamEditor) },
+  { path: 'teams', loadComponent: () => import('@tfn/team/feature').then((m) => m.TeamEditor) },
   { path: 'teams/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'team' } },
   { path: 'projectiles/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'projectile' } },
   { path: 'matchups', loadComponent: () => import('../matchup-editor/matchup-editor').then((m) => m.MatchupEditor) },
