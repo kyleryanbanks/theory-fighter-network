@@ -4,7 +4,7 @@ export const appShellRoutes: Route[] = [
   { path: '', pathMatch: 'full', redirectTo: 'game' },
   { path: 'game', loadComponent: () => import('../game-root/game-root').then((m) => m.GameRoot) },
   { path: 'game/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'game' } },
-  { path: 'stages', loadComponent: () => import('../stage-editor/stage-editor').then((m) => m.StageEditor) },
+  { path: 'stages', loadComponent: () => import('@tfn/stage/feature').then((m) => m.StageEditor) },
   { path: 'stages/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'stage' } },
   { path: 'zones/:entityKey', loadComponent: () => import('../entity-detail/entity-detail').then((m) => m.EntityDetail), data: { entityType: 'stageZone' } },
   { path: 'characters', loadComponent: () => import('../character-editor/character-editor').then((m) => m.CharacterEditor) },

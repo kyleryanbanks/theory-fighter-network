@@ -1,1 +1,1 @@
-export * from './lib/tfn-stage-feature';
+export * from './lib/stage-editor/stage-editor';
