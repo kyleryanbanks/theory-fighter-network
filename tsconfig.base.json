@@ -44,6 +44,9 @@
       ],
       "@tfn/shared/feature": [
         "./libs/tfn/shared/feature/src/index.ts"
+      ],
+      "@tfn/character/feature": [
+        "./libs/tfn/character/feature/src/index.ts"
       ]
     }
   },
