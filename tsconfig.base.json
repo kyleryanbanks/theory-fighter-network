@@ -56,6 +56,9 @@
       ],
       "@tfn/team/feature": [
         "./libs/tfn/team/feature/src/index.ts"
+      ],
+      "@tfn/matchup/feature": [
+        "./libs/tfn/matchup/feature/src/index.ts"
       ]
     }
   },
