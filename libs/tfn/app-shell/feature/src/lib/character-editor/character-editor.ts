@@ -7,8 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { LocalGuideFacadeStore, buildCharacterMoveList } from '@tfn/app-shell/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
 import type { Tile } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
-import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
+import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
 
 interface CharacterDraft {
   name: string;

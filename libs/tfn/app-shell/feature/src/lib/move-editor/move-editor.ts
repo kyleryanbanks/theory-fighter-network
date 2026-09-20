@@ -10,7 +10,7 @@ import {
   resolveEffectiveMove,
 } from '@tfn/app-shell/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityNotes } from '@tfn/shared/ui';
 
 interface MoveDraft {
   name: string;

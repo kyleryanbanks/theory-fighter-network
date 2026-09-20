@@ -9,7 +9,7 @@ import {
   LocalGuideFacadeStore,
 } from '@tfn/app-shell/data';
 import type { NoteEntry } from '@tfn/app-shell/data';
-import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityNotes } from '@tfn/shared/ui';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile, type TileChoice } from '@tfn/app-shell/ui';
 
 const UNSCOPED_STAGE = '';

@@ -1,1 +1,1 @@
-export * from './lib/tfn-shared-feature';
+export * from './lib/entity-detail/entity-detail';

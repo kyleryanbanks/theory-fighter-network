@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { DeleteButton, EntityMetadataView, ExpansionPanel, TfnLink, TileGridComponent, type Tile } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityNotes } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-team-editor',

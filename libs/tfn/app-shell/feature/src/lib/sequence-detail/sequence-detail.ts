@@ -5,7 +5,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { LocalGuideFacadeStore, type Step } from '@tfn/app-shell/data';
 import { ExpansionPanel, EntityDetailShell } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityNotes } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-sequence-detail',

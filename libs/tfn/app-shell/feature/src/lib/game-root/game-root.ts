@@ -18,7 +18,7 @@ import {
   type Inputs,
   LocalGuideFacadeStore,
 } from '@tfn/app-shell/data';
-import { EntityNotes } from '../entity-notes/entity-notes';
+import { EntityNotes } from '@tfn/shared/ui';
 import {
   GameStateManagerComponent,
   StateCreateDialogComponent,
@@ -26,7 +26,7 @@ import {
   TfnLink,
   type Tile,
 } from '@tfn/app-shell/ui';
-import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
+import { CancelGroupsEditorComponent } from '@tfn/shared/ui';
 import { firstValueFrom } from 'rxjs';
 
 interface GameFormModel {

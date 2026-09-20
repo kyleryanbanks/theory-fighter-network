@@ -11,8 +11,7 @@ import {
   type StateCreateDialogResult,
 } from '@tfn/app-shell/ui';
 import type { Tile } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
-import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
+import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-character-detail',

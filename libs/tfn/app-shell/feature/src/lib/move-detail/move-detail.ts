@@ -6,8 +6,7 @@ import { LocalGuideFacadeStore, resolveEffectiveMove, buildCharacterMoveList } f
 import type { DataValue, PhaseCancelRule, StatePatch, StateModel, MovePreconditions } from '@tfn/app-shell/data';
 import { MatButtonModule } from '@angular/material/button';
 import { DeleteButton, ExpansionPanel, EntityDetailShell, DataValueEditor, StatePatchEditorComponent, Tile, StateCreateDialogComponent, type StateCreateDialogResult, MovePreconditionEditorComponent } from '@tfn/app-shell/ui';
-import { EntityNotes } from '../entity-notes/entity-notes';
-import { CancelGroupsEditorComponent } from '../cancel-groups-editor/cancel-groups-editor';
+import { EntityNotes, CancelGroupsEditorComponent } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-move-detail',
