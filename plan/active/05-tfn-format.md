@@ -24,23 +24,18 @@ Archive format versions describe the envelope and serialization rules. Guide sch
     "formatVersion": 1,
     "schemaVersion": 1,
     "createdAt": "2026-08-15T12:00:00.000Z",
-    "entityOrder": [
-      "game",
-      "stages",
-      "stageZones",
-      "characters",
-      "teams",
-      "moves",
-      "sequences",
-      "projectiles",
-      "matchups"
-    ]
+    "entityOrder": ["game", "stages", "stageZones", "characters", "teams", "moves", "sequences", "projectiles", "matchups"]
   },
   "guide": {},
   "entities": {},
+  "workspace": {
+    "todos": []
+  },
   "checksum": "..."
 }
 ```
+
+The workspace section stores Guide-owned personal Todos. Helper task definitions and progress callbacks are application code and are never serialized in an archive.
 
 All persisted `Date` values are ISO 8601 strings. Loading hydrates entity metadata timestamps back into `Date` instances.
 
@@ -57,6 +52,8 @@ Format 1 requires this exact order:
 7. `sequences`
 8. `projectiles`
 9. `matchups`
+
+The archive also includes a `workspace.todos` collection. Todo array order is preserved, and Todo timestamps are serialized as ISO 8601 strings and hydrated on load.
 
 `game` is one document. Every other entry is an array, including an empty array when no entities exist.
 
@@ -88,6 +85,7 @@ Readers must process archives in this order:
 6. Validate the current canonical entity order.
 7. Validate the Guide schema version.
 8. Hydrate entity metadata dates.
+9. Hydrate workspace Todo dates.
 
 Checksum verification occurs before migration so migrations never legitimize corrupted input.
 

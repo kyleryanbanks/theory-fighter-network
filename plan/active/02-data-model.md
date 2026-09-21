@@ -5,7 +5,8 @@ Complete Firestore and local file schema for Theory Fighter Network.
 ## Source of Truth
 
 **TypeScript type definitions** (authoritative source):
-- All interfaces are defined in [`models/`](/models/) 
+
+- All interfaces are defined in [`models/`](/models/)
 - Use these as the source of truth for structure and field details
 - This document provides architectural context and design rationale
 
@@ -31,6 +32,37 @@ Complete Firestore and local file schema for Theory Fighter Network.
 /games/{gameId}/teams/{teamId}/sequences/{sequenceId}
 ```
 
+## Guide Workspace Data: Todos and Research Values
+
+Guide workspace content is persisted in the `.tfn` Guide because it represents the user's research, not transient application UI state. This includes personal Todos and user-entered values that helper tasks read, such as an expected game roster size.
+
+### Guide Todos
+
+Todos are lightweight follow-up items. They may be unlinked, or link to one or more existing Guide entities through `EntityRef`.
+
+```ts
+interface GuideTodo {
+  id: string;
+  text: string;
+  status: 'open' | 'done';
+  entityRefs?: EntityRef[];
+  createdAt: Date;
+  completedAt?: Date;
+}
+```
+
+Entity-attached `NoteEntry` remains appropriate for discussion about one entity. A `GuideTodo` is different: it represents work the user wants to revisit and can exist at Guide level without a linked entity.
+
+### User-entered Research Values
+
+Domain helper tasks may need a user-entered Guide value before they can calculate progress. These values belong in the relevant Guide/entity model, not in the helper task definition. For example, a roster-documentation helper task reads an expected roster size entered on the Game or Guide workspace data and compares it with `entities.characters.length`.
+
+These values are working research facts or estimates. They must remain distinguishable from gameplay configuration and should not be inferred from application task state.
+
+### Application-only Helper Tasks
+
+Helper task definitions, ordered steps, and `getProgress(guide)` callbacks are TFN application code. They are not entities, are not serialized in `.tfn`, and do not create a user-configurable query language. Their output is a standard progress view model for the Home page and progress components.
+
 ---
 
 ## Architectural Context
@@ -38,6 +70,7 @@ Complete Firestore and local file schema for Theory Fighter Network.
 ### Game-Level vs Character-Level Design
 
 **Game documents** define:
+
 - Match rules (rounds, timer, team size)
 - Frame data policy (whether exact data exists)
 - Input system (button/direction layout)
@@ -48,6 +81,7 @@ Complete Firestore and local file schema for Theory Fighter Network.
 - Stage effects on gameplay
 
 **Character documents** extend game rules with:
+
 - Character-specific slider axes (range adjustments, etc.)
 - Selectable loadouts and assists (for games supporting them)
 - Custom player/opponent states
@@ -55,12 +89,14 @@ Complete Firestore and local file schema for Theory Fighter Network.
 - Character's own movesets
 
 **Universal moves** (game-level) are inherited by characters via inheritance model:
+
 - Characters copy game-level moves and mark which fields they override
 - Inheritance allows single source of truth for shared moves while enabling per-character customization
 
 ### Move Scope & Inheritance
 
 Moves can be scoped as:
+
 - **Universal** (`characterId` absent): defined at game level, inherited by all characters
 - **Character-specific** (`characterId` present, `inheritedFromMoveId` absent): unique to that character
 - **Character override** (`inheritedFromMoveId` present): inherits from game-level move with field overrides specified in `fieldOverrides[]`
@@ -82,6 +118,7 @@ Games define attack type classifications as states in the `Attack` category, ena
 - **Enables mechanics**: Secondary mechanics based on attack class (e.g., SF6's strike/throw counters) work via state-driven game logic
 
 **Why this design:**
+
 - ✅ **Game-agnostic**: Games define any attack taxonomy they need
 - ✅ **State-driven**: Uses same State mechanism as all other mechanics
 - ✅ **Queryable**: UI can filter moves by attack type, show counter options
@@ -93,6 +130,7 @@ Games define attack type classifications as states in the `Attack` category, ena
 **Concept**: Different fighting games use completely different attack height classification systems. Rather than hardcoding a single taxonomy, heights are modeled as **configurable attack states** in the `Attack` category.
 
 **How it works:**
+
 1. Games define height taxonomy in the `Attack` state category during guide creation
 2. Moves reference height via attack state key in effects or preconditions
 3. Block states are keyed by height in the `Defense` category: `"sf6-blocks-low"`, `"sf6-blocks-mid"`, etc.
@@ -100,17 +138,18 @@ Games define attack type classifications as states in the `Attack` category, ena
 
 **Common height taxonomies (as UX templates):**
 
-| Game Family | Heights | Notes |
-|---|---|---|
-| **Street Fighter** | low / mid / high / overhead | Based on required blocking stance |
-| **Tekken** | low / mid / high | Based on hurtbox region hit |
-| **Guilty Gear** | low / mid / high / unblockable / air-only | Adds unblockable class |
-| **Marvel vs Capcom** | low / mid / high / crossup | Allows mid-air attacks |
-| **Custom** | User-defined | Any taxonomy the game requires |
+| Game Family          | Heights                                   | Notes                             |
+| -------------------- | ----------------------------------------- | --------------------------------- |
+| **Street Fighter**   | low / mid / high / overhead               | Based on required blocking stance |
+| **Tekken**           | low / mid / high                          | Based on hurtbox region hit       |
+| **Guilty Gear**      | low / mid / high / unblockable / air-only | Adds unblockable class            |
+| **Marvel vs Capcom** | low / mid / high / crossup                | Allows mid-air attacks            |
+| **Custom**           | User-defined                              | Any taxonomy the game requires    |
 
 **Example: Street Fighter game creation**
 
 User creates new guide, selects "Street Fighter" template:
+
 ```typescript
 states: {
   Attack: {
@@ -119,7 +158,7 @@ states: {
       description: "Must be blocked crouching"
     },
     "sf6-attacks-height-mid": {
-      name: "Mid Attack", 
+      name: "Mid Attack",
       description: "Blocked standing or crouching"
     },
     "sf6-attacks-height-high": {
@@ -140,34 +179,38 @@ states: {
 ```
 
 Ryu's Hadoken move then references height:
+
 ```typescript
 const hadoken: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        hitStop: { exact: 5 },
-        stun: { exact: 20 },
-        target: {
-          Attack: {
-            "sf6-attacks-height-mid": true  // Mid-height projectile
-          }
-        }
+  phases: [
+    {
+      effects: {
+        onHit: {
+          hitStop: { exact: 5 },
+          stun: { exact: 20 },
+          target: {
+            Attack: {
+              'sf6-attacks-height-mid': true, // Mid-height projectile
+            },
+          },
+        },
+        onBlock: {
+          hitStop: { exact: 3 },
+          stun: { exact: 8 },
+          target: {
+            Defense: {
+              'sf6-blocks-mid': true, // Requires mid-block stance
+            },
+          },
+        },
       },
-      onBlock: {
-        hitStop: { exact: 3 },
-        stun: { exact: 8 },
-        target: {
-          Defense: {
-            "sf6-blocks-mid": true  // Requires mid-block stance
-          }
-        }
-      }
-    }
-  }]
-}
+    },
+  ],
+};
 ```
 
 **Why this design:**
+
 - ✅ **Game-agnostic**: Works for any height system (2D, 3D, unique mechanics)
 - ✅ **User-customizable**: Games can add/remove/rename heights as needed
 - ✅ **Queryable**: UI can filter moves by height, show which blocks apply
@@ -189,7 +232,6 @@ During game guide creation, the UI should offer height template selection as par
    - Runs atomically: one effect application → one onUpdate call → value stored
    - Example: Hitstun scaling by combo count (incoming 20 frames → scale by combo → store 16 frames)
    - **Use for**: Attack modifier calculations, conditional state application, chaining effects
-   
 2. **`onFrameAdvance(context)`** — **System-driven mechanics**
    - Called once per frame during simulation, independently of effects
    - Runs according to `GameDocument.stateExecutionOrder` for deterministic behavior
@@ -200,6 +242,7 @@ During game guide creation, the UI should offer height template selection as par
 **CRITICAL: stateExecutionOrder for Determinism**
 
 `GameDocument.stateExecutionOrder` is **ESSENTIAL** for correct simulation:
+
 - Lists state semantic keys in the format "CategoryName.stateKey" that must execute before other registered behavior.
 - Passes the context returned by each registered `onFrameAdvance` callback to the next callback.
 - State keys without registered frame behavior are ignored.
@@ -212,6 +255,7 @@ During game guide creation, the UI should offer height template selection as par
 - Without this, frame-to-frame behavior becomes non-deterministic
 
 **Storage and Scope**:
+
 - `StateDocument` values are stored in guide JSON and may be published to Firestore.
 - Trusted behavior source may be serialized in `StateDocument.behavior`.
 - Code blocks receive `incomingValue` and `context` for `onUpdate`, or `context` for `onFrameAdvance`, and must return a context object.
@@ -222,10 +266,11 @@ During game guide creation, the UI should offer height template selection as par
 **Examples:**
 
 Hitstun scaling by combo count (effect-driven onUpdate):
+
 ```typescript
 states.Sequence.hitstun = {
-  semanticKey: "sf6-combo-hitstun",
-  name: "Hitstun",
+  semanticKey: 'sf6-combo-hitstun',
+  name: 'Hitstun',
   min: 0,
   max: 100,
   behavior: {
@@ -242,45 +287,44 @@ states.Sequence.hitstun = {
           }
         }
       };
-    `
-  }
+    `,
+  },
 };
 
 stateBehaviorRegistry.registerState(states.Sequence.hitstun);
 ```
 
 Gravity affecting motion (frame-driven onFrameAdvance):
+
 ```typescript
-stateBehaviorRegistry.register("sf6-stage-gravity", {
+stateBehaviorRegistry.register('sf6-stage-gravity', {
   onFrameAdvance: (context) => {
     const g = context.runtimeState.Environment.gravity;
     // Apply gravity to all character/projectile velocities
     // This runs FIRST per stateExecutionOrder, before position updates
     const allEntities = context.runtimeState.Character;
-    Object.values(allEntities).forEach(char => {
+    Object.values(allEntities).forEach((char) => {
       if (char.velocity) char.velocity.y -= g;
     });
     return context;
-  }
+  },
 });
 ```
 
 Health regeneration (frame-driven, conditional):
+
 ```typescript
-stateBehaviorRegistry.register("sf6-resource-health", {
+stateBehaviorRegistry.register('sf6-resource-health', {
   onFrameAdvance: (context) => {
     // Only regen if not in hitstun and not blocking
     const isInHitstun = context.runtimeState.Sequence.hitstun > 0;
     const isBlocking = context.runtimeState.Defense.isBlocking;
-    
+
     if (!isInHitstun && !isBlocking) {
-      context.runtimeState.Resource.health = Math.min(
-        context.runtimeState.Resource.health + 0.5,
-        100
-      );
+      context.runtimeState.Resource.health = Math.min(context.runtimeState.Resource.health + 0.5, 100);
     }
     return context;
-  }
+  },
 });
 ```
 
@@ -288,10 +332,11 @@ stateBehaviorRegistry.register("sf6-resource-health", {
 `GameDocument.stateExecutionOrder` seeds `StateBehaviorRegistry` with the user-preferred order. Behavior absent from that list is appended in first-registration order. This enables power users to manage dependencies (e.g., gravity before position calculation) without listing every state:
 
 ```typescript
-stateExecutionOrder: ["Environment.gravity", "Movement", "Resource.health", "Sequence.hitstun"]
+stateExecutionOrder: ['Environment.gravity', 'Movement', 'Resource.health', 'Sequence.hitstun'];
 ```
 
 **Storage:**
+
 - State documents are persisted and publishable.
 - Trusted behavior code may be stored with guide data or registered from Git-tracked modules.
 - The engine calls behavior resolved by semantic key at simulation time.
@@ -301,24 +346,26 @@ stateExecutionOrder: ["Environment.gravity", "Movement", "Resource.health", "Seq
 **Concept**: Four distinct box systems are unified under a single region model, supporting both 2D (circles/rectangles) and 3D (spheres/cubes) games. Regions are pure geometry—shape is identified by field presence, not type discriminators.
 
 **Region shapes** (discriminated by presence of fields):
+
 - **2D Circle**: `{ x, y, radius }`
 - **2D Rectangle**: `{ x, y, width, height }`
 - **3D Sphere**: `{ x, y, z, radius }`
 - **3D Cube**: `{ x, y, z, width, height, depth }`
 
 **Character neutral boxes** (baseline, standing stance):
+
 ```typescript
 const ryu: CharacterDocument = {
   neutralRegions: {
     collisionBoxes: [
-      { x: 0, y: 0, width: 40, height: 100 }  // Prevents overlap
+      { x: 0, y: 0, width: 40, height: 100 }, // Prevents overlap
     ],
     hurtBoxes: [
-      { x: 0, y: 0, width: 30, height: 100 },   // Torso
-      { x: 5, y: 90, width: 20, height: 15 }    // Head
-    ]
-  }
-}
+      { x: 0, y: 0, width: 30, height: 100 }, // Torso
+      { x: 5, y: 90, width: 20, height: 15 }, // Head
+    ],
+  },
+};
 ```
 
 **Move-phase region changes** (per frame stage):
@@ -326,77 +373,87 @@ Moves override neutral boxes during startup, active, and recovery frames. Each s
 
 ```typescript
 const crouch: MoveDocument = {
-  phases: [{
-    startup: {
-      duration: { exact: 1 },
-      collisionBoxes: [
-        { x: 0, y: 30, width: 50, height: 70 }  // Wider, shorter
-      ],
-      hurtBoxes: [
-        { x: 0, y: 30, width: 40, height: 70 }  // Lower profile
-      ]
+  phases: [
+    {
+      startup: {
+        duration: { exact: 1 },
+        collisionBoxes: [
+          { x: 0, y: 30, width: 50, height: 70 }, // Wider, shorter
+        ],
+        hurtBoxes: [
+          { x: 0, y: 30, width: 40, height: 70 }, // Lower profile
+        ],
+      },
+      active: {
+        duration: { exact: -1 }, // Infinite while held
+      },
+      recovery: {
+        duration: { exact: 1 },
+      },
     },
-    active: {
-      duration: { exact: -1 }  // Infinite while held
-    },
-    recovery: {
-      duration: { exact: 1 }
-    }
-  }]
-}
+  ],
+};
 ```
 
 Ryu's hadoken with phase-by-phase region changes:
+
 ```typescript
 const hadoken: MoveDocument = {
-  phases: [{
-    startup: {
-      duration: { exact: 10 },
-      // Charge-up pose: tighter collision
-      collisionBoxes: [{ x: 0, y: 0, width: 30, height: 100 }]
+  phases: [
+    {
+      startup: {
+        duration: { exact: 10 },
+        // Charge-up pose: tighter collision
+        collisionBoxes: [{ x: 0, y: 0, width: 30, height: 100 }],
+      },
+      active: {
+        duration: { exact: 20 },
+        // Extended arms create new hurt boxes
+        hurtBoxes: [
+          { x: 0, y: 0, width: 30, height: 100 }, // Torso
+          { x: -20, y: 30, width: 50, height: 40 }, // Extended arm
+        ],
+        // Projectile hit boxes
+        hitBoxes: [
+          { x: 0, y: 40, radius: 15 }, // Main projectile
+        ],
+      },
+      recovery: {
+        duration: { exact: 8 },
+        // Post-fireball pose with extended arm region
+        collisionBoxes: [{ x: 0, y: 0, width: 45, height: 100 }],
+      },
     },
-    active: {
-      duration: { exact: 20 },
-      // Extended arms create new hurt boxes
-      hurtBoxes: [
-        { x: 0, y: 0, width: 30, height: 100 },      // Torso
-        { x: -20, y: 30, width: 50, height: 40 }     // Extended arm
-      ],
-      // Projectile hit boxes
-      hitBoxes: [
-        { x: 0, y: 40, radius: 15 }  // Main projectile
-      ]
-    },
-    recovery: {
-      duration: { exact: 8 },
-      // Post-fireball pose with extended arm region
-      collisionBoxes: [{ x: 0, y: 0, width: 45, height: 100 }]
-    }
-  }]
-}
+  ],
+};
 ```
 
 **Box removal semantics**:
+
 - **Omitted field** (undefined): inherit from previous stage or character defaults
 - **Empty array** `[]`: explicitly remove (invulnerability, teleport dash, etc.)
 - **Specified boxes** `[box1, box2, ...]`: override with these regions
 
 Teleport dash example (all boxes disappear):
+
 ```typescript
 const teleportDash: MoveDocument = {
-  phases: [{
-    active: {
-      duration: { exact: 6 },
-      collisionBoxes: [],  // Gone
-      hurtBoxes: [],       // Invulnerable
-      hitBoxes: [],
-      throwBoxes: []
-    }
-  }]
-}
+  phases: [
+    {
+      active: {
+        duration: { exact: 6 },
+        collisionBoxes: [], // Gone
+        hurtBoxes: [], // Invulnerable
+        hitBoxes: [],
+        throwBoxes: [],
+      },
+    },
+  ],
+};
 ```
 
 **Why this design:**
+
 - ✅ **Unified model**: Collision, hurt, hit, throw boxes use same Region type
 - ✅ **Pure geometry**: No semantic keys or metadata on regions—identity via parent
 - ✅ **2D + 3D support**: Games use appropriate shapes via field presence
@@ -406,6 +463,7 @@ const teleportDash: MoveDocument = {
 - ✅ **Minimal friction**: Users only define what changes per stage
 
 **Integration points**:
+
 - **CharacterDocument**: `neutralRegions` (collision, hurt, throw boxes in neutral stance)
 - **MovePhase**: `startup`, `active`, `recovery` stages each with optional region overrides
 - **Query-time logic**: Resolve active boxes from character defaults + move phase overrides + state disabling
@@ -417,38 +475,42 @@ const teleportDash: MoveDocument = {
 **Example: Crouching**
 
 User presses down. This triggers the "crouch" move:
+
 ```typescript
 const crouch: MoveDocument = {
-  inputFrames: [{ directions: ["1"], durationFrames: 1 }],
+  inputFrames: [{ directions: ['1'], durationFrames: 1 }],
   preconditions: {
-    requiredAllPlayerStateTags: ["sf6-positions-standing"]
+    requiredAllPlayerStateTags: ['sf6-positions-standing'],
   },
-  phases: [{
-    startup: {
-      duration: { exact: 1 },
-      // REGION CHANGE: Crouch stance is shorter and wider
-      collisionBoxes: [{ x: 0, y: 30, width: 50, height: 70 }],
-      hurtBoxes: [{ x: 0, y: 30, width: 40, height: 70 }]
+  phases: [
+    {
+      startup: {
+        duration: { exact: 1 },
+        // REGION CHANGE: Crouch stance is shorter and wider
+        collisionBoxes: [{ x: 0, y: 30, width: 50, height: 70 }],
+        hurtBoxes: [{ x: 0, y: 30, width: 40, height: 70 }],
+      },
+      active: {
+        duration: { exact: -1 }, // Infinite while held
+      },
+      recovery: {
+        duration: { exact: 1 },
+      },
+      effects: {
+        onHit: {
+          playerEffects: {
+            // STATE CHANGE: Player is now in crouching state
+            appliesStateTags: ['sf6-positions-crouching'],
+          },
+        },
+      },
     },
-    active: {
-      duration: { exact: -1 }  // Infinite while held
-    },
-    recovery: {
-      duration: { exact: 1 }
-    },
-    effects: {
-      onHit: {
-        playerEffects: {
-          // STATE CHANGE: Player is now in crouching state
-          appliesStateTags: ["sf6-positions-crouching"]
-        }
-      }
-    }
-  }]
-}
+  ],
+};
 ```
 
-**Result**: 
+**Result**:
+
 - State changes from standing to crouching
 - Geometry changes from tall to short+wide
 - Both happen atomically via the same move
@@ -456,6 +518,7 @@ const crouch: MoveDocument = {
 - Invulnerability (hurt box removal) works the same way: move applies state + removes boxes
 
 This design eliminates the need for:
+
 - Explicit "state modifies hurt boxes" lookup tables
 - Separate "on state change, update geometry" logic
 - Magic linkages between state names and box lists
@@ -467,15 +530,17 @@ Instead: **Move is the single source of truth for both state and geometry change
 **Pattern**: Game properties (frame data, damage, resources, displacement, etc.) may have either exact values or user-positioned relative values.
 
 **DataValue Type**:
+
 ```typescript
 type DataValue = {
-  exact?: number;      // Precise value if user knows it (e.g., startup is 5 frames)
-  relative?: number;   // Positioned within bounds as percentage (0-100)
-  notes?: string;      // Context for how value was determined
-}
+  exact?: number; // Precise value if user knows it (e.g., startup is 5 frames)
+  relative?: number; // Positioned within bounds as percentage (0-100)
+  notes?: string; // Context for how value was determined
+};
 ```
 
 **State Models define the bounds**:
+
 - Games define `StateModel<T>` with bounds for properties that have them
 - Example: `stateModel.damage = { min: 0, max: 100 }` (game-level bounds discovered)
 - Example: `stateModel.ki = { min: 0, max: 200 }` (user learned bounds)
@@ -499,12 +564,14 @@ type DataValue = {
    - Move data unchanged; only interpretation changes
 
 **Applications**:
+
 - `FrameStage.duration` — DataValue for startup/active/recovery frame counts
 - `ResourceEffect.amount` — DataValue (for uncertain resource gains)
 - `PositionalEffect.displacement.x/y` — DataValue (for uncertain knockback distances)
 - Any numeric game property where user may not have precise data
 
 **Inference**: Knowledge completeness (exact vs exploratory) is inferred from DataValue presence:
+
 - All values are `{ exact: ... }` → exact knowledge for this property
 - Any `{ relative: ... }` present → exploratory/measured knowledge
 
@@ -513,6 +580,7 @@ type DataValue = {
 **Concept**: Scaling systems (damage scaling, hitstun scaling, etc.) are game-configurable resources that modify state during combos.
 
 **How it works:**
+
 - Games define scaling resources in the `Resource` category:
   ```typescript
   game.states.Resource: {
@@ -522,7 +590,7 @@ type DataValue = {
       max: 100
     },
     "hitstun-scaling": {
-      name: "Hitstun Scaling", 
+      name: "Hitstun Scaling",
       min: 50,
       max: 100
     }
@@ -531,6 +599,7 @@ type DataValue = {
 - Games without scaling don't define these resources (optional per-game)
 
 **Hitstun as a combo resource:**
+
 - Opening move grants `opponent.Resource.hitstun` (e.g., 5 frames)
 - Each subsequent move costs startup frames: `opponent.Resource.hitstun -= nextMove.startup`
 - If hitstun remaining < 0: combo ends, move whiffs
@@ -539,6 +608,7 @@ type DataValue = {
 - Corner/position effects modify bounds: `hitstun.max *= 1.2 (in corner)`
 
 **Combo feasibility with resources:**
+
 - Combo connects if: `opponent.Resource.hitstun - nextMove.startup >= 0` (AND spacing valid)
 - Scaling automatically tightens windows: less hitstun = fewer moves available
 - Move effects modify resources via RuntimeStatePatch: `target.Resource: { damageScaling: 0.9 }`
@@ -549,69 +619,76 @@ Effects now apply state changes directly through `source`, `target`, and `game` 
 
 ```typescript
 const hadoken: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        hitStop: { exact: 5 },     // Visual pause
-        stun: { exact: 20 },       // Hitstun duration
-        
-        // Direct state patch: target character's resources modified
-        target: {
-          Resource: {
-            damageScaling: 0.9     // Reduce to 90% (equivalent to delta: -10%)
-          }
-        }
-      }
-    }
-  }]
-}
+  phases: [
+    {
+      effects: {
+        onHit: {
+          hitStop: { exact: 5 }, // Visual pause
+          stun: { exact: 20 }, // Hitstun duration
+
+          // Direct state patch: target character's resources modified
+          target: {
+            Resource: {
+              damageScaling: 0.9, // Reduce to 90% (equivalent to delta: -10%)
+            },
+          },
+        },
+      },
+    },
+  ],
+};
 
 const meterBurn: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        hitStop: { exact: 8 },
-        stun: { exact: 25 },
-        
-        // Reset scaling to 100%
-        target: {
-          Resource: {
-            damageScaling: 1.0     // Full scaling (equivalent to exact: 100%)
-          }
-        }
-      }
-    }
-  }]
-}
+  phases: [
+    {
+      effects: {
+        onHit: {
+          hitStop: { exact: 8 },
+          stun: { exact: 25 },
+
+          // Reset scaling to 100%
+          target: {
+            Resource: {
+              damageScaling: 1.0, // Full scaling (equivalent to exact: 100%)
+            },
+          },
+        },
+      },
+    },
+  ],
+};
 
 // More complex example: Multiple state modifications via single patch
 const superMove: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        hitStop: { exact: 12 },
-        stun: { exact: 30 },
-        
-        target: {
-          // All target changes applied atomically
-          Resource: {
-            damageScaling: 1.0,    // Reset scaling
-            health: 80             // Additional damage (stored directly)
+  phases: [
+    {
+      effects: {
+        onHit: {
+          hitStop: { exact: 12 },
+          stun: { exact: 30 },
+
+          target: {
+            // All target changes applied atomically
+            Resource: {
+              damageScaling: 1.0, // Reset scaling
+              health: 80, // Additional damage (stored directly)
+            },
+            Sequence: {
+              hitstun: 30, // Extend hitstun
+            },
+            Attack: {
+              'sf6-counter-hit': true, // Mark as counter hit
+            },
           },
-          Sequence: {
-            hitstun: 30            // Extend hitstun
-          },
-          Attack: {
-            "sf6-counter-hit": true // Mark as counter hit
-          }
-        }
-      }
-    }
-  }]
-}
+        },
+      },
+    },
+  ],
+};
 ```
 
 **Why this unified approach is better:**
+
 - ✅ **Single pattern**: All state modifications use RuntimeStatePatch (source/target/game)
 - ✅ **Type-safe**: TypeScript ensures patches only reference valid state categories
 - ✅ **Composable**: Multiple patches to different state categories in one effect
@@ -619,6 +696,7 @@ const superMove: MoveDocument = {
 - ✅ **No modes needed**: Direct values replace delta/multiply/exact abstractions
 
 **User discovery workflow:**
+
 1. User captures per-hit damage in sequences
 2. TFN infers scaling: `observed damage / base damage = scaling factor`
 3. TFN suggests bounds from empirical data: "Scaling appears to be 25-100%, -10% per hit"
@@ -627,6 +705,7 @@ const superMove: MoveDocument = {
 6. TFN validates future sequences against discovered rules
 
 **Why this design:**
+
 - ✅ **Game-agnostic**: Any game defines any resources it needs
 - ✅ **Deterministic**: Resource state + move effects = predictable outcome
 - ✅ **Unified**: Scaling, hitstun, meter all follow same state modification pattern
@@ -636,6 +715,7 @@ const superMove: MoveDocument = {
 ### Sequence Analysis
 
 Sequences are subject to query-time validation: Can this sequence connect given current game/character/resource state? Feasibility depends on:
+
 - Move startup windows fitting within available hitstun
 - Spacing requirements between moves
 - Resource availability (meter, special states, etc.)
@@ -645,11 +725,13 @@ Sequences are subject to query-time validation: Can this sequence connect given 
 **Core Concept**: Projectiles are independent entities, not move properties.
 
 **Structure**:
+
 - **ProjectileDocument** — Reusable projectile template (similar to MoveDocument, but no `inputFrames`)
 - **ProjectilePhase** — Describes projectile motion, regions, effects, lifetime
 - **ProjectileInstance** — Runtime object during simulation with mutable state and position
 
 **Key Features**:
+
 - Each projectile has initial state values (durability, priority, etc.) defined in `ProjectileDocument.state`
 - These properties are user-defined per game and projectile type
 - Each projectile phase specifies:
@@ -662,6 +744,7 @@ Sequences are subject to query-time validation: Can this sequence connect given 
 - Supports teleporting projectiles (discontinuous phases) and continuous motion
 
 **User-Defined Properties**:
+
 - Each game can define custom projectile property states (durability, priority, level, etc.)
 - Examples:
   - SF6: `durability: 1-4`, `priority: 1-5`
@@ -670,11 +753,13 @@ Sequences are subject to query-time validation: Can this sequence connect given 
 - ProjectileDocument.state contains initial values, copied at spawn time
 
 **Spawning**:
+
 - `MovePhase.projectileKey` references projectile by semanticKey
 - Projectile spawns on first active frame of phase
 - Single move can have multiple phases, spawning different/same projectiles
 
 **Integration with State System**:
+
 - Projectile properties modified via `State.onUpdate` callback (effect-driven transformation)
   - Example: durability decrements when clash detected, stored as runtime state
 - System-level mechanics via `State.onFrameAdvance` (frame-driven)
@@ -682,6 +767,7 @@ Sequences are subject to query-time validation: Can this sequence connect given 
 - Projectile effects apply RuntimeStatePatch to game state like any other move effect
 
 **Collision & Destruction**:
+
 - Projectile destroyed when:
   - Effect applies destruction (via RuntimeStatePatch if needed)
   - `destroyedAfter: true` at phase end (lifetime expiration)
@@ -691,6 +777,7 @@ Sequences are subject to query-time validation: Can this sequence connect given 
 ### Stage Design
 
 Stages have:
+
 - Comparative stage properties (size, elevation, walk speed impact, etc.)
 - Zone definitions for wall/floor/ceiling interactions and positioning reference
 - Stage zones link to universal stage zones for cross-game comparison
@@ -698,11 +785,13 @@ Stages have:
 ### Team & Sequence Tracking
 
 **Teams** group related characters for multi-character games:
+
 - Teams define `characterSemanticKeys` in order (e.g., Ryu + Chun-Li)
 - Each team has `semanticKey` (computed from game + ordered character keys)
 - Used in team-vs-team games (Marvel vs Capcom, King of Fighters, etc.)
 
 **Sequences** document repeatable action chains:
+
 - **Universal sequences** (game-level): Applicable to any character (common combos, setups)
 - **Character sequences** (scoped to character): Character-specific combos or pressure strings
 - **Team sequences** (scoped to team): Team-specific mixups or synergy routes
@@ -710,6 +799,7 @@ Stages have:
 - Detailed field specifications: See [`models/sequence.ts`](/models/sequence.ts)
 
 **Matchups** analyze character-versus-character dynamics:
+
 - `MatchupDocument` defines both sides with character and game context
 - **MatchupScenario** (scenario tree): Specific position/state with defined opponent action
   - Tracks opening (player position, state, resources)
@@ -720,6 +810,7 @@ Stages have:
 - Example tree: Ryu at mid-range vs Hadoken → test jab combos → test throw vs tech attempts
 
 **Routing and anti-strategy**:
+
 - Sequences document optimal damage/positioning goals
 - Matchup scenarios document defensive and offensive option coverage
 - Community can discover whether a sequence works against specific opponent options
@@ -741,6 +832,7 @@ Stages have:
 **Computation**: `semanticKey = hash(identity_fields_only)` where identity fields are normalized values that define "is this the same entity?"
 
 **Semantics per entity type:**
+
 - **Game**: `normalizedGameName + versionFamily`
 - **Character**: `gameSemanticKey + normalizedCharacterName`
 - **Move**: `gameSemanticKey + (characterSemanticKey or empty) + normalizedInputFrames + normalizedPreconditions`
@@ -751,6 +843,7 @@ Stages have:
 - **Matchup**: `gameSemanticKey + ordered character pair semanticKeys`
 
 **Rules:**
+
 - Exclude metadata from semantic key (timestamps, ownerId, notes, etc.)
 - Include only fields that define entity identity
 - `semanticKey` is immutable per entity (changing identity = new entity)
@@ -763,10 +856,12 @@ Stages have:
 **Computation**: `semanticFingerprint = hash(same_fields_as_semanticKey + all_gameplay_values)`
 
 **When computed:**
+
 - At publish time (required) on the exact payload
 - Optional during local edit for UI preview
 
 **Use cases:**
+
 - Deduplicating identical variants (exact match = same fingerprint)
 - Confidence calculation (% of published versions matching top fingerprint)
 - Conflict detection (multiple distinct fingerprints = conflicting data)
@@ -800,11 +895,13 @@ Stages have:
    - Different players testing the same scenario reach the same conclusions about outcome (-1/0/+1)
 
 **Critical assumption for implementation:**
+
 - When querying a move by `moveSemanticKey`, **always use the same game/character/version context**
 - If game mechanics change (e.g., a patch), the move's gameplay values may differ, but semanticKey remains stable
 - Scenario contexts must explicitly store `gameVersion` to maintain determinism across patches
 
 **Why not include gameplay values in semanticKey?**
+
 - semanticKey identifies "what was tested", not "what the result was"
 - Multiple test results can be published for the same move (each documented via DataValue: exact vs relative)
 - Determinism comes from **stable identity + resolved context**, not from freezing gameplay values
@@ -835,6 +932,7 @@ By defining attack classifications in the `Attack` state category, games can enc
 ### Inheritance Model for Characters
 
 Rather than duplicating game-level moves in every character:
+
 - Games define universal movesets
 - Characters explicitly list field overrides
 - Minimal character-specific data reduces redundancy
@@ -847,35 +945,41 @@ Rather than duplicating game-level moves in every character:
 **Concept**: Frame advantage describes the recovery difference between attacker and opponent after an attack connects.
 
 **How it works:**
+
 - **Frame Advantage** = `opponent.stun - attacker.recovery`
 - Positive frame advantage: attacker can act before opponent
 - Negative frame advantage: opponent can act first (or neutral if zero)
 - Example: If jab has 5-frame hitstun and 4-frame recovery, frame advantage is +1
 
 **Meaty Timing** (for games that support it):
+
 - Attack connects on a frame **after** the first active frame, but still causes the same effect (hitstun, damage, etc.)
 - Key insight: Opponent enters hitstun at a later time, but hitstun duration is the same
 - Result: Attacker recovers earlier relative to when that same attack connects on its first active frame
 
 **Model structure:**
+
 ```typescript
 const jab: MoveDocument = {
-  phases: [{
-    startup: { duration: { exact: 4 } },
-    active: { duration: { exact: 5 } },
-    recovery: { duration: { exact: 4 } },
-    effects: {
-      onHit: {
-        opponent: {
-          stun: { exact: 5, unit: 'frames' }
-        }
+  phases: [
+    {
+      startup: { duration: { exact: 4 } },
+      active: { duration: { exact: 5 } },
+      recovery: { duration: { exact: 4 } },
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 5, unit: 'frames' },
+          },
+        },
       },
-    }
-  }]
-}
+    },
+  ],
+};
 ```
 
 **Why this matters:**
+
 - Players who optimize timing gain measurable advantage
 - Community guides can document which moves allow meaty setups
 - Combo feasibility analysis must account for both frame 1 and meaty variants
@@ -887,43 +991,49 @@ const jab: MoveDocument = {
 **Concept**: Each attack has unique stun duration for opponent, determined by the attack's outcome type.
 
 **How it works:**
+
 - Hitstun: frames opponent cannot act after being hit
 - Blockstun: frames opponent cannot act after blocking (usually shorter than hitstun)
 - Applied via `stun` field in MoveOutcomeEffect (works for both onHit and onBlock)
 
 **Example:**
+
 ```typescript
 const jab: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        stun: { exact: 5, unit: 'frames' },  // 5 frames hitstun
-        target: {
-          comboMechanics: {
-            hitstun: 5
-          }
-        }
+  phases: [
+    {
+      effects: {
+        onHit: {
+          stun: { exact: 5, unit: 'frames' }, // 5 frames hitstun
+          target: {
+            comboMechanics: {
+              hitstun: 5,
+            },
+          },
+        },
+        onBlock: {
+          stun: { exact: 2, unit: 'frames' }, // 2 frames blockstun
+          target: {
+            comboMechanics: {
+              blockstun: 2,
+            },
+          },
+        },
       },
-      onBlock: {
-        stun: { exact: 2, unit: 'frames' },  // 2 frames blockstun
-        target: {
-          comboMechanics: {
-            blockstun: 2
-          }
-        }
-      }
-    }
-  }]
-}
+    },
+  ],
+};
 ```
 
 **Combo timing and frame advantage:**
+
 - Combo connects if: `nextMove.startup <= hitstun + (frameAdvantage.base || 0)` (AND spacing condition met)
 - Frame advantage determines when next move can combo: `effective_startup = nextMove.startup - frameAdvantage`
 - Example: Jab's 5-frame hitstun with +1 frame advantage allows combos from any move with 6-frame startup or less
 - Meaty timing increases available startup window: `effective_startup = nextMove.startup - (frameAdvantage.base + meatyAdvantageGain)`
 
 **DataValue.unit defaults to frames** when undefined, but can be overridden:
+
 ```typescript
 stun: { exact: 83, unit: 'milliseconds' }  // Explicitly not frames
 stun: { exact: 5 }                          // Implicitly frames
@@ -936,28 +1046,33 @@ stun: { exact: 5 }                          // Implicitly frames
 **Concept**: Brief visual pause when move connects, affecting perceived "weight" and cancel window.
 
 **How it works:**
+
 - `MovePhase.effects.onHit.hitStop` — Applies when move hits
 - `MovePhase.effects.onBlock.hitStop` — Applies when move is blocked (often different)
 
 **Example:**
+
 ```typescript
 const hadoken: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        hitStop: { exact: 12, unit: 'frames' },  // Heavier feel on hit
-        opponent: { stun: { exact: 20 } }
+  phases: [
+    {
+      effects: {
+        onHit: {
+          hitStop: { exact: 12, unit: 'frames' }, // Heavier feel on hit
+          opponent: { stun: { exact: 20 } },
+        },
+        onBlock: {
+          hitStop: { exact: 8, unit: 'frames' }, // Less heavy on block
+          opponent: { stun: { exact: 12 } },
+        },
       },
-      onBlock: {
-        hitStop: { exact: 8, unit: 'frames' },   // Less heavy on block
-        opponent: { stun: { exact: 12 } }
-      }
-    }
-  }]
-}
+    },
+  ],
+};
 ```
 
 **Impact:**
+
 - Longer hit stop = more time for player to input cancel commands
 - Cancel window is determined by hit stop duration (CFN: "timing is during hit stop")
 - Heavier attacks typically have longer hit stop (visual feedback of power)
@@ -969,36 +1084,43 @@ const hadoken: MoveDocument = {
 **Concept**: Cancels have two independent constraints: timing window and state preconditions.
 
 **How it works:**
+
 - Cancel **timing**: `PhaseCancelRule.startFrame/endFrame` in `MoveOutcomeEffect.cancels` (WHEN cancel is available)
 - Cancel **restrictions**: Determined by target move's `preconditions` (IF move can be used)
 - No duplication: Cancels are now nested within each outcome effect (onHit cancels ≠ onBlock cancels)
 
 **Example: Ryu Jab → Hadoken cancel**
+
 ```typescript
 const jab: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        cancels: [{
-          startFrame: 2,               // Cancel available frames 2-5
-          endFrame: 5,
-          allowedMoveKeys: ["hadoken", "shoryuken"]
-        }]
-      }
-    }
-  }]
-}
+  phases: [
+    {
+      effects: {
+        onHit: {
+          cancels: [
+            {
+              startFrame: 2, // Cancel available frames 2-5
+              endFrame: 5,
+              allowedMoveKeys: ['hadoken', 'shoryuken'],
+            },
+          ],
+        },
+      },
+    },
+  ],
+};
 
 const hadoken: MoveDocument = {
   preconditions: {
     // No state restrictions—can cancel into from any state
-  }
-}
+  },
+};
 
 // Result: Cancel available frames 2-5; no state gate
 ```
 
 **Per-game variability (CFN documents):**
+
 - Street Fighter II: Universal 4-frame grace period (cancel timer)
 - Super SFII: Per-character cancel timers (some 4F, some 5F)
 - SF3: Complex per-version differences
@@ -1013,36 +1135,43 @@ Users document via `MoveOutcomeEffect.cancels` (PhaseCancelRule[]) + target move
 **Concept**: Users may measure durations with a watch (seconds) or know frame counts. DataValue supports both.
 
 **How it works:**
+
 - `DataValue.unit` clarifies measurement unit (defaults to frames if undefined)
 - `GameDocument.frameRate` enables conversion: `frames = seconds * frameRate`
 - UI layer handles display and conversion
 
 **Example: Street Fighter at 60fps**
+
 ```typescript
 const game: GameDocument = {
-  frameRate: 60,  // 60 frames per second
+  frameRate: 60, // 60 frames per second
   // ...
-}
+};
 
 // User measures with stopwatch: "Jab stun is about 83 milliseconds"
 const jab: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        opponent: {
-          stun: { exact: 83, unit: 'milliseconds' }  // Explicit unit
-        }
-      }
-    }
-  }]
-}
+  phases: [
+    {
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 83, unit: 'milliseconds' }, // Explicit unit
+          },
+        },
+      },
+    },
+  ],
+};
 
 // UI converts to frames: 83ms ÷ 1000 * 60fps = ~5 frames
 // Alternative: User enters frames directly
-stun: { exact: 5 }  // Implicitly frames; UI shows as "5 frames" or "83.3ms" depending on context
+stun: {
+  exact: 5;
+} // Implicitly frames; UI shows as "5 frames" or "83.3ms" depending on context
 ```
 
 **Progressive documentation helper:**
+
 - Frame-only knowledge: `{ exact: 5 }` is clear
 - Second-based measurement: `{ exact: 0.083, unit: 'seconds' }` captures user intent
 - No data loss; unit clarifies interpretation
@@ -1054,33 +1183,37 @@ stun: { exact: 5 }  // Implicitly frames; UI shows as "5 frames" or "83.3ms" dep
 **Concept**: Opponent displacement on hit/block affects combo feasibility. Located in positional effects.
 
 **How it works:**
+
 - `MovePhase.effects.onHit.opponent.positional.displacement` — Opponent pushed back on hit
 - `MovePhase.effects.onBlock.opponent.positional.displacement` — Opponent pushed back on block (often less)
 
 **Example:**
+
 ```typescript
 const jab: MoveDocument = {
-  phases: [{
-    effects: {
-      onHit: {
-        opponent: {
-          stun: { exact: 5, unit: 'frames' },
-          positional: {
-            displacesCharacter: true,
-            displacement: { x: { exact: 20 } }  // Pushed back 20 units
-          }
-        }
+  phases: [
+    {
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 5, unit: 'frames' },
+            positional: {
+              displacesCharacter: true,
+              displacement: { x: { exact: 20 } }, // Pushed back 20 units
+            },
+          },
+        },
+        onBlock: {
+          opponent: {
+            positional: {
+              displacement: { x: { exact: 10 } }, // Less pushback on block
+            },
+          },
+        },
       },
-      onBlock: {
-        opponent: {
-          positional: {
-            displacement: { x: { exact: 10 } }  // Less pushback on block
-          }
-        }
-      }
-    }
-  }]
-}
+    },
+  ],
+};
 ```
 
 **Combo feasibility (timing and spacing):**
@@ -1101,26 +1234,28 @@ Both conditions must be satisfied for a combo to connect:
    - Example: Jab pushes opponent 20 units; next move needs 20+ range to connect
 
 **Query-time validation** (both must pass AND):
+
 ```typescript
 canCombo(move1, move2, currentState) {
   // Apply move1's effects to current state (including hitstun scaling)
   const stateAfterMove1 = applyEffects(currentState, move1.effects);
-  
+
   // Check if move2 can connect with scaled hitstun
   const currentHitstun = stateAfterMove1.opponent.resources.hitstun;
   const timingValid = move2.startup <= (currentHitstun + move2.frameAdvantage);
-  
+
   // Check if spacing condition is met
   const spacingValid = (pos1 + move1.pushback + move2.range) >= (pos2 + move2.spacing);
-  
+
   // Check for forced knockdown state (if using hit counter system)
   const forcedKnockdown = stateAfterMove1.opponent.resources.hitCount >= hitCountThreshold;
-  
+
   return timingValid && spacingValid && !forcedKnockdown;
 }
 ```
 
 **Hitstun scaling mechanics (game-specific):**
+
 - **Percentage-based scaling**: Each hit reduces hitstun by % (e.g., -10% per hit)
   - Starting hitstun depletes as combo progresses
   - Eventually hitstun drops to minimum bound (e.g., 1 frame), forcing combo end
@@ -1139,6 +1274,7 @@ canCombo(move1, move2, currentState) {
 **Concept**: Moves can hit multiple times via multiple phases or multiple hitboxes in single phase.
 
 **Approach A: Sequential hits (multiple phases)**
+
 ```typescript
 const multiHit: MoveDocument = {
   phases: [
@@ -1149,10 +1285,10 @@ const multiHit: MoveDocument = {
         onHit: {
           opponent: {
             stun: { exact: 8 },
-            positional: { displacement: { x: { exact: 15 } } }
-          }
-        }
-      }
+            positional: { displacement: { x: { exact: 15 } } },
+          },
+        },
+      },
     },
     {
       label: 'Second hit',
@@ -1161,38 +1297,42 @@ const multiHit: MoveDocument = {
         onHit: {
           opponent: {
             stun: { exact: 8 },
-            positional: { displacement: { x: { exact: 15 } } }
-          }
-        }
-      }
-    }
-  ]
-}
+            positional: { displacement: { x: { exact: 15 } } },
+          },
+        },
+      },
+    },
+  ],
+};
 ```
 
 **Approach B: Simultaneous/overlapping hits (multiple hitboxes in same active phase)**
+
 ```typescript
 const multiHit: MoveDocument = {
-  phases: [{
-    active: {
-      duration: { exact: 10 },
-      hitBoxes: [
-        { x: -10, y: 30, width: 20, height: 30 },  // Left side hitbox (active entire 10 frames)
-        { x: 10, y: 30, width: 20, height: 30 }    // Right side hitbox (active entire 10 frames)
-      ]
+  phases: [
+    {
+      active: {
+        duration: { exact: 10 },
+        hitBoxes: [
+          { x: -10, y: 30, width: 20, height: 30 }, // Left side hitbox (active entire 10 frames)
+          { x: 10, y: 30, width: 20, height: 30 }, // Right side hitbox (active entire 10 frames)
+        ],
+      },
+      effects: {
+        onHit: {
+          opponent: {
+            stun: { exact: 12 }, // Total stun for entire move
+          },
+        },
+      },
     },
-    effects: {
-      onHit: {
-        opponent: {
-          stun: { exact: 12 }  // Total stun for entire move
-        }
-      }
-    }
-  }]
-}
+  ],
+};
 ```
 
 **When to use each approach:**
+
 - **Approach A (phases)**: Hits occur at different times during move (first hit frames 1-5, second hit frames 6-10)
   - Each phase has its own timing, effects, and positioning
   - Naturally represents per-hit variation
@@ -1201,6 +1341,7 @@ const multiHit: MoveDocument = {
   - Single active phase with multiple hitboxes covering the move's geometry
 
 **Hitstun scaling:**
+
 - Multi-hit combos apply per-game scaling rules (handled at query time, not in model)
 - Each hit contributes to combo counter (prevents infinites via damage scaling)
 - Approach A naturally represents sequential hits with individual hitstun/scaling per hit
@@ -1213,6 +1354,7 @@ const multiHit: MoveDocument = {
 **Concept**: Detect when documented moves or sequences become outdated due to game patches.
 
 **How it works:**
+
 - Each entity metadata stores `validatedVersion: string` (last game version it was tested/verified against)
 - Games have current `version: string` (e.g., "6.0", "1.5.2")
 - **Out of date**: Compare `meta.validatedVersion` against `game.version`
@@ -1221,23 +1363,25 @@ const multiHit: MoveDocument = {
 - UI flags entities where `meta.validatedVersion !== game.version`
 
 **Why this matters:**
+
 - Communities can see which guides are tested on current patch
 - Players avoid outdated frame data or move properties
 - Guides accumulate confidence as multiple players validate on same version
 - When game patches, community can quickly identify what needs re-testing
 
 **Example:**
+
 ```typescript
 // Ryu jab documented and tested on SF6 v1.0
 const jab: MoveDocument = {
-  meta: { validatedVersion: "1.0" },
+  meta: { validatedVersion: '1.0' },
   // frame data, effects, etc.
-}
+};
 
 // Game is now at v1.5
 const game: GameDocument = {
-  version: "1.5"
-}
+  version: '1.5',
+};
 
 // Comparison: if validatedVersion !== game.version, flag as "tested on older version"
 ```

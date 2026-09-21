@@ -26,6 +26,121 @@ Historical implementation detail is intentionally kept out of this roadmap so ro
 
 ---
 
+## Next Implementation Slice (2026-09-21)
+
+The next work is usability-focused and should be implemented in this order:
+
+1. **Move Table with filterable input data and sortable fields**
+2. **TFN Home Page with placeholders for todos and helper tasks**
+3. **Guide Todo entity and management page**
+4. **TFN helper tasks and progress tracking**
+5. **Generic creation flow for entities**
+
+This slice changes how users approach the existing domain model. It does not replace the local-first hierarchy or introduce a general-purpose project-management engine.
+
+### Feature A: Move Table and Move Page Data View
+
+**Scope**: Make the Moves page useful for research by presenting move data in the table format fighting game players already expect from frame-data references.
+
+The existing expansion-panel list exposes mostly move names and hides the information users need to compare, triage, and complete move data. Adding a move must immediately produce a row in the table; the page must not retain expansion panels as its primary move listing.
+
+**Deliverables**:
+
+- Replace the Moves page expansion-panel list with a responsive, sortable data table.
+- Render effective moves for the selected universal/character scope, including inherited moves and character overrides.
+- Show move identity and input data in the first columns, followed by the most useful frame-data fields: startup, active, recovery, total, on-hit, on-block, and counter-hit values where available.
+- Distinguish unknown, relative/estimated, exact, and inherited values without treating an empty field as numeric zero.
+- Filter by move name, input, scope/character, and data completeness.
+- Sort by move name, input, numeric fields, and completeness where the column supports it.
+- Keep row actions compact and direct: open move details, add a Todo, and select the move for comparison.
+- Keep advanced notes, metadata, deletion, inheritance actions, and editing in the move detail route rather than expanding rows in the table.
+- Keep the existing Move Comparison route as a secondary analysis view launched from selected table rows.
+- Make newly created moves appear in the table without requiring a page reload.
+
+**Validation**: Adding a move creates a visible table row; filtering and sorting remain stable across scopes; inherited moves resolve consistently; unknown values are not confused with numeric zero; row actions navigate to the correct move; the table remains usable on narrow screens through horizontal scrolling or intentional column prioritization.
+
+### Feature B: TFN Home Page
+
+**Scope**: Make the active Guide open into a research workspace rather than a peer list of tools.
+
+**Deliverables**:
+
+- Add an Overview/Home route as the default route for an active Guide.
+- Show the active game identity and concise counts for existing Guide collections.
+- Add persistent placeholder sections for open Guide Todos and available helper tasks.
+- Surface recent Guide activity using existing entity metadata timestamps.
+- Provide next actions into existing editors, including adding a Todo, opening the Move Table, and starting a helper task.
+- Keep Load, Save, and Close available in the Guide shell without making them the primary workspace content.
+
+**Boundary**: Home may render placeholder task cards before helper-task calculations exist. It must not invent progress or store task definitions in `.tfn`.
+
+**Validation**: Opening an active Guide lands on Home; the page remains useful for an empty or sparse Guide; Todo and helper-task placeholders are visible without blocking existing routes.
+
+### Feature C: Guide Todo Entity and Management Page
+
+**Scope**: Let users capture personal follow-up work in the Guide itself.
+
+**Guide data**: Add a persisted Todo collection to the Guide. Todos are user-authored Guide content and travel with the `.tfn` file.
+
+**Deliverables**:
+
+- Create a Todo document with stable ID, text, open/done status, created/completed timestamps, and optional linked `EntityRef[]`.
+- Add create, edit, complete/reopen, and delete mutations with unsaved tracking.
+- Add a Todo management route with open/done views and links back to referenced entities.
+- Provide quick-add Todo entry from Home and entity detail surfaces.
+- Permit unlinked Todos; entity-originated quick-add pre-links the current entity.
+- Keep Todo content separate from entity-attached discussion notes.
+
+**Validation**: Todo changes survive `.tfn` save/load, preserve links and completion state, and mark the Guide unsaved until saved.
+
+### Feature D: TFN Helper Tasks and Progress Tracking
+
+**Scope**: Add application-defined domain guidance that tells users which Guide data to add next.
+
+Helper tasks are TFN application code, not Guide entities and not `.tfn` data. A helper task reads the active `LocalGuide` and returns a standard progress object consumed by shared progress UI.
+
+```ts
+interface ProgressResult {
+  completed: number;
+  total?: number;
+  label: string;
+  state: 'not-started' | 'in-progress' | 'complete' | 'blocked';
+}
+
+interface HelperTaskStep {
+  key: string;
+  title: string;
+  getProgress: (guide: LocalGuide) => ProgressResult;
+}
+```
+
+**Deliverables**:
+
+- Define helper tasks and multi-step helper-task steps in TFN application code.
+- Keep progress callbacks typed against `LocalGuide`; do not use serialized callbacks or configurable magic-string progress kinds.
+- Add a character-roster task: enter expected roster size in the Guide, add Characters, then review the roster.
+- Return progress objects for progress bars, labels, blocked states, and empty-data guidance.
+- Direct users to the Guide fields or editor routes that unblock the next step.
+- Keep helper-task UI separate from persisted Guide Todos.
+
+**Validation**: Changing Guide data immediately changes helper-task progress; no helper-task definition or callback is written to `.tfn`; missing prerequisites produce a useful blocked/next-action state.
+
+### Feature E: Generic Creation Flow
+
+**Scope**: Establish a consistent first-step creation experience after the Move Table, Home, Todo, and helper-task foundations.
+
+**Deliverables**:
+
+- Add one consistent Create entry point from the Guide shell/Home.
+- Let users choose an entity type and required scope before opening the specialized editor.
+- Reuse existing entity-specific validation and facade mutations.
+- Navigate to the new entity or its detail/editor surface after successful creation.
+- Keep advanced configuration in existing specialized editors.
+
+**Validation**: Creating a Character, Move, Stage, Sequence, Team, or Matchup follows the same entry pattern while preserving each entity's required context and validation rules.
+
+**Dependencies**: Feature A can use existing Move data and should land first. Feature B follows the Move Table and provides the workspace shell for Features C and D. Feature C is required before Todo-aware Home content is complete. Feature D reads Guide data but must not add helper-task schema. Feature E follows the shared surfaces and should feed newly created entities directly into the Move Table and other data views.
+
 ## Priority 1: Local-First Core + Hierarchy
 
 These phases establish the offline foundation. All features are local-only; no network/community features.

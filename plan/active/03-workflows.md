@@ -2,11 +2,38 @@
 
 Detailed workflows for move inheritance, difficulty computation, file sync, and community convergence.
 
+## Guide Todo Workflow
+
+Guide Todos are persisted personal follow-up items, not application helper-task definitions.
+
+1. User adds a Todo from Home, the Todo page, or an entity detail surface.
+2. The Todo may remain unlinked or receive one or more `EntityRef` links; entity-originated quick-add pre-links the current entity.
+3. User edits the text or links, marks the Todo done, or reopens it later.
+4. Todo mutations mark the Guide unsaved and are included in the next `.tfn` save.
+5. Loading the `.tfn` restores open/done status, links, and timestamps.
+
+Entity notes remain discussion/context attached to an entity. Todos remain actionable follow-up work and can be reviewed from the workspace Home.
+
+## Application Helper Task Workflow
+
+Helper tasks are domain-specific TFN application code. They do not live in `.tfn` data and do not store research results. Each helper task step receives the active `LocalGuide` and returns a progress object for shared UI.
+
+The first helper task targets character-roster research:
+
+1. The user enters an expected roster size into Guide-owned research data.
+2. The helper task reads that value and the current character collection.
+3. The user adds Character entities through the normal Guide editors.
+4. Progress updates from the Guide data without copying counts into the task.
+5. A final review step lets the user decide whether the roster is complete, even if the estimate was wrong.
+
+Missing prerequisites must produce a blocked or actionable result rather than a fabricated percentage. Helper-task definitions may direct the user to the Guide field or editor route that supplies the missing data.
+
 ## Promote character move to inherited workflow
 
 When a user created a move at the character level and later realizes it is actually a universal game move, they must explicitly link it via a "promote to inherited" flow. This cannot be automated because the app cannot safely distinguish intentional overrides from values entered before the game-level move existed.
 
 **Flow:**
+
 1. User selects a character move and chooses "Link to universal move."
 2. App presents a side-by-side field comparison: character move values vs. the selected game-level move values.
 3. For each differing field, user chooses:
@@ -22,6 +49,7 @@ When a user created a move at the character level and later realizes it is actua
 Stages use the same inheritance behavior as moves: game-level universal stage zones define defaults, and stage-level zones can override specific fields.
 
 **Flow:**
+
 1. User selects a stage zone and chooses "Link to universal stage zone."
 2. App presents a side-by-side field comparison: local stage zone values vs. selected game-level zone values.
 3. For each differing field, user chooses:
@@ -60,6 +88,7 @@ Users can selectively publish entities (games, characters, moves, combos, teams,
    - UI shows a success summary: "Published X games, Y characters, Z moves."
 
 **Timestamp logic:**
+
 - `updatedAt`: Updated on any local entity modification.
 - `lastPublishedAt`: Set/updated only when entity is explicitly published.
 - **Out-of-date detection**: If `updatedAt > lastPublishedAt` and entity has a `communityId`, show "Local changes not yet published" in the UI.
@@ -88,6 +117,7 @@ Users can share guides, combos, matchups, or scenarios with friends and teammate
    - Enables community to discover independent confirmations of data (multiple people tested same thing).
 
 **Why this matters:**
+
 - Local FGC communities can collaborate without publishing to global database.
 - Teammates share routing and theory without public visibility.
 - Solo research can be peer-reviewed by friends before community publishing.
@@ -100,6 +130,7 @@ Users can share guides, combos, matchups, or scenarios with friends and teammate
 Users can create specific scenarios and use TFN to drive opponent actions deterministically, testing and tracking how their strategies respond.
 
 **Scenario creation:**
+
 1. User selects matchup (e.g., Ryu vs Zangief) and game state (round 1, mid-stage, neutral resources).
 2. User specifies opening position and state (player at mid-range, standing, no meter).
 3. User selects opponent action via `opponentOptionKey` (a move or sequence semanticKey):
@@ -115,6 +146,7 @@ Users can create specific scenarios and use TFN to drive opponent actions determ
    - Child scenarios for follow-ups (e.g., if opponent does secondary action after the first)
 
 **Testing with Web Controller API:**
+
 1. User opens scenario and clicks "Test this scenario" or "Replay opponent action."
 2. App uses Web Controller API to drive opponent character:
    - Inputs opponent move/sequence from semanticKey definition
@@ -129,6 +161,7 @@ Users can create specific scenarios and use TFN to drive opponent actions determ
    - `outcomeMatches`: "Tested 5 times, outcome matched expected 4 times, failed 1 time"
 
 **Scenario tree exploration:**
+
 1. Scenarios form a tree: parent scenario → opponent does action → user responds → child scenarios branch from outcome.
 2. Example tree structure:
    ```
@@ -142,6 +175,7 @@ Users can create specific scenarios and use TFN to drive opponent actions determ
 5. Shared scenarios retain semanticKey references, so opponent moves update automatically if community data changes.
 
 **Why this matters:**
+
 - Deterministic opponent actions (via semanticKey) enable reproducible testing.
 - Users discover option coverage and gaps ("What beats this move in this position?").
 - Web Controller API turns TFN into a testing partner, not just a knowledge repository.
@@ -170,6 +204,7 @@ Users can create specific scenarios and use TFN to drive opponent actions determ
 Users capture per-hit damage in sequences, and TFN infers scaling patterns to help discover game configuration.
 
 **Empirical data collection:**
+
 1. User tests sequence in training mode and records damage of each hit:
    - "Ryu Jab → Hadoken → Kick combo"
    - Hit 1: Jab base damage 40 → observed 40 damage
@@ -182,6 +217,7 @@ Users capture per-hit damage in sequences, and TFN infers scaling patterns to he
    - Hit 3: `56 / 80 = 70%` (scaling reduced 20% from hit 2)
 
 **Pattern discovery:**
+
 1. TFN analyzes inferred scaling across multiple sequences:
    - "Damage scaling drops approximately 10% per hit"
    - "Lowest observed damage: 35 (70% of base 50)"
@@ -193,6 +229,7 @@ Users capture per-hit damage in sequences, and TFN infers scaling patterns to he
 3. User confirms/adjusts hypotheses based on testing
 
 **Game configuration:**
+
 1. User applies discovered bounds to game settings:
    - `game.states.resources.damage-scaling: { min: 25, max: 100, initialValue: 100 }`
 2. User documents scaling modifiers on moves:
@@ -202,6 +239,7 @@ Users capture per-hit damage in sequences, and TFN infers scaling patterns to he
    - New sequence at 5 hits: expected final scaling ~50%, move says 55% → note discrepancy
 
 **Why this matters:**
+
 - **Discovery-driven**: Users don't guess scaling formula; TFN helps them find it
 - **Game-agnostic**: Works for any game with or without scaling
 - **Data-backed**: Inferred from actual gameplay, not theory
@@ -215,6 +253,7 @@ Users capture per-hit damage in sequences, and TFN infers scaling patterns to he
 TFN helps users fill in missing move data and test sequences/scenarios using phone-optimized quick-entry interface, with real-time sync to desktop.
 
 **Discovery and guidance:**
+
 1. User opens guide on desktop; TFN identifies gaps:
    - Moves missing frame data (startup, active, recovery)
    - Moves missing hitstun/blockstun or frame advantage
@@ -228,6 +267,7 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
 3. User can click "Collect data" to start guided mobile session.
 
 **Mobile-optimized entry UI:**
+
 1. App opens on phone in **quick-entry mode**:
    - Large touch targets (buttons, sliders, number pads)
    - Minimal keyboard/mouse interaction
@@ -247,6 +287,7 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
    - Frames opponent action if scenario testing
 
 **Real-time sync (desktop ↔ phone):**
+
 1. Desktop and phone maintain shared session (not Firestore):
    - Peer-to-peer sync via WebSocket, local network, or shared document store
    - When user enters data on phone, desktop updates immediately
@@ -263,6 +304,7 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
    - No Firestore dependency (internal app sync only)
 
 **Workflow progression:**
+
 1. Desktop: User selects moves/sequences/scenarios to fill gaps
 2. Mobile: User collects data through guided prompts
 3. Desktop: Live updates appear as user enters phone data
@@ -270,6 +312,7 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
 5. Option to immediately publish new data to community or keep private
 
 **Why this matters:**
+
 - **Lab partner paradigm**: Phone in one hand, controller in other; quick data entry without desktop
 - **Commute documentation**: Test combos in training mode, record results on phone during break
 - **Community momentum**: Gap identification accelerates data collection (don't guess what's missing)
@@ -286,13 +329,11 @@ TFN helps users fill in missing move data and test sequences/scenarios using pho
   - Spacing information (hitbox position, range) is defined
   - Player and opponent positions in scenario are specified
   - Result: Combo can be verified or refuted deterministically (timing and spacing both check)
-  
 - **Exploratory simulation** occurs when data is incomplete:
   - Frame data uses relative positioning (DataValue.relative) instead of exact
   - Stun values are missing or approximate
   - Spacing is estimated from move descriptions
   - Result: Suggestions surface as "likely works if..." with reasoning shown to users
-  
 - **Known state values enable determinism**: If a game's state rules (invulnerability windows, hitstun modifiers, frame advantage rules) are documented, simulations using those states produce reproducible results.
 - Suggestions and move breakdowns clearly surface data completeness: "Verified with exact frame data" vs "Estimated from relative positioning."
 
