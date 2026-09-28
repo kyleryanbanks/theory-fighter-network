@@ -1,0 +1,25 @@
+:host { display: block; }
+.todo-page { max-width: 900px; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 3.5rem) 4rem; color: #e7f1eb; }
+.page-header { display: flex; justify-content: space-between; align-items: end; gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #315441; }
+.eyebrow { margin: 0 0 .4rem; color: #e7b84b; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+h1 { margin: 0 0 .5rem; color: #f7fbf8; font-size: clamp(2.5rem, 7vw, 5.5rem); line-height: .9; letter-spacing: -.05em; }
+.subline { margin: 0; color: #9db3a4; }
+.count { display: grid; justify-items: end; color: #9db3a4; text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
+.count strong { color: #e7b84b; font-size: 2.4rem; line-height: 1; letter-spacing: 0; }
+.panel { border: 1px solid #315441; border-radius: 6px; background: #142b21; }
+.composer { margin: 1.25rem 0; padding: 1rem; }
+.todo-list { display: grid; gap: .6rem; }
+.todo-row { display: grid; grid-template-columns: 2rem 1fr auto; gap: .75rem; align-items: start; padding: 1rem; }
+.check-button, .delete-button { border: 0; background: transparent; color: #e7b84b; cursor: pointer; font-size: 1.5rem; line-height: 1; }
+.delete-button { color: #91a89a; }
+.todo-content h2 { margin: 0 0 .35rem; color: #f5faf6; font-size: 1rem; }
+.todo-content p { margin: 0; color: #91a89a; font-size: .78rem; }
+.links { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+.links a { color: #e7b84b; font-size: .78rem; text-decoration: none; }
+.completed-section { margin-top: 2rem; color: #9db3a4; }
+summary { cursor: pointer; padding: .5rem 0; }
+.completed { opacity: .65; }
+.checked { color: #7ec99b; }
+.empty { display: grid; gap: .3rem; padding: 2rem; color: #9db3a4; }
+.empty strong { color: #e7f1eb; }
+@media (max-width: 620px) { .page-header { align-items: start; } .count { justify-items: start; } }

@@ -114,8 +114,8 @@ export const LocalGuideFacadeStore = signalStore(
       operation: (input: CreateGuideInput) => of(buildInitialGuide(input)),
       onSuccess: (guide) => {
         patchState(store, { value: guide });
-        store.todoStore.reset();
-        store.researchStore.reset();
+        store.todoStore.reset(undefined);
+        store.researchStore.reset(undefined);
       },
     }),
 
@@ -3032,8 +3032,8 @@ export const LocalGuideFacadeStore = signalStore(
           })(),
         ),
       onSuccess: () => {
-        store.todoStore.markClean();
-        store.researchStore.markClean();
+        store.todoStore.markClean(undefined);
+        store.researchStore.markClean(undefined);
       },
     }),
 
@@ -3433,8 +3433,8 @@ export const LocalGuideFacadeStore = signalStore(
      */
     clearActiveGuide(): void {
       patchState(store, { value: undefined });
-      store.todoStore.reset();
-      store.researchStore.reset();
+      store.todoStore.reset(undefined);
+      store.researchStore.reset(undefined);
     },
   })),
   // Computed helpers keep feature components declarative and thin.

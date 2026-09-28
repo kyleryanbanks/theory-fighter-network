@@ -24,6 +24,8 @@ const MODE_TOGGLE_LABEL: Record<GuideNavMode, string> = {
 };
 
 const NAV_ITEMS: GuideNavItem[] = [
+  { path: 'home', label: 'Home', icon: '⌂' },
+  { path: 'todos', label: 'Todos', icon: '☑' },
   { path: 'game', label: 'Game', icon: '🎮' },
   { path: 'stages', label: 'Stages', icon: '🗺️' },
   { path: 'characters', label: 'Characters', icon: '🥋' },
@@ -32,6 +34,8 @@ const NAV_ITEMS: GuideNavItem[] = [
   { path: 'sequences', label: 'Sequences', icon: '💫' },
   { path: 'teams', label: 'Teams', icon: '👥' },
   { path: 'matchups', label: 'Matchups', icon: '🆚' },
+    { path: 'home', label: 'Home', icon: '⌂' },
+    { path: 'todos', label: 'Todos', icon: '☑' },
 ];
 
 @Component({

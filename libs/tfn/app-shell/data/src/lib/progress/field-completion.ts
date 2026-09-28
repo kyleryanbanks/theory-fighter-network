@@ -6,24 +6,22 @@ import type {
 } from '../models';
 import type { ProgressResult } from './progress.types';
 
-export type FieldEntity =
-  | 'character'
-  | 'move'
-  | 'stage'
-  | 'matchup';
+export type FieldEntity = 'character' | 'move' | 'stage' | 'matchup';
 
 export interface FieldDescriptor<T> {
   key: string;
   label: string;
   groupLabel?: string;
-  getValue: (entity: T) => unknown;
+  getValue(entity: T): unknown;
 }
 
 export function calculateFieldCompletion<T>(
   entity: T,
   fields: FieldDescriptor<T>[],
 ): ProgressResult {
-  const completed = fields.filter((field) => isPopulated(field.getValue(entity))).length;
+  const completed = fields.filter((field) =>
+    isPopulated(field.getValue(entity)),
+  ).length;
   const label = fields[0]?.groupLabel ?? 'Entity fields';
 
   return {
@@ -53,32 +51,73 @@ export function createFieldDescriptors(
 export function createFieldDescriptors(
   entity: 'matchup',
 ): FieldDescriptor<MatchupDocument>[];
-export function createFieldDescriptors(entity: FieldEntity): FieldDescriptor<unknown>[] {
+export function createFieldDescriptors(
+  entity: FieldEntity,
+): FieldDescriptor<any>[];
+export function createFieldDescriptors(
+  entity: FieldEntity,
+): FieldDescriptor<any>[] {
   switch (entity) {
     case 'character':
       return [
-        field('Character fields', 'Name', (value: CharacterDocument) => value.name),
-        field('Character fields', 'Archetypes', (value: CharacterDocument) => value.archetypes),
-        field('Character fields', 'Moves', (value: CharacterDocument) => value.hierarchy.moveKeys),
-        field('Character fields', 'Neutral regions', (value: CharacterDocument) => value.neutralRegions),
+        field(
+          'Character fields',
+          'Name',
+          (value: CharacterDocument) => value.name,
+        ),
+        field(
+          'Character fields',
+          'Archetypes',
+          (value: CharacterDocument) => value.archetypes,
+        ),
+        field(
+          'Character fields',
+          'Moves',
+          (value: CharacterDocument) => value.hierarchy.moveKeys,
+        ),
+        field(
+          'Character fields',
+          'Neutral regions',
+          (value: CharacterDocument) => value.neutralRegions,
+        ),
       ];
     case 'move':
       return [
         field('Move fields', 'Name', (value: MoveDocument) => value.name),
         field('Move fields', 'Input', (value: MoveDocument) => value.sequence),
-        field('Move fields', 'Preconditions', (value: MoveDocument) => value.preconditions),
+        field(
+          'Move fields',
+          'Preconditions',
+          (value: MoveDocument) => value.preconditions,
+        ),
         field('Move fields', 'Phases', (value: MoveDocument) => value.phases),
       ];
     case 'stage':
       return [
         field('Stage fields', 'Name', (value: StageDocument) => value.name),
-        field('Stage fields', 'Zones', (value: StageDocument) => value.hierarchy.zoneKeys),
+        field(
+          'Stage fields',
+          'Zones',
+          (value: StageDocument) => value.hierarchy.zoneKeys,
+        ),
       ];
     case 'matchup':
       return [
-        field('Matchup fields', 'Attacker', (value: MatchupDocument) => value.attackerKey),
-        field('Matchup fields', 'Defender', (value: MatchupDocument) => value.defenderKey),
-        field('Matchup fields', 'Scenarios', (value: MatchupDocument) => value.scenarios),
+        field(
+          'Matchup fields',
+          'Attacker',
+          (value: MatchupDocument) => value.attackerKey,
+        ),
+        field(
+          'Matchup fields',
+          'Defender',
+          (value: MatchupDocument) => value.defenderKey,
+        ),
+        field(
+          'Matchup fields',
+          'Scenarios',
+          (value: MatchupDocument) => value.scenarios,
+        ),
       ];
   }
 }
@@ -89,7 +128,7 @@ function field<T>(
   getValue: (entity: T) => unknown,
 ): FieldDescriptor<T> {
   return {
-    key: label.toLowerCase().replaceAll(' ', '-'),
+    key: label.toLowerCase().replace(/ /g, '-'),
     label,
     groupLabel,
     getValue,

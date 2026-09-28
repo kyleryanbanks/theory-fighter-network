@@ -1,10 +1,18 @@
 import { computed, inject } from '@angular/core';
-import { signalStore, withComputed, withMethods, withProps } from '@ngrx/signals';
+import {
+  signalStore,
+  withComputed,
+  withMethods,
+  withProps,
+} from '@ngrx/signals';
 import { LocalGuideFacadeStore } from '../facades/local-guide.facade.store';
 import type { EntityType, LocalGuide } from '../guide';
 import { ResearchValuesStore } from '../workspace/research/research-values.store';
 import { createHelperTasks } from './helper-tasks';
-import { calculateFieldCompletion, createFieldDescriptors } from './field-completion';
+import {
+  calculateFieldCompletion,
+  createFieldDescriptors,
+} from './field-completion';
 import { calculateMatchupCoverage } from './matchup-coverage';
 
 export const GuideProgressStore = signalStore(
@@ -18,7 +26,7 @@ export const GuideProgressStore = signalStore(
     taskProgress: computed(() => {
       const guide = store.facade.value();
       if (!guide) return [];
-      return store.tasks().map((task) => ({
+      return createHelperTasks(store.researchStore.research()).map((task) => ({
         ...task,
         steps: task.steps.map((step) => ({
           ...step,
@@ -29,7 +37,10 @@ export const GuideProgressStore = signalStore(
   })),
   withMethods((store) => ({
     fieldCompletion(
-      entityType: Extract<EntityType, 'character' | 'move' | 'stage' | 'matchup'>,
+      entityType: Extract<
+        EntityType,
+        'character' | 'move' | 'stage' | 'matchup'
+      >,
       entityKey: string,
     ) {
       const guide = store.facade.value();
@@ -37,7 +48,7 @@ export const GuideProgressStore = signalStore(
       const entity = findEntity(guide, entityType, entityKey);
       if (!entity) return undefined;
       return calculateFieldCompletion(
-        entity,
+        entity as never,
         createFieldDescriptors(entityType) as never,
       );
     },
@@ -64,12 +75,20 @@ function findEntity(
 ): unknown {
   switch (entityType) {
     case 'character':
-      return guide.entities.characters.find((entity) => entity.semanticKey === entityKey);
+      return guide.entities.characters.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
     case 'move':
-      return guide.entities.moves.find((entity) => entity.semanticKey === entityKey);
+      return guide.entities.moves.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
     case 'stage':
-      return guide.entities.stages.find((entity) => entity.semanticKey === entityKey);
+      return guide.entities.stages.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
     case 'matchup':
-      return guide.entities.matchups.find((entity) => entity.semanticKey === entityKey);
+      return guide.entities.matchups.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
   }
 }

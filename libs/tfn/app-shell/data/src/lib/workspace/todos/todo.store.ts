@@ -47,7 +47,7 @@ export const TodoStore = signalStore(
     }),
 
     updateText: rxMutation({
-      operation: (todoId: string, text: string) =>
+      operation: ((todoId: string, text: string) =>
         from(
           (async () => {
             const todo = store.todos().find((t) => t.id === todoId);
@@ -56,7 +56,7 @@ export const TodoStore = signalStore(
             }
             return { ...todo, text: text.trim() };
           })(),
-        ),
+        )) as any,
       onSuccess: (updated) => {
         patchState(store, (state) => ({
           todos: state.todos.map((t) => (t.id === updated.id ? updated : t)),

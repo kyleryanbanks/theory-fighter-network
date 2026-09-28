@@ -2,8 +2,10 @@ import { Route } from '@angular/router';
 import { GameRoot } from '@tfn/game/feature';
 
 export const appShellRoutes: Route[] = [
-  { path: '', pathMatch: 'full', redirectTo: 'game' },
-  { path: 'game', component: GameRoot },
+  { path: '', pathMatch: 'full', redirectTo: 'home' },
+  { path: 'home', loadComponent: () => import('./guide-home/guide-home').then((m) => m.GuideHome) },
+    { path: 'todos', loadComponent: () => import('../todo-page/todo-page').then((m) => m.TodoPage) },
+    { path: 'game', component: GameRoot },
   { path: 'game/:entityKey', loadComponent: () => import('@tfn/shared/feature').then((m) => m.EntityDetail), data: { entityType: 'game' } },
   { path: 'stages', loadComponent: () => import('@tfn/stage/feature').then((m) => m.StageEditor) },
   { path: 'stages/:entityKey', loadComponent: () => import('@tfn/shared/feature').then((m) => m.EntityDetail), data: { entityType: 'stage' } },

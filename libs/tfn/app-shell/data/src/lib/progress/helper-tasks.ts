@@ -62,13 +62,15 @@ export function createHelperTasks(research: ResearchValues = {}): HelperTask[] {
       steps: [
         {
           key: 'character-move-count',
-          title: 'Add each Character\'s expected Moves',
+          title: "Add each Character's expected Moves",
           getProgress: (guide: LocalGuide) => {
             const expected = Object.values(expectedCharacterMoves).reduce(
               (total, count) => total + count,
               0,
             );
-            const actual = guide.entities.moves.filter((move) => move.characterKey).length;
+            const actual = guide.entities.moves.filter(
+              (move) => move.characterKey,
+            ).length;
             return calculateCountProgress(
               'Character Moves',
               actual,
