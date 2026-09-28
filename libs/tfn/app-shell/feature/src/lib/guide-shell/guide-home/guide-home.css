@@ -7,6 +7,10 @@ h2 { margin-bottom: 0; font-size: 1.2rem; letter-spacing: -.02em; }
 .subline, .todo-note { margin: 0; color: #9db3a4; }
 .quiet-link, .text-link { color: #e7b84b; text-decoration: none; font-weight: 700; }
 .home-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr); gap: 1rem; margin-top: 1rem; }
+.create-panel { grid-column: 1 / -1; }
+.create-field { display: grid; gap: .4rem; margin-bottom: .8rem; color: #9db3a4; font-size: .82rem; font-weight: 700; }
+.create-field select { min-height: 2.5rem; border: 1px solid #527461; border-radius: 4px; padding: 0 .7rem; background: #0d2118; color: #f7fbf8; font: inherit; }
+.create-button { min-height: 2.6rem; border: 1px solid #e7b84b; border-radius: 4px; padding: 0 .9rem; background: #e7b84b; color: #142b21; font-weight: 800; cursor: pointer; }
 .panel { border: 1px solid #315441; border-radius: 6px; background: #142b21; padding: 1.25rem; }
 .section-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1.2rem; }
 .panel-mark { color: #527461; font-size: .75rem; font-weight: 800; }

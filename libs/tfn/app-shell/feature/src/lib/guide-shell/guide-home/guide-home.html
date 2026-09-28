@@ -15,6 +15,44 @@
   </header>
 
   <div class="home-grid">
+    <section class="panel create-panel" aria-labelledby="create-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Start authoring</p>
+          <h2 id="create-title">Create an entity</h2>
+        </div>
+        <span class="panel-mark" aria-hidden="true">00</span>
+      </div>
+      <label class="create-field">
+        <span>Entity type</span>
+        <select
+          [value]="selectedCreationType()"
+          (change)="selectedCreationType.set($any($event.target).value)"
+        >
+          @for (type of creationTypes; track type.key) {
+          <option [value]="type.key">{{ type.label }}</option>
+          }
+        </select>
+      </label>
+      @if (needsCreationScope()) {
+      <label class="create-field">
+        <span>Character scope</span>
+        <select
+          [value]="selectedCreationScope()"
+          (change)="selectedCreationScope.set($any($event.target).value)"
+        >
+          <option value="">Universal</option>
+          @for (character of characters(); track character.semanticKey) {
+          <option [value]="character.semanticKey">{{ character.name }}</option>
+          }
+        </select>
+      </label>
+      }
+      <button class="create-button" type="button" (click)="openCreationEditor()">
+        Open {{ selectedCreationType() }} editor <span aria-hidden="true">→</span>
+      </button>
+    </section>
+
     <section class="panel task-panel" aria-labelledby="tasks-title">
       <div class="section-heading">
         <div>

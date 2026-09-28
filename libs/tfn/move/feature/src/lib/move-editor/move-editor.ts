@@ -4,7 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
@@ -43,10 +43,13 @@ const UNIVERSAL_SCOPE = '';
 })
 export class MoveEditor {
   readonly facade = inject(LocalGuideFacadeStore);
+  private readonly route = inject(ActivatedRoute);
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? [],
   );
-  readonly scopeKey = signal(UNIVERSAL_SCOPE);
+  readonly scopeKey = signal(
+    this.route.snapshot.queryParamMap.get('characterKey') ?? UNIVERSAL_SCOPE,
+  );
   readonly universalMoves = computed(() =>
     (this.facade.guide()?.entities.moves ?? []).filter(
       (move) => !move.characterKey,

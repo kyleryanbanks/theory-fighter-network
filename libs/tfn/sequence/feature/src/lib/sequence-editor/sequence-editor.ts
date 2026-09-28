@@ -3,7 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   LocalGuideFacadeStore,
   resolveEffectiveMove,
@@ -38,11 +38,14 @@ const UNIVERSAL_SCOPE = '';
 })
 export class SequenceEditor {
   readonly facade = inject(LocalGuideFacadeStore);
+  private readonly route = inject(ActivatedRoute);
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? [],
   );
   readonly teams = computed(() => this.facade.guide()?.entities.teams ?? []);
-  readonly scopeKey = signal(UNIVERSAL_SCOPE);
+  readonly scopeKey = signal(
+    this.route.snapshot.queryParamMap.get('characterKey') ?? UNIVERSAL_SCOPE,
+  );
   private readonly team = computed(() =>
     this.teams().find((team) => team.semanticKey === this.scopeKey()),
   );
