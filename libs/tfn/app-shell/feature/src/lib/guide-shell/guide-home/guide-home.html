@@ -48,8 +48,13 @@
         </select>
       </label>
       }
-      <button class="create-button" type="button" (click)="openCreationEditor()">
-        Open {{ selectedCreationType() }} editor <span aria-hidden="true">→</span>
+      <button
+        class="create-button"
+        type="button"
+        (click)="openCreationEditor()"
+      >
+        Open {{ selectedCreationType() }} editor
+        <span aria-hidden="true">→</span>
       </button>
     </section>
 
