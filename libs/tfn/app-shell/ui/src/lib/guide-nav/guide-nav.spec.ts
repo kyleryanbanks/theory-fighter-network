@@ -19,7 +19,7 @@ describe('GuideNav', () => {
 
   it('renders a nav link for each entity section', () => {
     const links = fixture.nativeElement.querySelectorAll('.nav-list a');
-    expect(links).toHaveLength(8);
+    expect(links).toHaveLength(10);
     expect(fixture.nativeElement.textContent).toContain('Game');
     expect(fixture.nativeElement.textContent).toContain('Stages');
     expect(fixture.nativeElement.textContent).toContain('Characters');
@@ -33,7 +33,9 @@ describe('GuideNav', () => {
   it('starts expanded showing icon and label', () => {
     expect(fixture.componentInstance.mode()).toBe('expanded');
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-nav-game"] .nav-label')
+      fixture.nativeElement.querySelector(
+        '[data-testid="guide-nav-game"] .nav-label',
+      ),
     ).not.toBeNull();
   });
 
@@ -47,14 +49,18 @@ describe('GuideNav', () => {
     fixture.detectChanges();
     expect(fixture.componentInstance.mode()).toBe('compact');
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-nav-game"] .nav-label')
+      fixture.nativeElement.querySelector(
+        '[data-testid="guide-nav-game"] .nav-label',
+      ),
     ).toBeNull();
 
     toggle();
     fixture.detectChanges();
     expect(fixture.componentInstance.mode()).toBe('expanded');
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-nav-game"] .nav-label')
+      fixture.nativeElement.querySelector(
+        '[data-testid="guide-nav-game"] .nav-label',
+      ),
     ).not.toBeNull();
   });
 
