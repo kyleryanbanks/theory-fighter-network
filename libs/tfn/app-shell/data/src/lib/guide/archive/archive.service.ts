@@ -1,5 +1,5 @@
 import { assertSupportedSchemaVersion } from '../guide.mutations';
-import type { LocalGuideEntities } from '../guide.types';
+import type { LocalGuideEntities, TfnWorkspace } from '../guide.types';
 import { computeChecksum } from './archive.checksum';
 import {
   migrateTfnArchive,
@@ -18,6 +18,7 @@ export { CURRENT_TFN_FORMAT_VERSION } from './archive.types';
 export function buildTfnArchive(input: {
   guide: TfnArchive['guide'];
   entities: LocalGuideEntities;
+  workspace: TfnWorkspace;
   schemaVersion?: number;
 }): string {
   const schemaVersion = input.schemaVersion ?? input.guide.schemaVersion;
@@ -34,6 +35,7 @@ export function buildTfnArchive(input: {
     header,
     guide: { ...input.guide, schemaVersion },
     entities: input.entities,
+    workspace: input.workspace,
   };
 
   return stableStringify({
@@ -48,19 +50,29 @@ export function parseTfnArchive(rawArchive: string): TfnArchive {
 
   if (parsed.header.formatVersion > CURRENT_TFN_FORMAT_VERSION) {
     throw new Error(
-      `.tfn formatVersion ${parsed.header.formatVersion} is newer than this client (${CURRENT_TFN_FORMAT_VERSION}). Please upgrade the app.`
+      `.tfn formatVersion ${parsed.header.formatVersion} is newer than this client (${CURRENT_TFN_FORMAT_VERSION}). Please upgrade the app.`,
     );
   }
 
-  const payload = {
-    header: parsed.header,
-    guide: parsed.guide,
-    entities: parsed.entities,
-  };
+  // Verify checksum using only the fields that were included in the original archive.
+  // Format 0 archives don't include workspace in the checksum.
+  const checksumPayload =
+    parsed.header.formatVersion === 0
+      ? {
+          header: parsed.header,
+          guide: parsed.guide,
+          entities: parsed.entities,
+        }
+      : {
+          header: parsed.header,
+          guide: parsed.guide,
+          entities: parsed.entities,
+          workspace: parsed.workspace ?? { todos: [], research: {} },
+        };
 
-  if (computeChecksum(payload) !== parsed.checksum) {
+  if (computeChecksum(checksumPayload) !== parsed.checksum) {
     throw new Error(
-      'Archive checksum mismatch. The .tfn file may be corrupted.'
+      'Archive checksum mismatch. The .tfn file may be corrupted.',
     );
   }
 
@@ -71,11 +83,14 @@ export function parseTfnArchive(rawArchive: string): TfnArchive {
   return {
     ...migrated,
     entities: hydrateEntityDates(migrated.entities),
+    workspace: hydrateWorkspaceTodoDates(
+      migrated.workspace ?? { todos: [], research: {} },
+    ),
   };
 }
 
 export function hydrateEntityDates(
-  entities: LocalGuideEntities
+  entities: LocalGuideEntities,
 ): LocalGuideEntities {
   return {
     ...entities,
@@ -91,8 +106,21 @@ export function hydrateEntityDates(
   };
 }
 
+export function hydrateWorkspaceTodoDates(
+  workspace: TfnWorkspace,
+): TfnWorkspace {
+  return {
+    ...workspace,
+    todos: (workspace.todos ?? []).map((todo) => ({
+      ...todo,
+      createdAt: new Date(todo.createdAt),
+      completedAt: todo.completedAt ? new Date(todo.completedAt) : undefined,
+    })),
+  };
+}
+
 function assertArchiveShape(
-  archive: Partial<MigratableTfnArchive>
+  archive: Partial<MigratableTfnArchive>,
 ): asserts archive is MigratableTfnArchive {
   if (!archive.header || archive.header.format !== 'TFN_ARCHIVE') {
     throw new Error('Invalid .tfn header format.');
@@ -106,12 +134,12 @@ function assertArchiveShape(
 }
 
 function assertCanonicalEntityOrder(
-  entityOrder: (keyof LocalGuideEntities)[]
+  entityOrder: (keyof LocalGuideEntities)[],
 ): void {
   const isCanonical =
     entityOrder.length === TFN_ENTITY_ORDER.length &&
     entityOrder.every(
-      (entityKey, index) => entityKey === TFN_ENTITY_ORDER[index]
+      (entityKey, index) => entityKey === TFN_ENTITY_ORDER[index],
     );
 
   if (!isCanonical) {
@@ -120,7 +148,7 @@ function assertCanonicalEntityOrder(
 }
 
 function hydrateMetaDates<
-  T extends { meta: { createdAt: Date; lastUpdatedAt: Date } }
+  T extends { meta: { createdAt: Date; lastUpdatedAt: Date } },
 >(entity: T): T {
   return {
     ...entity,

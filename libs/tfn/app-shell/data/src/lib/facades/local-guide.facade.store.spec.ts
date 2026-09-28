@@ -1,15 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+import { createGuideJson, type LocalGuide, type TfnWorkspace } from '../guide';
+import { createStateModel } from '../models';
 import {
   LocalGuideFacadeStore,
   TFN_LOCAL_GUIDE_PERSISTENCE,
   type LocalGuidePersistencePort,
 } from './local-guide.facade.store';
-import {
-  createGuideJson,
-  type LocalGuide,
-} from '../guide';
-import { createStateModel } from '../models';
 
 // Shared fixture builder used to keep tests focused on facade behavior.
 function buildGuide(gameKey = 'game-demo-1x'): LocalGuide {
@@ -46,13 +43,20 @@ function buildGuide(gameKey = 'game-demo-1x'): LocalGuide {
   };
 }
 
+function buildWorkspace(): TfnWorkspace {
+  return { todos: [], research: {} };
+}
+
 // Mock port lets tests verify orchestration without real filesystem side effects.
 function createPersistenceMock(): LocalGuidePersistencePort {
   return {
-    parseArchiveFile: vi.fn(async () => buildGuide('imported-game')),
+    parseArchiveFile: vi.fn(async () => ({
+      guide: buildGuide('imported-game'),
+      workspace: buildWorkspace(),
+    })),
     buildArchiveFile: vi.fn(
-      async (_guide, fileName = 'guide.tfn') =>
-        new File(['{}'], fileName, { type: 'application/json' })
+      async (_guide, _workspace, fileName = 'guide.tfn') =>
+        new File(['{}'], fileName, { type: 'application/json' }),
     ),
   };
 }
@@ -88,15 +92,19 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(result.status).toBe('success');
     expect(store.value()?.guide.gameKey).toBe(
-      store.value()?.entities.game.semanticKey
+      store.value()?.entities.game.semanticKey,
     );
     expect(store.value()?.entities.game.name).toBe('Created Fighter');
   });
 
   it('updates active game metadata while preserving identity and marking it unsaved', async () => {
     await store.createGuide({
-      name: 'Editable Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Editable Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     const semanticKey = store.value()?.entities.game.semanticKey;
 
@@ -119,15 +127,13 @@ describe('LocalGuideFacadeStore', () => {
     });
 
     const createGameState = Reflect.get(store, 'createGameState') as
-      | ((
-          input: {
-            category: string;
-            name: string;
-            min?: number;
-            max?: number;
-            unit?: string;
-          }
-        ) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          name: string;
+          min?: number;
+          max?: number;
+          unit?: string;
+        }) => Promise<{ status: string }>)
       | undefined;
 
     const result = await createGameState?.({
@@ -136,12 +142,14 @@ describe('LocalGuideFacadeStore', () => {
     });
 
     expect(result?.status).toBe('success');
-    expect(store.value()?.entities.game.states.Defense['guard-crush']).toMatchObject({
+    expect(
+      store.value()?.entities.game.states.Defense['guard-crush'],
+    ).toMatchObject({
       semanticKey: 'guard-crush',
       name: 'Guard Crush',
     });
     expect(store.value()?.guide.localChanges).toContain(
-      `game:${store.value()?.entities.game.semanticKey}`
+      `game:${store.value()?.entities.game.semanticKey}`,
     );
   });
 
@@ -156,15 +164,13 @@ describe('LocalGuideFacadeStore', () => {
     });
 
     const createGameState = Reflect.get(store, 'createGameState') as
-      | ((
-          input: {
-            category: string;
-            name: string;
-            min?: number;
-            max?: number;
-            unit?: string;
-          }
-        ) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          name: string;
+          min?: number;
+          max?: number;
+          unit?: string;
+        }) => Promise<{ status: string }>)
       | undefined;
 
     await createGameState?.({
@@ -178,15 +184,19 @@ describe('LocalGuideFacadeStore', () => {
     });
 
     expect(duplicate?.status).toBe('error');
-    expect(Object.keys(store.value()?.entities.game.states.Defense ?? {})).toEqual([
-      'guard-crush',
-    ]);
+    expect(
+      Object.keys(store.value()?.entities.game.states.Defense ?? {}),
+    ).toEqual(['guard-crush']);
   });
 
   it('creates and deletes Stages while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Stage Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Stage Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createStage({ name: 'Training Room' });
@@ -198,7 +208,7 @@ describe('LocalGuideFacadeStore', () => {
       stage?.semanticKey,
     ]);
     expect(store.value()?.guide.localChanges).toContain(
-      `stage:${stage?.semanticKey}`
+      `stage:${stage?.semanticKey}`,
     );
 
     const deleted = await store.deleteStage({
@@ -209,14 +219,18 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.stages).toEqual([]);
     expect(store.value()?.entities.game.hierarchy.stageKeys).toEqual([]);
     expect(store.value()?.guide.localChanges).toContain(
-      `stage:${stage?.semanticKey}`
+      `stage:${stage?.semanticKey}`,
     );
   });
 
   it('rejects duplicate Stage identity within a Guide', async () => {
     await store.createGuide({
-      name: 'Stage Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Stage Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
 
@@ -228,8 +242,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes stage-scoped Zones while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Zone Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
     const stage = store.value()?.entities.stages[0];
@@ -246,7 +264,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(zone?.stageKey).toBe(stage?.semanticKey);
     expect(updatedStage?.hierarchy.zoneKeys).toContain(zone?.semanticKey);
     expect(store.value()?.guide.localChanges).toContain(
-      `stageZone:${zone?.semanticKey}`
+      `stageZone:${zone?.semanticKey}`,
     );
 
     const deleted = await store.deleteStageZone({
@@ -260,8 +278,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('overrides a universal Zone for a Stage and reverts by deleting the override', async () => {
     await store.createGuide({
-      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Zone Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
     const stage = store.value()?.entities.stages[0];
@@ -293,8 +315,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects overriding the same universal Zone twice for one Stage', async () => {
     await store.createGuide({
-      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Zone Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
     const stage = store.value()?.entities.stages[0];
@@ -316,8 +342,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('promotes a Stage-only Zone to a universal Zone', async () => {
     await store.createGuide({
-      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Zone Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
     const stage = store.value()?.entities.stages[0];
@@ -338,15 +368,19 @@ describe('LocalGuideFacadeStore', () => {
     expect(universalZone?.name).toBe('Pit Trap');
     expect(universalZone?.stageKey).toBeUndefined();
     expect(store.value()?.entities.game.universal.stageZoneKeys).toContain(
-      universalZone?.semanticKey
+      universalZone?.semanticKey,
     );
     expect(updatedStage?.hierarchy.zoneKeys).toEqual([]);
   });
 
   it('rejects promoting a Zone that is already an override', async () => {
     await store.createGuide({
-      name: 'Zone Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Zone Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createStage({ name: 'Training Room' });
     const stage = store.value()?.entities.stages[0];
@@ -370,8 +404,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes Characters while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Character Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Character Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createCharacter({ name: 'Ryu' });
@@ -383,7 +421,7 @@ describe('LocalGuideFacadeStore', () => {
       character?.semanticKey,
     ]);
     expect(store.value()?.guide.localChanges).toContain(
-      `character:${character?.semanticKey}`
+      `character:${character?.semanticKey}`,
     );
 
     const deleted = await store.deleteCharacter({
@@ -394,14 +432,18 @@ describe('LocalGuideFacadeStore', () => {
     expect(store.value()?.entities.characters).toEqual([]);
     expect(store.value()?.entities.game.hierarchy.characterKeys).toEqual([]);
     expect(store.value()?.guide.localChanges).toContain(
-      `character:${character?.semanticKey}`
+      `character:${character?.semanticKey}`,
     );
   });
 
   it('rejects duplicate Character identity within a Guide', async () => {
     await store.createGuide({
-      name: 'Character Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Character Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
 
@@ -413,8 +455,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes character-scoped Moves while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -431,7 +477,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(move?.characterKey).toBe(character?.semanticKey);
     expect(updatedCharacter?.hierarchy.moveKeys).toContain(move?.semanticKey);
     expect(store.value()?.guide.localChanges).toContain(
-      `move:${move?.semanticKey}`
+      `move:${move?.semanticKey}`,
     );
 
     const deleted = await store.deleteMove({
@@ -440,15 +486,19 @@ describe('LocalGuideFacadeStore', () => {
 
     expect(deleted.status).toBe('success');
     expect(store.value()?.entities.moves).toEqual([]);
-    expect(
-      store.value()?.entities.characters[0]?.hierarchy.moveKeys
-    ).toEqual([]);
+    expect(store.value()?.entities.characters[0]?.hierarchy.moveKeys).toEqual(
+      [],
+    );
   });
 
   it('updates startup, active, and recovery phase durations independently', async () => {
     await store.createGuide({
-      name: 'Phase Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Phase Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createMove({ name: 'Hadoken' });
     const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
@@ -469,13 +519,20 @@ describe('LocalGuideFacadeStore', () => {
     const phases = store.value()?.entities.moves[0]?.phases;
     expect(phases?.[0]?.startup?.duration).toEqual({ relative: 20 });
     expect(phases?.[0]?.active?.duration).toEqual({ exact: 3 });
-    expect(phases?.[0]?.recovery?.duration).toEqual({ exact: 18, relative: 72 });
+    expect(phases?.[0]?.recovery?.duration).toEqual({
+      exact: 18,
+      relative: 72,
+    });
   });
 
   it('adds and removes ordered Move phases', async () => {
     await store.createGuide({
-      name: 'Phase CRUD Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Phase CRUD Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createMove({ name: 'Hadoken' });
     const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
@@ -485,22 +542,40 @@ describe('LocalGuideFacadeStore', () => {
     expect((await store.addMovePhase({ moveKey })).status).toBe('success');
     expect(store.value()?.entities.moves[0]?.phases).toHaveLength(3);
 
-    expect((await store.removeMovePhase({ moveKey, phaseIndex: 0 })).status).toBe('success');
+    expect(
+      (await store.removeMovePhase({ moveKey, phaseIndex: 0 })).status,
+    ).toBe('success');
     expect(store.value()?.entities.moves[0]?.phases).toHaveLength(2);
   });
 
   it('updates on-hit hit stop and stun DataValues independently', async () => {
     await store.createGuide({
-      name: 'Outcome Data Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Outcome Data Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createMove({ name: 'Hadoken' });
     const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
 
-    await store.updateMoveOutcomeDataValue({ moveKey, outcome: 'onHit', field: 'hitStop', value: { exact: 8 } });
-    await store.updateMoveOutcomeDataValue({ moveKey, outcome: 'onHit', field: 'stun', value: { relative: 70 } });
+    await store.updateMoveOutcomeDataValue({
+      moveKey,
+      outcome: 'onHit',
+      field: 'hitStop',
+      value: { exact: 8 },
+    });
+    await store.updateMoveOutcomeDataValue({
+      moveKey,
+      outcome: 'onHit',
+      field: 'stun',
+      value: { relative: 70 },
+    });
 
-    expect(store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit).toEqual({
+    expect(
+      store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit,
+    ).toEqual({
       hitStop: { exact: 8 },
       stun: { relative: 70 },
     });
@@ -508,24 +583,42 @@ describe('LocalGuideFacadeStore', () => {
 
   it('updates move outcome cancels independently per outcome', async () => {
     await store.createGuide({
-      name: 'Cancel Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Cancel Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createMove({ name: 'Jab' });
     const moveKey = store.value()?.entities.moves[0]?.semanticKey ?? '';
 
     const cancels = [
-      { startFrame: 2, endFrame: 5, userOverrideMoves: { hadoken: true, shoryuken: true } },
+      {
+        startFrame: 2,
+        endFrame: 5,
+        userOverrideMoves: { hadoken: true, shoryuken: true },
+      },
     ];
-    await store.updateMoveOutcomeCancels({ moveKey, outcome: 'onHit', cancels });
+    await store.updateMoveOutcomeCancels({
+      moveKey,
+      outcome: 'onHit',
+      cancels,
+    });
 
-    expect(store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit?.cancels).toEqual(cancels);
+    expect(
+      store.value()?.entities.moves[0]?.phases?.[0]?.effects?.onHit?.cancels,
+    ).toEqual(cancels);
   });
 
   it('creates a universal Move scoped to the Game when no character is given', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createMove({ name: 'Universal Parry' });
@@ -534,14 +627,18 @@ describe('LocalGuideFacadeStore', () => {
     expect(created.status).toBe('success');
     expect(move?.characterKey).toBeUndefined();
     expect(store.value()?.entities.game.universal.moveKeys).toContain(
-      move?.semanticKey
+      move?.semanticKey,
     );
   });
 
   it('rejects duplicate Move identity within the same scope', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -561,8 +658,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('promotes a Character Move to universal and rewrites Sequence references', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -588,7 +689,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(universalMove?.name).toBe('Hadoken');
     expect(universalMove?.characterKey).toBeUndefined();
     expect(store.value()?.entities.game.universal.moveKeys).toContain(
-      universalMove?.semanticKey
+      universalMove?.semanticKey,
     );
     expect(updatedCharacter?.hierarchy.moveKeys).toEqual([]);
     expect(sequence?.sequence[0].moveKey).toBe(universalMove?.semanticKey);
@@ -596,8 +697,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects promoting a Move that is already an override', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -621,8 +726,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('overrides a universal Move for a Character and reverts by deleting the override', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -642,7 +751,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(override?.name).toBe('Universal Parry');
     expect(override?.parentKey).toBe(universalMove?.semanticKey);
     expect(updatedCharacter?.hierarchy.moveKeys).toContain(
-      override?.semanticKey
+      override?.semanticKey,
     );
     expect(store.value()?.entities.moves).toHaveLength(2);
 
@@ -656,8 +765,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects overriding the same universal Move twice for one Character', async () => {
     await store.createGuide({
-      name: 'Move Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Move Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -679,8 +792,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes character-scoped Sequences while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Sequence Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -695,10 +812,10 @@ describe('LocalGuideFacadeStore', () => {
     expect(created.status).toBe('success');
     expect(sequence?.characterKey).toBe(character?.semanticKey);
     expect(updatedCharacter?.hierarchy.sequenceKeys).toContain(
-      sequence?.semanticKey
+      sequence?.semanticKey,
     );
     expect(store.value()?.guide.localChanges).toContain(
-      `sequence:${sequence?.semanticKey}`
+      `sequence:${sequence?.semanticKey}`,
     );
 
     const deleted = await store.deleteSequence({
@@ -708,14 +825,18 @@ describe('LocalGuideFacadeStore', () => {
     expect(deleted.status).toBe('success');
     expect(store.value()?.entities.sequences).toEqual([]);
     expect(
-      store.value()?.entities.characters[0]?.hierarchy.sequenceKeys
+      store.value()?.entities.characters[0]?.hierarchy.sequenceKeys,
     ).toEqual([]);
   });
 
   it('creates a universal Sequence scoped to the Game when no character or team is given', async () => {
     await store.createGuide({
-      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Sequence Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createSequence({
@@ -727,14 +848,18 @@ describe('LocalGuideFacadeStore', () => {
     expect(sequence?.characterKey).toBeUndefined();
     expect(sequence?.teamKey).toBeUndefined();
     expect(store.value()?.entities.game.universal.sequenceKeys).toContain(
-      sequence?.semanticKey
+      sequence?.semanticKey,
     );
   });
 
   it('rejects duplicate Sequence identity within the same scope', async () => {
     await store.createGuide({
-      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Sequence Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createSequence({
       sequence: [{ directions: ['6'], buttons: ['mp'] }],
@@ -750,8 +875,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects creating a Sequence scoped to a nonexistent Team', async () => {
     await store.createGuide({
-      name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Sequence Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createSequence({
@@ -765,8 +894,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes Teams while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 2,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -786,7 +919,7 @@ describe('LocalGuideFacadeStore', () => {
       team?.semanticKey,
     ]);
     expect(store.value()?.guide.localChanges).toContain(
-      `team:${team?.semanticKey}`
+      `team:${team?.semanticKey}`,
     );
 
     const deleted = await store.deleteTeam({
@@ -800,8 +933,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects creating a Team with a nonexistent Character', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const created = await store.createTeam({
@@ -814,8 +951,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects creating a Team when the Game Team Size is 1', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -830,8 +971,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects a Team with more Characters than the Game Team Size', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 2,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -848,8 +993,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('allows a Team subset smaller than the Game Team Size', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 3, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 3,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -864,8 +1013,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects duplicate Team identity based on ordered Character keys', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 2,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -884,8 +1037,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects deleting a Team that still has Sequences', async () => {
     await store.createGuide({
-      name: 'Team Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 2, inputs: { directions: [], buttons: [] },
+      name: 'Team Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 2,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -909,8 +1066,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('creates and deletes Matchups while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -929,7 +1090,7 @@ describe('LocalGuideFacadeStore', () => {
       matchup?.semanticKey,
     ]);
     expect(store.value()?.guide.localChanges).toContain(
-      `matchup:${matchup?.semanticKey}`
+      `matchup:${matchup?.semanticKey}`,
     );
 
     const deleted = await store.deleteMatchup({
@@ -943,8 +1104,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects creating a Matchup with a nonexistent Character', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const ryu = store.value()?.entities.characters[0];
@@ -960,8 +1125,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('allows a mirror-match Matchup where attacker and defender are the same Character', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const ryu = store.value()?.entities.characters[0];
@@ -977,8 +1146,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects duplicate Matchup identity based on attacker and defender', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -999,19 +1172,29 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects deleting a nonexistent Matchup', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
-    const deleted = await store.deleteMatchup({ matchupKey: 'matchup-missing' });
+    const deleted = await store.deleteMatchup({
+      matchupKey: 'matchup-missing',
+    });
 
     expect(deleted.status).toBe('error');
   });
 
   it('adds and removes Matchup Scenarios while tracking Guide changes', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1035,7 +1218,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(scenario?.opponentOptionKey).toBe(move?.semanticKey);
     expect(scenario?.name).toBe('Fireball punish');
     expect(store.value()?.guide.localChanges).toContain(
-      `matchup:${matchup?.semanticKey}`
+      `matchup:${matchup?.semanticKey}`,
     );
 
     const removed = await store.removeMatchupScenario({
@@ -1049,8 +1232,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects adding a Scenario with a nonexistent opponentOptionKey', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1072,8 +1259,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects adding a Scenario to a nonexistent Matchup', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createMove({ name: 'Fireball' });
     const move = store.value()?.entities.moves[0];
@@ -1088,8 +1279,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects adding a Scenario scoped to a nonexistent Stage', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1114,8 +1309,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects duplicate Scenario identity within the same Matchup', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1143,8 +1342,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects removing a nonexistent Scenario', async () => {
     await store.createGuide({
-      name: 'Matchup Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Matchup Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1165,8 +1368,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('adds and removes Scenario Responses', async () => {
     await store.createGuide({
-      name: 'Response Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Response Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1192,7 +1399,8 @@ describe('LocalGuideFacadeStore', () => {
       outcome: 1,
       notes: 'Escapes cleanly',
     });
-    const response = store.value()?.entities.matchups[0].scenarios[0].responses[0];
+    const response =
+      store.value()?.entities.matchups[0].scenarios[0].responses[0];
 
     expect(added.status).toBe('success');
     expect(response?.playerOptionKey).toBe(backdash.semanticKey);
@@ -1205,13 +1413,19 @@ describe('LocalGuideFacadeStore', () => {
     });
 
     expect(removed.status).toBe('success');
-    expect(store.value()?.entities.matchups[0].scenarios[0].responses).toEqual([]);
+    expect(store.value()?.entities.matchups[0].scenarios[0].responses).toEqual(
+      [],
+    );
   });
 
   it('rejects a Response with a missing player option', async () => {
     await store.createGuide({
-      name: 'Response Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Response Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const added = await store.addScenarioResponse({
@@ -1225,8 +1439,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('adds and removes a note on any entity type generically', async () => {
     await store.createGuide({
-      name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Notes Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -1242,7 +1460,7 @@ describe('LocalGuideFacadeStore', () => {
     expect(note?.text).toBe('Forgot to log his command grab');
     expect(note?.promotedToKey).toBeUndefined();
     expect(store.value()?.guide.localChanges).toContain(
-      `character:${character?.semanticKey}`
+      `character:${character?.semanticKey}`,
     );
 
     const removed = await store.removeEntityNote({
@@ -1257,8 +1475,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('adds a note on a Matchup and promotes it, keeping the note with a promotedToKey', async () => {
     await store.createGuide({
-      name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Notes Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     await store.createCharacter({ name: 'Ken' });
@@ -1291,8 +1513,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects adding a note with empty text', async () => {
     await store.createGuide({
-      name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Notes Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -1308,8 +1534,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects adding a note to a nonexistent entity', async () => {
     await store.createGuide({
-      name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Notes Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const added = await store.addEntityNote({
@@ -1323,8 +1553,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('rejects removing a nonexistent note', async () => {
     await store.createGuide({
-      name: 'Notes Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Notes Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
     await store.createCharacter({ name: 'Ryu' });
     const character = store.value()?.entities.characters[0];
@@ -1340,13 +1574,15 @@ describe('LocalGuideFacadeStore', () => {
 
   it('imports a Guide through a mutation and replaces the active Guide', async () => {
     const importedGuide = buildGuide('imported-game');
+    const importedWorkspace = buildWorkspace();
     const archiveFile = new File(['{}'], 'import.tfn', {
       type: 'application/json',
     });
 
-    vi.mocked(persistence.parseArchiveFile).mockResolvedValue(
-      importedGuide
-    );
+    vi.mocked(persistence.parseArchiveFile).mockResolvedValue({
+      guide: importedGuide,
+      workspace: importedWorkspace,
+    });
 
     const result = await store.importArchive(archiveFile);
 
@@ -1356,8 +1592,12 @@ describe('LocalGuideFacadeStore', () => {
 
   it('exports the active Guide through a mutation', async () => {
     await store.createGuide({
-      name: 'Export Fighter', version: '3.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Export Fighter',
+      version: '3.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const result = await store.exportArchive({
@@ -1375,76 +1615,120 @@ describe('LocalGuideFacadeStore', () => {
 
   it('deleteGameState removes a state entry and marks game unsaved', async () => {
     await store.createGuide({
-      name: 'State Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'State Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const createGameState = Reflect.get(store, 'createGameState') as
-      | ((input: { category: string; name: string }) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          name: string;
+        }) => Promise<{ status: string }>)
       | undefined;
     const deleteGameState = Reflect.get(store, 'deleteGameState') as
-      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          semanticKey: string;
+        }) => Promise<{ status: string }>)
       | undefined;
 
     await createGameState?.({ category: 'Defense', name: 'Guard Crush' });
 
-    const result = await deleteGameState?.({ category: 'Defense', semanticKey: 'guard-crush' });
+    const result = await deleteGameState?.({
+      category: 'Defense',
+      semanticKey: 'guard-crush',
+    });
 
     expect(result?.status).toBe('success');
     expect(store.value()?.entities.game.states['Defense']).toBeUndefined();
     expect(store.value()?.guide.localChanges).toContain(
-      `game:${store.value()?.entities.game.semanticKey}`
+      `game:${store.value()?.entities.game.semanticKey}`,
     );
   });
 
   it('deleteGameState removes only the targeted state, leaving others in the category', async () => {
     await store.createGuide({
-      name: 'State Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'State Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const createGameState = Reflect.get(store, 'createGameState') as
-      | ((input: { category: string; name: string }) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          name: string;
+        }) => Promise<{ status: string }>)
       | undefined;
     const deleteGameState = Reflect.get(store, 'deleteGameState') as
-      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          semanticKey: string;
+        }) => Promise<{ status: string }>)
       | undefined;
 
     await createGameState?.({ category: 'Defense', name: 'Guard Crush' });
     await createGameState?.({ category: 'Defense', name: 'Parry' });
 
-    await deleteGameState?.({ category: 'Defense', semanticKey: 'guard-crush' });
+    await deleteGameState?.({
+      category: 'Defense',
+      semanticKey: 'guard-crush',
+    });
 
-    expect(store.value()?.entities.game.states['Defense']?.['guard-crush']).toBeUndefined();
-    expect(store.value()?.entities.game.states['Defense']?.['parry']).toBeDefined();
+    expect(
+      store.value()?.entities.game.states['Defense']?.['guard-crush'],
+    ).toBeUndefined();
+    expect(
+      store.value()?.entities.game.states['Defense']?.['parry'],
+    ).toBeDefined();
   });
 
   it('deleteGameState returns error when state does not exist', async () => {
     await store.createGuide({
-      name: 'State Fighter', version: '1.0.0', frameRate: 60,
-      is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'State Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     const deleteGameState = Reflect.get(store, 'deleteGameState') as
-      | ((input: { category: string; semanticKey: string }) => Promise<{ status: string }>)
+      | ((input: {
+          category: string;
+          semanticKey: string;
+        }) => Promise<{ status: string }>)
       | undefined;
 
-    const result = await deleteGameState?.({ category: 'Defense', semanticKey: 'nonexistent' });
+    const result = await deleteGameState?.({
+      category: 'Defense',
+      semanticKey: 'nonexistent',
+    });
 
     expect(result?.status).toBe('error');
   });
 
   it('updates Sequence steps including frame delays', async () => {
     await store.createGuide({
-     name: 'Sequence Fighter', version: '1.0.0', frameRate: 60,
-     is3d: false, teamSize: 1, inputs: { directions: [], buttons: [] },
+      name: 'Sequence Fighter',
+      version: '1.0.0',
+      frameRate: 60,
+      is3d: false,
+      teamSize: 1,
+      inputs: { directions: [], buttons: [] },
     });
 
     await store.createSequence({
-     sequence: [
-       { directions: ['5'], buttons: ['lp'], frames: 1 },
-       { directions: ['6'], buttons: ['mp'], frames: 1 },
-     ],
+      sequence: [
+        { directions: ['5'], buttons: ['lp'], frames: 1 },
+        { directions: ['6'], buttons: ['mp'], frames: 1 },
+      ],
     });
 
     const originalSequence = store.value()?.entities.sequences[0];
@@ -1453,18 +1737,18 @@ describe('LocalGuideFacadeStore', () => {
 
     // Update frames for second step
     const updated = await store.updateSequence({
-     sequenceKey: originalSequence?.semanticKey ?? '',
-     sequence: [
-       { directions: ['5'], buttons: ['lp'], frames: 1 },
-       { directions: ['6'], buttons: ['mp'], frames: 8 },
-     ],
+      sequenceKey: originalSequence?.semanticKey ?? '',
+      sequence: [
+        { directions: ['5'], buttons: ['lp'], frames: 1 },
+        { directions: ['6'], buttons: ['mp'], frames: 8 },
+      ],
     });
 
     expect(updated.status).toBe('success');
     const updatedSequence = store.value()?.entities.sequences[0];
     expect(updatedSequence?.sequence[1]?.frames).toBe(8);
     expect(store.value()?.guide.localChanges).toContain(
-     `sequence:${originalSequence?.semanticKey}`
+      `sequence:${originalSequence?.semanticKey}`,
     );
   });
 });

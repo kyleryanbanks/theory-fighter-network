@@ -1,4 +1,8 @@
-import type { GuideJson, LocalGuideEntities } from '../guide.types';
+import type {
+  GuideJson,
+  LocalGuideEntities,
+  TfnWorkspace,
+} from '../guide.types';
 import { computeChecksum } from './archive.checksum';
 import {
   CURRENT_TFN_FORMAT_VERSION,
@@ -16,30 +20,25 @@ export interface MigratableTfnArchive {
   };
   guide: GuideJson;
   entities: LocalGuideEntities;
+  workspace?: TfnWorkspace;
   checksum: string;
 }
 
-type ArchiveMigration = (
-  archive: MigratableTfnArchive
-) => MigratableTfnArchive;
+type ArchiveMigration = (archive: MigratableTfnArchive) => MigratableTfnArchive;
 
 const ARCHIVE_MIGRATIONS = new Map<number, ArchiveMigration>([
   [0, migrateFormat0To1],
 ]);
 
-export function migrateTfnArchive(
-  archive: MigratableTfnArchive
-): TfnArchive {
+export function migrateTfnArchive(archive: MigratableTfnArchive): TfnArchive {
   let migrated = archive;
 
   while (migrated.header.formatVersion < CURRENT_TFN_FORMAT_VERSION) {
-    const migration = ARCHIVE_MIGRATIONS.get(
-      migrated.header.formatVersion
-    );
+    const migration = ARCHIVE_MIGRATIONS.get(migrated.header.formatVersion);
 
     if (!migration) {
       throw new Error(
-        `No .tfn migration is registered for formatVersion ${migrated.header.formatVersion}.`
+        `No .tfn migration is registered for formatVersion ${migrated.header.formatVersion}.`,
       );
     }
 
@@ -50,7 +49,7 @@ export function migrateTfnArchive(
 }
 
 function migrateFormat0To1(
-  archive: MigratableTfnArchive
+  archive: MigratableTfnArchive,
 ): MigratableTfnArchive {
   const payload = {
     header: {
@@ -60,6 +59,7 @@ function migrateFormat0To1(
     },
     guide: archive.guide,
     entities: archive.entities,
+    workspace: archive.workspace ?? { todos: [], research: {} },
   };
 
   return {

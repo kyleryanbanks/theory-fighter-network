@@ -1,39 +1,47 @@
-import {
-  buildTfnArchive,
-  parseTfnArchive,
-} from '../guide/archive/index';
-import type { LocalGuide } from '../guide/guide.types';
+import { buildTfnArchive, parseTfnArchive } from '../guide/archive/index';
+import type { LocalGuide, TfnWorkspace } from '../guide/guide.types';
 
-export function buildArchiveBlob(guide: LocalGuide): Blob {
-  const archive = buildTfnArchive(guide);
+export function buildArchiveBlob(
+  guide: LocalGuide,
+  workspace: TfnWorkspace,
+): Blob {
+  const archive = buildTfnArchive({
+    guide: guide.guide,
+    entities: guide.entities,
+    workspace,
+  });
   return new Blob([archive], { type: 'application/json' });
 }
 
 export async function parseArchiveBlob(
-  archiveBlob: Blob
-): Promise<LocalGuide> {
+  archiveBlob: Blob,
+): Promise<{ guide: LocalGuide; workspace: TfnWorkspace }> {
   const rawArchive = await readBlobText(archiveBlob);
   const archive = parseTfnArchive(rawArchive);
 
   return {
-    guide: archive.guide,
-    entities: archive.entities,
+    guide: {
+      guide: archive.guide,
+      entities: archive.entities,
+    },
+    workspace: archive.workspace,
   };
 }
 
 export function buildArchiveFile(
   guide: LocalGuide,
-  fileName = 'guide.tfn'
+  workspace: TfnWorkspace,
+  fileName = 'guide.tfn',
 ): File {
-  const archiveBlob = buildArchiveBlob(guide);
+  const archiveBlob = buildArchiveBlob(guide, workspace);
   return new File([archiveBlob], fileName, {
     type: 'application/json',
   });
 }
 
 export async function parseArchiveFile(
-  archiveFile: File
-): Promise<LocalGuide> {
+  archiveFile: File,
+): Promise<{ guide: LocalGuide; workspace: TfnWorkspace }> {
   return parseArchiveBlob(archiveFile);
 }
 

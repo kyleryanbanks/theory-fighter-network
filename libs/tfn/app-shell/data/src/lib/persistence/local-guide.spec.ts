@@ -1,3 +1,6 @@
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   CURRENT_GUIDE_SCHEMA_VERSION,
   assertSupportedSchemaVersion,
@@ -7,15 +10,13 @@ import {
   markEntityUnsaved,
   parseTfnArchive,
   type LocalGuideEntities,
+  type TfnWorkspace,
 } from '../guide';
 import { createStateModel } from '../models';
 import {
   loadGuideFromDirectory,
   saveGuideToDirectory,
 } from './local-guide-node';
-import { mkdtemp, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 
 function buildFixtureEntities(): LocalGuideEntities {
   return {
@@ -50,6 +51,10 @@ function buildFixtureEntities(): LocalGuideEntities {
   };
 }
 
+function buildFixtureWorkspace(): TfnWorkspace {
+  return { todos: [], research: {} };
+}
+
 describe('local guide foundation', () => {
   it('tracks unsaved and synced status per entity in guide metadata', () => {
     const guide = createGuideJson({ gameKey: 'game-demo-1x' });
@@ -77,12 +82,13 @@ describe('local guide foundation', () => {
   it('round-trips .tfn archive with checksum and date restoration', () => {
     const entities = buildFixtureEntities();
     const guide = createGuideJson({ gameKey: entities.game.semanticKey });
+    const workspace = buildFixtureWorkspace();
     markEntityUnsaved(guide, {
       entityType: 'game',
       entityKey: entities.game.semanticKey,
     });
 
-    const archive = buildTfnArchive({ guide, entities });
+    const archive = buildTfnArchive({ guide, entities, workspace });
     const loaded = parseTfnArchive(archive);
 
     expect(loaded.header.format).toBe('TFN_ARCHIVE');
@@ -94,7 +100,8 @@ describe('local guide foundation', () => {
   it('rejects tampered .tfn content via checksum mismatch', () => {
     const entities = buildFixtureEntities();
     const guide = createGuideJson({ gameKey: entities.game.semanticKey });
-    const archive = buildTfnArchive({ guide, entities });
+    const workspace = buildFixtureWorkspace();
+    const archive = buildTfnArchive({ guide, entities, workspace });
 
     const tampered = archive.replace('Demo Fighter', 'Demo Fighter X');
 
@@ -103,7 +110,7 @@ describe('local guide foundation', () => {
 
   it('rejects unknown newer schema versions with upgrade guidance', () => {
     expect(() =>
-      assertSupportedSchemaVersion(CURRENT_GUIDE_SCHEMA_VERSION + 1)
+      assertSupportedSchemaVersion(CURRENT_GUIDE_SCHEMA_VERSION + 1),
     ).toThrow(/upgrade/i);
   });
 
@@ -113,16 +120,18 @@ describe('local guide foundation', () => {
     try {
       const entities = buildFixtureEntities();
       const guide = createGuideJson({ gameKey: entities.game.semanticKey });
+      const workspace = buildFixtureWorkspace();
 
-      await saveGuideToDirectory(tempRoot, { guide, entities });
+      await saveGuideToDirectory(tempRoot, { guide, entities }, workspace);
       const loaded = await loadGuideFromDirectory(tempRoot);
 
-      expect(loaded.guide.gameKey).toBe('game-demo-1x');
-      expect(loaded.entities.game.name).toBe('Demo Fighter');
-      expect(loaded.entities.game.meta.lastUpdatedAt).toBeInstanceOf(Date);
+      expect(loaded.guide.guide.gameKey).toBe('game-demo-1x');
+      expect(loaded.guide.entities.game.name).toBe('Demo Fighter');
+      expect(loaded.guide.entities.game.meta.lastUpdatedAt).toBeInstanceOf(
+        Date,
+      );
     } finally {
       await rm(tempRoot, { recursive: true, force: true });
     }
   });
-
 });
