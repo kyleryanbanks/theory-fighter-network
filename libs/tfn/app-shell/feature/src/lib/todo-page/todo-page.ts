@@ -15,8 +15,15 @@ export class TodoPage {
 
   routeFor(ref: EntityRef): string {
     const paths: Record<EntityRef['entityType'], string> = {
-      game: 'game', stage: 'stages', stageZone: 'zones', character: 'characters',
-      team: 'teams', move: 'moves', sequence: 'sequences', projectile: 'projectiles', matchup: 'matchups',
+      game: 'game',
+      stage: 'stages',
+      stageZone: 'zones',
+      character: 'characters',
+      team: 'teams',
+      move: 'moves',
+      sequence: 'sequences',
+      projectile: 'projectiles',
+      matchup: 'matchups',
     };
     return `/${paths[ref.entityType]}/${ref.entityKey}`;
   }

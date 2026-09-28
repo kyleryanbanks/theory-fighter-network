@@ -18,7 +18,8 @@ describe('TodoQuickAdd', () => {
       providers: [{ provide: TodoStore, useValue: { create } }],
     }).compileComponents();
 
-    const fixture: ComponentFixture<TestHost> = TestBed.createComponent(TestHost);
+    const fixture: ComponentFixture<TestHost> =
+      TestBed.createComponent(TestHost);
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input');
     input.value = '  Check frame data  ';

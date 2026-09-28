@@ -1,57 +1,84 @@
 @if (facade.guide(); as guide) {
-  <section class="home-page" aria-labelledby="home-title">
-    <header class="home-hero">
-      <div>
-        <p class="eyebrow">Guide workspace</p>
-        <h1 id="home-title">{{ guide.entities.game.name }}</h1>
-        <p class="subline">{{ guide.entities.game.version }} · {{ guide.entities.characters.length }} Characters · {{ guide.entities.moves.length }} Moves</p>
-      </div>
-      <a class="quiet-link" routerLink="/todos">Open todos <span aria-hidden="true">→</span></a>
-    </header>
-
-    <div class="home-grid">
-      <section class="panel task-panel" aria-labelledby="tasks-title">
-        <div class="section-heading">
-          <div><p class="eyebrow">Next evidence</p><h2 id="tasks-title">Build the guide</h2></div>
-          <span class="panel-mark" aria-hidden="true">01</span>
-        </div>
-        @for (task of progress.taskProgress(); track task.key) {
-          <article class="task-row">
-            <div class="task-title"><span class="task-dot" aria-hidden="true"></span>{{ task.title }}</div>
-            @for (step of task.steps; track step.key) {
-              <tfn-progress-meter [label]="step.title" [completed]="step.progress.completed" [total]="step.progress.total" />
-            }
-          </article>
-        }
-      </section>
-
-      <section class="panel todo-panel" aria-labelledby="todo-title">
-        <div class="section-heading">
-          <div><p class="eyebrow">Working memory</p><h2 id="todo-title">Capture the next question</h2></div>
-          <a class="text-link" routerLink="/todos">View all</a>
-        </div>
-        <tfn-todo-quick-add />
-        <p class="todo-note">Small unanswered questions become useful research trails.</p>
-      </section>
+<section class="home-page" aria-labelledby="home-title">
+  <header class="home-hero">
+    <div>
+      <p class="eyebrow">Guide workspace</p>
+      <h1 id="home-title">{{ guide.entities.game.name }}</h1>
+      <p class="subline">
+        {{ guide.entities.game.version }} · {{ guide.entities.characters.length
+        }} Characters · {{ guide.entities.moves.length }} Moves
+      </p>
     </div>
+    <a class="quiet-link" routerLink="/todos"
+      >Open todos <span aria-hidden="true">→</span></a
+    >
+  </header>
 
-    <section class="panel checklist-panel" aria-labelledby="checklist-title">
+  <div class="home-grid">
+    <section class="panel task-panel" aria-labelledby="tasks-title">
       <div class="section-heading">
-        <div><p class="eyebrow">Field coverage</p><h2 id="checklist-title">What is getting documented</h2></div>
-        <a class="text-link" routerLink="/characters">Review entities</a>
+        <div>
+          <p class="eyebrow">Next evidence</p>
+          <h2 id="tasks-title">Build the guide</h2>
+        </div>
+        <span class="panel-mark" aria-hidden="true">01</span>
       </div>
-      <div class="coverage-grid">
-        @for (entity of [
-          { label: 'Characters', path: '/characters', count: guide.entities.characters.length },
-          { label: 'Stages', path: '/stages', count: guide.entities.stages.length },
-          { label: 'Moves', path: '/moves', count: guide.entities.moves.length },
-          { label: 'Matchups', path: '/matchups', count: guide.entities.matchups.length }
-        ]; track entity.label) {
-          <a class="coverage-link" [routerLink]="entity.path"><span>{{ entity.label }}</span><strong>{{ entity.count }}</strong></a>
+      @for (task of progress.taskProgress(); track task.key) {
+      <article class="task-row">
+        <div class="task-title">
+          <span class="task-dot" aria-hidden="true"></span>{{ task.title }}
+        </div>
+        @for (step of task.steps; track step.key) {
+        <tfn-progress-meter
+          [label]="step.title"
+          [completed]="step.progress.completed"
+          [total]="step.progress.total"
+        />
         }
-      </div>
+      </article>
+      }
     </section>
+
+    <section class="panel todo-panel" aria-labelledby="todo-title">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Working memory</p>
+          <h2 id="todo-title">Capture the next question</h2>
+        </div>
+        <a class="text-link" routerLink="/todos">View all</a>
+      </div>
+      <tfn-todo-quick-add />
+      <p class="todo-note">
+        Small unanswered questions become useful research trails.
+      </p>
+    </section>
+  </div>
+
+  <section class="panel checklist-panel" aria-labelledby="checklist-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Field coverage</p>
+        <h2 id="checklist-title">What is getting documented</h2>
+      </div>
+      <a class="text-link" routerLink="/characters">Review entities</a>
+    </div>
+    <div class="coverage-grid">
+      @for (entity of [ { label: 'Characters', path: '/characters', count:
+      guide.entities.characters.length }, { label: 'Stages', path: '/stages',
+      count: guide.entities.stages.length }, { label: 'Moves', path: '/moves',
+      count: guide.entities.moves.length }, { label: 'Matchups', path:
+      '/matchups', count: guide.entities.matchups.length } ]; track
+      entity.label) {
+      <a class="coverage-link" [routerLink]="entity.path"
+        ><span>{{ entity.label }}</span><strong>{{ entity.count }}</strong></a
+      >
+      }
+    </div>
   </section>
+</section>
 } @else {
-  <section class="home-empty"><h1>No guide open</h1><p>Create or load a guide to begin.</p></section>
+<section class="home-empty">
+  <h1>No guide open</h1>
+  <p>Create or load a guide to begin.</p>
+</section>
 }
