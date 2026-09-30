@@ -72,23 +72,29 @@ interface TrackingEntityOption {
           }
         }
         @if (trackingType === 'entity') {
-          <label for="todo-entity-key">Entity</label>
-          <select
-            id="todo-entity-key"
-            data-testid="todo-entity-key"
-            [value]="entityKey"
-            (change)="entityKey = $any($event.target).value"
-          >
-            <option value="">Select an entity</option>
-            @for (
-              entity of entities;
-              track entity.entityType + entity.entityKey
-            ) {
-              <option [value]="entity.entityType + ':' + entity.entityKey">
-                {{ entity.label }}
-              </option>
-            }
-          </select>
+          @if (entities.length) {
+            <label for="todo-entity-key">Entity</label>
+            <select
+              id="todo-entity-key"
+              data-testid="todo-entity-key"
+              [value]="entityKey"
+              (change)="entityKey = $any($event.target).value"
+            >
+              <option value="">Select an entity</option>
+              @for (
+                entity of entities;
+                track entity.entityType + entity.entityKey
+              ) {
+                <option [value]="entity.entityType + ':' + entity.entityKey">
+                  {{ entity.label }}
+                </option>
+              }
+            </select>
+          } @else {
+            <p class="tracking-empty" data-testid="todo-entity-empty">
+              No entities are available to track yet.
+            </p>
+          }
         }
       </details>
     </form>
@@ -118,6 +124,11 @@ interface TrackingEntityOption {
       background: #152d23;
       color: #f5faf6;
       padding: 0.4rem 0.6rem;
+    }
+    .tracking-empty {
+      margin: 0;
+      color: #91a89a;
+      font-size: 0.78rem;
     }
     label {
       color: #9db3a4;

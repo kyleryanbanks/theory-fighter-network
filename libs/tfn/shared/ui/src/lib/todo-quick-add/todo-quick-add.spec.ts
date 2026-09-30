@@ -128,4 +128,28 @@ describe('TodoQuickAdd', () => {
       },
     });
   });
+
+  it('shows an empty state when no entities are available to track', async () => {
+    const create = vi.fn();
+    await TestBed.configureTestingModule({
+      imports: [TestHost],
+      providers: [
+        { provide: TodoStore, useValue: { create, createTracked: create } },
+      ],
+    }).compileComponents();
+
+    const fixture: ComponentFixture<TestHost> =
+      TestBed.createComponent(TestHost);
+    fixture.detectChanges();
+    const trackingType = fixture.nativeElement.querySelector(
+      '[data-testid="todo-tracking-type"]',
+    );
+    trackingType.value = 'entity';
+    trackingType.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="todo-entity-empty"]'),
+    ).toBeTruthy();
+  });
 });

@@ -36,11 +36,6 @@ export class GuideHome {
     const entities = this.facade.guide()?.entities;
     if (!entities) return [];
     return [
-      {
-        entityType: 'game' as const,
-        entityKey: entities.game.semanticKey,
-        label: `Game · ${entities.game.name}`,
-      },
       ...entities.characters.map((entity) => ({
         entityType: 'character' as const,
         entityKey: entity.semanticKey,
