@@ -2,13 +2,18 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import {
+  calculateFieldCompletion,
+  createFieldDescriptors,
   LocalGuideFacadeStore,
   ResearchValuesStore,
   TodoStore,
   resolveTodoEstimate,
   type EntityRef,
+  type EntityType,
+  type LocalGuideEntities,
   type TodoEstimateKey,
   type TodoTracking,
+  type ProgressResult,
 } from '@tfn/app-shell/data';
 import { ProgressMeter, TodoQuickAdd } from '@tfn/shared/ui';
 
@@ -29,11 +34,6 @@ export class TodoPage {
     const entities = this.facade.guide()?.entities;
     if (!entities) return [];
     return [
-      {
-        entityType: 'game' as const,
-        entityKey: entities.game.semanticKey,
-        label: `Game · ${entities.game.name}`,
-      },
       ...entities.characters.map((entity) => ({
         entityType: 'character' as const,
         entityKey: entity.semanticKey,
@@ -86,7 +86,46 @@ export class TodoPage {
         ? `Estimated ${tracking.key} · ${tracking.scopeKey}`
         : `Estimated ${tracking.key}`;
     }
-    return `${tracking.entityType} · ${tracking.entityKey}`;
+    return (
+      this.trackingEntities().find(
+        (entity) =>
+          entity.entityType === tracking.entityType &&
+          entity.entityKey === tracking.entityKey,
+      )?.label ?? `${tracking.entityType} · ${tracking.entityKey}`
+    );
+  }
+
+  trackedEntityProgress(tracking: TodoTracking): ProgressResult | undefined {
+    if (tracking.type !== 'entity') return undefined;
+    if (
+      tracking.entityType !== 'character' &&
+      tracking.entityType !== 'move' &&
+      tracking.entityType !== 'stage' &&
+      tracking.entityType !== 'matchup'
+    ) {
+      return undefined;
+    }
+    const guide = this.facade.guide();
+    const entity = guide
+      ? findTrackedEntity(
+          guide.entities,
+          tracking.entityType,
+          tracking.entityKey,
+        )
+      : undefined;
+    if (!entity) return undefined;
+    return calculateFieldCompletion(
+      entity as never,
+      createFieldDescriptors(tracking.entityType) as never,
+    );
+  }
+
+  trackingRoute(tracking: TodoTracking): string | undefined {
+    if (tracking.type !== 'entity') return undefined;
+    return this.routeFor({
+      entityType: tracking.entityType,
+      entityKey: tracking.entityKey,
+    });
   }
 
   openEstimateDialog(tracking: TodoTracking): void {
@@ -175,3 +214,26 @@ type EstimateKind =
   | 'stages'
   | 'universalMoves'
   | 'characterMoves';
+
+function findTrackedEntity(
+  entities: LocalGuideEntities,
+  entityType: Extract<EntityType, 'character' | 'move' | 'stage' | 'matchup'>,
+  entityKey: string,
+): unknown {
+  switch (entityType) {
+    case 'character':
+      return entities.characters.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
+    case 'move':
+      return entities.moves.find((entity) => entity.semanticKey === entityKey);
+    case 'stage':
+      return entities.stages.find((entity) => entity.semanticKey === entityKey);
+    case 'matchup':
+      return entities.matchups.find(
+        (entity) => entity.semanticKey === entityKey,
+      );
+    default:
+      return undefined;
+  }
+}

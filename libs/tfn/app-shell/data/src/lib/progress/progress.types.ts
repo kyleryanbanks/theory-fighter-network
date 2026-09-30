@@ -10,6 +10,7 @@ export interface ProgressResult {
   completed: number;
   total?: number;
   label: string;
+  nextStep?: string;
   state: ProgressState;
 }
 

@@ -22,12 +22,16 @@ export function calculateFieldCompletion<T>(
   const completed = fields.filter((field) =>
     isPopulated(field.getValue(entity)),
   ).length;
+  const nextStep = fields.find(
+    (field) => !isPopulated(field.getValue(entity)),
+  )?.label;
   const label = fields[0]?.groupLabel ?? 'Entity fields';
 
   return {
     completed,
     total: fields.length,
     label,
+    ...(nextStep ? { nextStep } : {}),
     state:
       fields.length === 0
         ? 'blocked'

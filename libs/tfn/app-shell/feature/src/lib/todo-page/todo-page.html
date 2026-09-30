@@ -35,14 +35,32 @@
         <p>Added {{ todo.createdAt | date: 'mediumDate' }}</p>
         @if (todo.tracking; as tracking) {
         <p class="tracking-label">Tracking: {{ trackingLabel(tracking) }}</p>
+        @if (tracking.type === 'entity') { @if (trackedEntityProgress(tracking);
+        as entityProgress) {
+        <tfn-progress-meter
+          class="todo-tracking-progress"
+          [label]="entityProgress.label"
+          [completed]="entityProgress.completed"
+          [total]="entityProgress.total"
+        />
+        @if (entityProgress.nextStep) {
+        <p class="tracking-next-step">Next: {{ entityProgress.nextStep }}</p>
+        } } @else {
+        <tfn-progress-meter
+          class="todo-tracking-progress"
+          [label]="trackingLabel(tracking)"
+          [mappingPending]="true"
+        />
+        } @if (trackingRoute(tracking); as route) {
+        <a class="tracking-action" [routerLink]="route">Open tracked entity</a>
+        } } @else {
         <tfn-progress-meter
           class="todo-tracking-progress"
           [label]="trackingLabel(tracking)"
           [total]="trackedTotal(tracking)"
-          [mappingPending]="tracking.type === 'entity'"
           (estimateRequested)="openEstimateDialog(tracking)"
         />
-        } @if (todo.entityRefs?.length) {
+        } } @if (todo.entityRefs?.length) {
         <div class="links">
           @for (ref of todo.entityRefs; track ref.entityType + ref.entityKey) {
           <a [routerLink]="routeFor(ref)"
@@ -88,14 +106,26 @@
           <p>Completed {{ todo.completedAt | date: 'mediumDate' }}</p>
           @if (todo.tracking; as tracking) {
           <p class="tracking-label">Tracking: {{ trackingLabel(tracking) }}</p>
+          @if (trackedEntityProgress(tracking); as entityProgress) {
+          <tfn-progress-meter
+            class="todo-tracking-progress"
+            [label]="entityProgress.label"
+            [completed]="entityProgress.completed"
+            [total]="entityProgress.total"
+          />
+          @if (entityProgress.nextStep) {
+          <p class="tracking-next-step">Next: {{ entityProgress.nextStep }}</p>
+          } } @else {
           <tfn-progress-meter
             class="todo-tracking-progress"
             [label]="trackingLabel(tracking)"
-            [total]="trackedTotal(tracking)"
-            [mappingPending]="tracking.type === 'entity'"
-            (estimateRequested)="openEstimateDialog(tracking)"
+            [mappingPending]="true"
           />
-          }
+          } @if (trackingRoute(tracking); as route) {
+          <a class="tracking-action" [routerLink]="route"
+            >Open tracked entity</a
+          >
+          } }
         </div>
         <button
           class="delete-button"

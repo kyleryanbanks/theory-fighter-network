@@ -16,6 +16,8 @@ h1 { margin: 0 0 .5rem; color: #142b21; font-size: clamp(2.5rem, 7vw, 5.5rem); l
 .todo-content p { margin: 0; color: #91a89a; font-size: .78rem; }
 .tracking-label { color: #e7b84b !important; }
 .todo-tracking-progress { margin-top: .75rem; }
+.tracking-next-step { color: #dbe7df !important; }
+.tracking-action { display: inline-block; margin-top: .5rem; color: #e7b84b; font-size: .78rem; font-weight: 700; text-decoration: none; }
 .estimate-dialog { position: fixed; top: 50%; left: 50%; z-index: 1000; width: min(420px, calc(100% - 2rem)); max-height: calc(100vh - 2rem); box-sizing: border-box; margin: 0; transform: translate(-50%, -50%); border: 1px solid #527461; border-radius: 6px; padding: 1.5rem; background: #142b21; color: #e7f1eb; }
 .estimate-dialog::backdrop { background: rgba(5, 16, 11, .72); }
 .estimate-dialog h2 { margin: 0 0 1rem; }

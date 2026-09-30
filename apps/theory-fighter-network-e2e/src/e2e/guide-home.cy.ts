@@ -5,15 +5,19 @@ describe('guide home', () => {
     cy.get('[data-testid="guide-empty-state"], [data-testid="guide-toolbar"]', {
       timeout: 10000,
     }).then(($state) => {
-      if ($state.is('[data-testid="guide-empty-state"]')) {
-        cy.get('.backdrop').should('not.exist');
-        cy.get('[data-testid="create-guide"]').click();
-        cy.get('[data-testid="game-name"]').type('Cypress Fighter');
-        cy.get('[data-testid="game-version"]').type('1.0.0');
-        cy.get('[data-testid="create-guide"]').click();
+      if ($state.is('[data-testid="guide-toolbar"]')) {
+        cy.get('[data-testid="close-guide"]').click({ force: true });
       }
     });
 
+    cy.get('[data-testid="guide-empty-state"]', { timeout: 10000 }).should(
+      'be.visible',
+    );
+    cy.get('.backdrop').should('not.exist');
+    cy.get('[data-testid="create-guide"]').click({ force: true });
+    cy.get('[data-testid="game-name"]').type('Cypress Fighter');
+    cy.get('[data-testid="game-version"]').type('1.0.0');
+    cy.get('[data-testid="create-guide"]').click();
     cy.get('[data-testid="guide-toolbar"]').should('be.visible');
     cy.get('[data-testid="guide-nav-home"]').click();
     cy.get('#home-title').should('contain', 'Cypress Fighter');

@@ -103,6 +103,7 @@ describe('progress calculators', () => {
       completed: 2,
       total: 4,
       label: 'Character fields',
+      nextStep: 'Moves',
       state: 'in-progress',
     });
   });
