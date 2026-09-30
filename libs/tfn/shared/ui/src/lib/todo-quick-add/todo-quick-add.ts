@@ -29,7 +29,7 @@ interface TrackingEntityOption {
         <button type="submit" aria-label="Add todo">Add</button>
       </div>
       <details class="tracking-options">
-        <summary>Track against guide progress</summary>
+        <summary>Link this TODO to progress</summary>
         <label for="todo-tracking-type">Track</label>
         <select
           id="todo-tracking-type"

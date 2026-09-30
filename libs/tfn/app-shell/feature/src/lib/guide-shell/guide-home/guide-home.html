@@ -113,9 +113,7 @@
   <h1>No guide open</h1>
   <p>Create or load a guide to begin.</p>
 </section>
-}
-
-@if (trackerManagerOpen()) {
+} @if (trackerManagerOpen()) {
 <dialog
   class="tracker-manager-dialog"
   data-testid="tracker-manager-dialog"
@@ -168,9 +166,7 @@
     }
   </div>
 </dialog>
-}
-
-@if (estimateKey(); as key) {
+} @if (estimateKey(); as key) {
 <dialog class="estimate-dialog" open aria-labelledby="tracker-estimate-title">
   <form (submit)="saveEstimate($event)">
     <p class="eyebrow">Progress estimate</p>

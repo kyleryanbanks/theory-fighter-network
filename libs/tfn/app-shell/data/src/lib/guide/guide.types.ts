@@ -59,7 +59,10 @@ export type TodoTracker =
   | { type: 'guide-progress'; key: TodoEstimateKey; scopeKey?: string }
   | {
       type: 'entity-completion';
-      entityType: Extract<EntityType, 'character' | 'move' | 'stage' | 'matchup'>;
+      entityType: Extract<
+        EntityType,
+        'character' | 'move' | 'stage' | 'matchup'
+      >;
       entityKey: string;
     };
 

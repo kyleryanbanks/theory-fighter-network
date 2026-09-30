@@ -234,7 +234,9 @@ export class GuideHome {
       'universal-move-count': 'universalMoves',
     };
     if (key === 'character-move-count') {
-      this.estimateError.set('Set character move estimates from the TODO page.');
+      this.estimateError.set(
+        'Set character move estimates from the TODO page.',
+      );
       return;
     }
     const result = await this.research.setExpectedCount({

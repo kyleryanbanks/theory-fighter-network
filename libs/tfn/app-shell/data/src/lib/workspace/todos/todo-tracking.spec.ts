@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isPinnedGuideTracker,
-  resolveTodoEstimate,
-} from './todo-tracking';
+import { isPinnedGuideTracker, resolveTodoEstimate } from './todo-tracking';
 
 describe('todo tracking', () => {
   it('resolves aggregate and scoped estimate targets', () => {

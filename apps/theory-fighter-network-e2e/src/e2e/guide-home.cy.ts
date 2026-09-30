@@ -74,9 +74,7 @@ describe('guide home', () => {
     cy.contains('button', 'Open character editor').click();
     cy.get('[data-testid="character-name"]').type('Loki');
     cy.get('[data-testid="add-character"]').click();
-    cy.contains('[data-testid="character-entry"]', 'Loki').should(
-      'be.visible',
-    );
+    cy.contains('[data-testid="character-entry"]', 'Loki').should('be.visible');
     cy.get('[data-testid="guide-nav-home"]').click();
     cy.get('[data-testid="populate-todos"]').click();
 
