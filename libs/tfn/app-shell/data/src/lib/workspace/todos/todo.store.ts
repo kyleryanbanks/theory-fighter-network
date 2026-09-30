@@ -60,12 +60,17 @@ export const TodoStore = signalStore(
     }),
 
     createTracked: rxMutation({
-      operation: (input: { text: string; tracking: TodoTracking }) =>
+      operation: (input: {
+        text: string;
+        tracking: TodoTracking;
+        tracker?: GuideTodo['tracker'];
+      }) =>
         of({
           id: nanoid(),
           text: input.text.trim(),
           status: 'open' as const,
           tracking: input.tracking,
+          tracker: input.tracker,
           createdAt: new Date(),
         }),
       onSuccess: (todo: GuideTodo) => {

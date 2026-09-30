@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { resolveTodoEstimate } from './todo-tracking';
+import {
+  isPinnedGuideTracker,
+  resolveTodoEstimate,
+} from './todo-tracking';
 
 describe('todo tracking', () => {
   it('resolves aggregate and scoped estimate targets', () => {
@@ -37,5 +40,45 @@ describe('todo tracking', () => {
         { expectedCounts: { characters: 4 } },
       ),
     ).toBeUndefined();
+  });
+
+  it('identifies only manager-owned TODOs as pinned guide trackers', () => {
+    expect(
+      isPinnedGuideTracker({
+        id: 'manual',
+        text: 'Research character roster',
+        status: 'open',
+        tracking: { type: 'estimated-count', key: 'character-count' },
+        createdAt: new Date(),
+      }),
+    ).toBe(false);
+    expect(
+      isPinnedGuideTracker({
+        id: 'pinned',
+        text: 'TODO: Add the expected Characters',
+        status: 'open',
+        tracking: { type: 'estimated-count', key: 'character-count' },
+        tracker: { type: 'guide-progress', key: 'character-count' },
+        createdAt: new Date(),
+      }),
+    ).toBe(true);
+    expect(
+      isPinnedGuideTracker({
+        id: 'entity-pinned',
+        text: 'TODO: Complete Ryu',
+        status: 'open',
+        tracking: {
+          type: 'entity',
+          entityType: 'character',
+          entityKey: 'ryu',
+        },
+        tracker: {
+          type: 'entity-completion',
+          entityType: 'character',
+          entityKey: 'ryu',
+        },
+        createdAt: new Date(),
+      }),
+    ).toBe(true);
   });
 });

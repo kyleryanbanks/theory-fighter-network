@@ -1,4 +1,11 @@
-import type { ResearchValues, TodoTracking } from '../../guide';
+import type { GuideTodo, ResearchValues, TodoTracking } from '../../guide';
+
+export function isPinnedGuideTracker(todo: GuideTodo): boolean {
+  return (
+    todo.tracker?.type === 'guide-progress' ||
+    todo.tracker?.type === 'entity-completion'
+  );
+}
 
 export function resolveTodoEstimate(
   tracking: TodoTracking,

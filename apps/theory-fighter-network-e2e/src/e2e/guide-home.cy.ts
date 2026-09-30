@@ -49,20 +49,58 @@ describe('guide home', () => {
     cy.get('.todo-panel').should('have.css', 'display', 'block');
   });
 
-  it('replaces Next Evidence with Todos and can populate evidence TODOs', () => {
+  it('opens the tracker manager and pins selected trackers to TODOs', () => {
     openGuideHome();
 
     cy.get('.task-panel').should('not.exist');
     cy.get('[data-testid="populate-todos"]').click();
-    cy.get('[data-testid="populate-todos"]').click();
+    cy.get('[data-testid="tracker-manager-dialog"]').should('be.visible');
+    cy.get('[data-testid="tracker-manager-row"]').should('have.length', 4);
+    cy.contains('[data-testid="tracker-manager-row"]', 'Characters')
+      .find('button')
+      .contains('Pin to TODOs')
+      .click();
+    cy.contains('[data-testid="tracker-manager-row"]', 'Characters').should(
+      'contain',
+      'Pinned to TODOs',
+    );
     cy.get('[data-testid="guide-nav-todos"]').click();
-    cy.get('.todo-row').should('have.length', 4);
+    cy.get('.todo-row').should('have.length', 1);
+  });
+
+  it('pins Loki completion and move count trackers after adding Loki', () => {
+    openGuideHome();
+
+    cy.contains('button', 'Open character editor').click();
+    cy.get('[data-testid="character-name"]').type('Loki');
+    cy.get('[data-testid="add-character"]').click();
+    cy.contains('[data-testid="character-entry"]', 'Loki').should(
+      'be.visible',
+    );
+    cy.get('[data-testid="guide-nav-home"]').click();
+    cy.get('[data-testid="populate-todos"]').click();
+
+    cy.contains('[data-testid="tracker-manager-row"]', 'Loki completion')
+      .find('button')
+      .contains('Pin to TODOs')
+      .click();
+    cy.contains('[data-testid="tracker-manager-row"]', 'Loki move count')
+      .find('button')
+      .contains('Pin to TODOs')
+      .click();
+    cy.get('[data-testid="guide-nav-todos"]').click();
+    cy.contains('.todo-row', 'Complete Loki').should('be.visible');
+    cy.contains('.todo-row', 'Loki move count').should('be.visible');
   });
 
   it('updates an estimate from a tracked TODO and shows its maximum', () => {
     openGuideHome();
 
     cy.get('[data-testid="populate-todos"]').click();
+    cy.contains('[data-testid="tracker-manager-row"]', 'Characters')
+      .find('button')
+      .contains('Pin to TODOs')
+      .click();
     cy.get('[data-testid="guide-nav-todos"]').click();
     cy.contains('.todo-row', 'Add the expected Characters').as('trackedTodo');
     cy.get('@trackedTodo').find('.estimate-link').click();

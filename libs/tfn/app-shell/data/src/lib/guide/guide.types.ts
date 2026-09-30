@@ -55,12 +55,21 @@ export type TodoTracking =
   | { type: 'estimated-count'; key: TodoEstimateKey; scopeKey?: string }
   | { type: 'entity'; entityType: EntityType; entityKey: string };
 
+export type TodoTracker =
+  | { type: 'guide-progress'; key: TodoEstimateKey; scopeKey?: string }
+  | {
+      type: 'entity-completion';
+      entityType: Extract<EntityType, 'character' | 'move' | 'stage' | 'matchup'>;
+      entityKey: string;
+    };
+
 export interface GuideTodo {
   id: string;
   text: string;
   status: 'open' | 'done';
   entityRefs?: EntityRef[];
   tracking?: TodoTracking;
+  tracker?: TodoTracker;
   createdAt: Date;
   completedAt?: Date;
 }

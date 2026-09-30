@@ -25,9 +25,9 @@
           class="create-button"
           type="button"
           data-testid="populate-todos"
-          (click)="populateTodos()"
+          (click)="trackerManagerOpen.set(true)"
         >
-          Populate Todos
+          Manage trackers
         </button>
         <a class="text-link" routerLink="/todos">View all</a>
       </div>
@@ -113,4 +113,87 @@
   <h1>No guide open</h1>
   <p>Create or load a guide to begin.</p>
 </section>
+}
+
+@if (trackerManagerOpen()) {
+<dialog
+  class="tracker-manager-dialog"
+  data-testid="tracker-manager-dialog"
+  open
+  aria-labelledby="tracker-manager-title"
+>
+  <header class="tracker-manager-header">
+    <div>
+      <p class="eyebrow">Tracker library</p>
+      <h2 id="tracker-manager-title">Manage TODO trackers</h2>
+      <p>Pin progress trackers to keep them in your research queue.</p>
+    </div>
+    <button
+      class="dialog-close"
+      type="button"
+      aria-label="Close tracker manager"
+      (click)="trackerManagerOpen.set(false)"
+    >
+      ×
+    </button>
+  </header>
+  <div class="tracker-manager-actions">
+    <button type="button" (click)="pinAllTrackers()">Pin all</button>
+    <button type="button" (click)="unpinAllTrackers()">Unpin all</button>
+  </div>
+  <div class="tracker-manager-list">
+    @for (tracker of trackerSteps(); track tracker.id) {
+    <article class="tracker-manager-row" data-testid="tracker-manager-row">
+      <div class="tracker-manager-row-heading">
+        <h3>{{ tracker.title }}</h3>
+        @if (isPinnedTracker(tracker)) {
+        <span class="tracker-selected">✓ Pinned to TODOs</span>
+        }
+      </div>
+      <tfn-progress-meter
+        [label]="tracker.progress.label"
+        [completed]="tracker.progress.completed"
+        [total]="tracker.progress.total"
+        (estimateRequested)="openEstimateDialog($any(tracker.tracking).key)"
+      />
+      <button
+        class="tracker-toggle"
+        type="button"
+        [attr.aria-pressed]="isPinnedTracker(tracker)"
+        (click)="toggleTracker(tracker)"
+      >
+        {{ isPinnedTracker(tracker) ? 'Unpin from TODOs' : 'Pin to TODOs' }}
+      </button>
+    </article>
+    }
+  </div>
+</dialog>
+}
+
+@if (estimateKey(); as key) {
+<dialog class="estimate-dialog" open aria-labelledby="tracker-estimate-title">
+  <form (submit)="saveEstimate($event)">
+    <p class="eyebrow">Progress estimate</p>
+    <h2 id="tracker-estimate-title">Set expected total</h2>
+    <label class="estimate-field">
+      <span>Expected total</span>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        required
+        autofocus
+        [value]="estimateValue()"
+        (input)="estimateValue.set($any($event.target).value)"
+      />
+    </label>
+    @if (estimateError()) {
+    <p class="estimate-error" role="alert">{{ estimateError() }}</p>
+    }
+    <div class="estimate-actions">
+      <button type="button" (click)="closeEstimateDialog()">Cancel</button>
+      <button class="create-button" type="submit">Save estimate</button>
+    </div>
+  </form>
+</dialog>
 }
