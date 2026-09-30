@@ -39,4 +39,24 @@ describe('ProgressMeter', () => {
     expect(fixture.nativeElement.querySelector('.estimate-link')).toBeTruthy();
     expect(fixture.nativeElement.textContent).toContain('Estimate needed');
   });
+
+  it('shows pending mapping instead of an estimate action when requested', async () => {
+    @Component({
+      imports: [ProgressMeter],
+      template:
+        '<tfn-progress-meter label="Character Ryu" [mappingPending]="true" />',
+    })
+    class PendingHost {}
+
+    await TestBed.configureTestingModule({
+      imports: [PendingHost],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(PendingHost);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(
+      'Progress mapping pending',
+    );
+    expect(fixture.nativeElement.querySelector('.estimate-link')).toBeNull();
+  });
 });

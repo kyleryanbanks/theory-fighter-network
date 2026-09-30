@@ -20,13 +20,23 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     >
       <span class="meter-fill" [style.width.%]="percent"></span>
     </div>
-    @if (total === undefined) {
-      <button class="estimate-link" type="button" (click)="estimateRequested.emit()">
-        Estimate needed
-      </button>
-    } @else {
-      <small>{{ percent + '%' }}</small>
-    }
+    <div class="meter-footer">
+      @if (total === undefined) {
+        @if (mappingPending) {
+          <small>Progress mapping pending</small>
+        } @else {
+          <button
+            class="estimate-link"
+            type="button"
+            (click)="estimateRequested.emit()"
+          >
+            Estimate needed
+          </button>
+        }
+      } @else {
+        <small>{{ percent + '%' }}</small>
+      }
+    </div>
   `,
   styles: `
     :host {
@@ -56,6 +66,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     small {
       color: #91a89a;
     }
+    .meter-footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
     .estimate-link {
       border: 0;
       padding: 0;
@@ -71,6 +86,7 @@ export class ProgressMeter {
   @Input() completed = 0;
   @Input() total: number | undefined;
   @Input() label = 'Progress';
+  @Input() mappingPending = false;
   @Output() estimateRequested = new EventEmitter<void>();
 
   get percent(): number {
