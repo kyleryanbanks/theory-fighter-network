@@ -19,12 +19,13 @@ export const ResearchValuesStore = signalStore(
   }),
   withMutations((store) => ({
     setExpectedCount: rxMutation({
-      operation: ((
-        kind: 'characters' | 'stages' | 'universalMoves',
-        count: number | undefined,
-      ) =>
+      operation: (input: {
+        kind: 'characters' | 'stages' | 'universalMoves';
+        count: number | undefined;
+      }) =>
         from(
           (async () => {
+            const { kind, count } = input;
             const expectedCounts = {
               ...(store.research().expectedCounts ?? {}),
             };
@@ -44,16 +45,17 @@ export const ResearchValuesStore = signalStore(
                 : undefined,
             };
           })(),
-        )) as any,
+        ),
       onSuccess: (research) => {
         patchState(store, { research, dirty: true });
       },
     }),
 
     setExpectedCharacterMoves: rxMutation({
-      operation: ((characterKey: string, count: number | undefined) =>
+      operation: (input: { characterKey: string; count: number | undefined }) =>
         from(
           (async () => {
+            const { characterKey, count } = input;
             const movesByCharacter = {
               ...(store.research().movesByCharacter ?? {}),
             };
@@ -73,7 +75,7 @@ export const ResearchValuesStore = signalStore(
                 : undefined,
             };
           })(),
-        )) as any,
+        ),
       onSuccess: (research) => {
         patchState(store, { research, dirty: true });
       },

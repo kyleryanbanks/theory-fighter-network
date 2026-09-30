@@ -1,5 +1,4 @@
-import type { ResearchValues } from '../guide';
-import type { LocalGuide } from '../guide';
+import type { LocalGuide, ResearchValues } from '../guide';
 import { calculateCountProgress } from './count-progress';
 import type { HelperTask } from './progress.types';
 

@@ -45,11 +45,22 @@ export interface LocalGuide {
   entities: LocalGuideEntities;
 }
 
+export type TodoEstimateKey =
+  | 'character-count'
+  | 'stage-count'
+  | 'universal-move-count'
+  | 'character-move-count';
+
+export type TodoTracking =
+  | { type: 'estimated-count'; key: TodoEstimateKey; scopeKey?: string }
+  | { type: 'entity'; entityType: EntityType; entityKey: string };
+
 export interface GuideTodo {
   id: string;
   text: string;
   status: 'open' | 'done';
   entityRefs?: EntityRef[];
+  tracking?: TodoTracking;
   createdAt: Date;
   completedAt?: Date;
 }

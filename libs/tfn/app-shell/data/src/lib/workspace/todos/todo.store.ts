@@ -11,6 +11,7 @@ import { from, of } from 'rxjs';
 import type {
   EntityRef,
   GuideTodo,
+  TodoTracking,
   TfnWorkspace,
 } from '../../guide/guide.types';
 
@@ -30,15 +31,44 @@ export const TodoStore = signalStore(
   }),
   withMutations((store) => ({
     create: rxMutation({
-      operation: (text: string, entityRefs?: EntityRef[]) =>
-        of({
+      operation: (
+        text: string,
+        entityRefsOrTracking?: EntityRef[] | TodoTracking,
+        tracking?: TodoTracking,
+      ) => {
+        const entityRefs = Array.isArray(entityRefsOrTracking)
+          ? entityRefsOrTracking
+          : undefined;
+        const trackingValue = Array.isArray(entityRefsOrTracking)
+          ? tracking
+          : entityRefsOrTracking;
+        return of({
           id: nanoid(),
           text: text.trim(),
           status: 'open' as const,
           entityRefs,
+          tracking: trackingValue,
+          createdAt: new Date(),
+        });
+      },
+      onSuccess: (todo) => {
+        patchState(store, (state) => ({
+          todos: [...state.todos, todo],
+          dirty: true,
+        }));
+      },
+    }),
+
+    createTracked: rxMutation({
+      operation: (input: { text: string; tracking: TodoTracking }) =>
+        of({
+          id: nanoid(),
+          text: input.text.trim(),
+          status: 'open' as const,
+          tracking: input.tracking,
           createdAt: new Date(),
         }),
-      onSuccess: (todo) => {
+      onSuccess: (todo: GuideTodo) => {
         patchState(store, (state) => ({
           todos: [...state.todos, todo],
           dirty: true,
