@@ -6,6 +6,7 @@ describe('guide home', () => {
       timeout: 10000,
     }).then(($state) => {
       if ($state.is('[data-testid="guide-empty-state"]')) {
+        cy.get('.backdrop').should('not.exist');
         cy.get('[data-testid="create-guide"]').click();
         cy.get('[data-testid="game-name"]').type('Cypress Fighter');
         cy.get('[data-testid="game-version"]').type('1.0.0');
@@ -44,10 +45,36 @@ describe('guide home', () => {
     cy.get('.todo-panel').should('have.css', 'display', 'block');
   });
 
-  it('makes Next Evidence span the Home content width', () => {
+  it('replaces Next Evidence with Todos and can populate evidence TODOs', () => {
     openGuideHome();
 
-    cy.get('.task-panel').should('have.css', 'grid-column', '1 / -1');
+    cy.get('.task-panel').should('not.exist');
+    cy.get('[data-testid="populate-todos"]').click();
+    cy.get('[data-testid="populate-todos"]').click();
+    cy.get('[data-testid="guide-nav-todos"]').click();
+    cy.get('.todo-row').should('have.length', 4);
+  });
+
+  it('updates an estimate from a tracked TODO and shows its maximum', () => {
+    openGuideHome();
+
+    cy.get('[data-testid="populate-todos"]').click();
+    cy.get('[data-testid="guide-nav-todos"]').click();
+    cy.contains('.todo-row', 'Add the expected Characters').as('trackedTodo');
+    cy.get('@trackedTodo').find('.estimate-link').click();
+    cy.get('dialog[open] input[type="number"]').type('4');
+    cy.contains('dialog[open] button', 'Save estimate').click();
+    cy.get('.todo-row')
+      .filter(':has(.tracking-label)')
+      .first()
+      .find('.todo-tracking-progress strong')
+      .should('have.text', '0 / 4');
+    cy.get('[data-testid="guide-nav-home"]').click();
+    cy.get('.todo-panel').should('contain', 'Working memory');
+    cy.get('[data-testid="guide-nav-todos"]').click();
+    cy.contains('.todo-row', 'Add the expected Characters')
+      .find('.todo-tracking-progress strong')
+      .should('have.text', '0 / 4');
   });
 
   it('uses a readable title color on Home and TODO pages', () => {
@@ -56,18 +83,5 @@ describe('guide home', () => {
     cy.get('#home-title').should('have.css', 'color', 'rgb(20, 43, 33)');
     cy.get('[data-testid="guide-nav-todos"]').click();
     cy.get('#todos-title').should('have.css', 'color', 'rgb(20, 43, 33)');
-  });
-
-  it('opens and closes the progress estimate dialog', () => {
-    openGuideHome();
-
-    cy.get('.estimate-link').first().click();
-    cy.get('dialog[open]').should('be.visible');
-    cy.get('dialog[open]')
-      .should('have.css', 'position', 'fixed')
-      .and('have.css', 'z-index', '1000');
-    cy.get('dialog[open] h2').should('contain', 'How many');
-    cy.contains('button', 'Cancel').click();
-    cy.get('dialog[open]').should('not.exist');
   });
 });

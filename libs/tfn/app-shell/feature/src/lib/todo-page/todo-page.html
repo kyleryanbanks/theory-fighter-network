@@ -12,7 +12,12 @@
     </div>
   </header>
 
-  <section class="composer panel"><tfn-todo-quick-add /></section>
+  <section class="composer panel">
+    <tfn-todo-quick-add
+      [entities]="trackingEntities()"
+      [characters]="characters()"
+    />
+  </section>
 
   <section class="todo-list" aria-label="Open todos">
     @for (todo of todos.openTodos(); track todo.id) {
@@ -28,7 +33,16 @@
       <div class="todo-content">
         <h2>{{ todo.text }}</h2>
         <p>Added {{ todo.createdAt | date: 'mediumDate' }}</p>
-        @if (todo.entityRefs?.length) {
+        @if (todo.tracking; as tracking) {
+        <p class="tracking-label">Tracking: {{ trackingLabel(tracking) }}</p>
+        <tfn-progress-meter
+          class="todo-tracking-progress"
+          [label]="trackingLabel(tracking)"
+          [total]="trackedTotal(tracking)"
+          [mappingPending]="tracking.type === 'entity'"
+          (estimateRequested)="openEstimateDialog(tracking)"
+        />
+        } @if (todo.entityRefs?.length) {
         <div class="links">
           @for (ref of todo.entityRefs; track ref.entityType + ref.entityKey) {
           <a [routerLink]="routeFor(ref)"
@@ -72,6 +86,16 @@
         <div class="todo-content">
           <h2>{{ todo.text }}</h2>
           <p>Completed {{ todo.completedAt | date: 'mediumDate' }}</p>
+          @if (todo.tracking; as tracking) {
+          <p class="tracking-label">Tracking: {{ trackingLabel(tracking) }}</p>
+          <tfn-progress-meter
+            class="todo-tracking-progress"
+            [label]="trackingLabel(tracking)"
+            [total]="trackedTotal(tracking)"
+            [mappingPending]="tracking.type === 'entity'"
+            (estimateRequested)="openEstimateDialog(tracking)"
+          />
+          }
         </div>
         <button
           class="delete-button"
@@ -87,3 +111,44 @@
   </details>
   }
 </section>
+
+@if (estimateKind(); as kind) {
+<dialog class="estimate-dialog" open aria-labelledby="todo-estimate-title">
+  <form (submit)="saveEstimate($event)">
+    <p class="eyebrow">Progress estimate</p>
+    <h2 id="todo-estimate-title">How many {{ kind }}?</h2>
+    @if (kind === 'characterMoves') {
+    <label class="estimate-field">
+      <span>Character</span>
+      <select
+        [value]="estimateCharacterKey()"
+        (change)="estimateCharacterKey.set($any($event.target).value)"
+      >
+        @for (character of characters(); track character.semanticKey) {
+        <option [value]="character.semanticKey">{{ character.name }}</option>
+        }
+      </select>
+    </label>
+    }
+    <label class="estimate-field">
+      <span>Expected total</span>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        required
+        autofocus
+        [value]="estimateValue()"
+        (input)="estimateValue.set($any($event.target).value)"
+      />
+    </label>
+    @if (estimateError()) {
+    <p class="estimate-error" role="alert">{{ estimateError() }}</p>
+    }
+    <div class="estimate-actions">
+      <button type="button" (click)="closeEstimateDialog()">Cancel</button>
+      <button class="create-button" type="submit">Save estimate</button>
+    </div>
+  </form>
+</dialog>
+}

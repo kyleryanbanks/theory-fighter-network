@@ -20,9 +20,22 @@
         <p class="eyebrow">Working memory</p>
         <h2 id="todo-title">Capture the next question</h2>
       </div>
-      <a class="text-link" routerLink="/todos">View all</a>
+      <div class="todo-actions">
+        <button
+          class="create-button"
+          type="button"
+          data-testid="populate-todos"
+          (click)="populateTodos()"
+        >
+          Populate Todos
+        </button>
+        <a class="text-link" routerLink="/todos">View all</a>
+      </div>
     </div>
-    <tfn-todo-quick-add />
+    <tfn-todo-quick-add
+      [entities]="trackingEntities()"
+      [characters]="characters()"
+    />
     <p class="todo-note">
       Small unanswered questions become useful research trails.
     </p>
@@ -71,32 +84,6 @@
         <span aria-hidden="true">→</span>
       </button>
     </section>
-
-    <section class="panel task-panel" aria-labelledby="tasks-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Next evidence</p>
-          <h2 id="tasks-title">Build the guide</h2>
-        </div>
-        <span class="panel-mark" aria-hidden="true">01</span>
-      </div>
-      @for (task of progress.taskProgress(); track task.key) {
-      <article class="task-row">
-        <div class="task-title">
-          <span class="task-dot" aria-hidden="true"></span>{{ task.title }}
-        </div>
-        @for (step of task.steps; track step.key) {
-        <tfn-progress-meter
-          [label]="step.title"
-          [completed]="step.progress.completed"
-          [total]="step.progress.total"
-          (estimateRequested)="openEstimateDialog(step.key)"
-        />
-        }
-      </article>
-      }
-    </section>
-
   </div>
 
   <section class="panel checklist-panel" aria-labelledby="checklist-title">
@@ -126,45 +113,4 @@
   <h1>No guide open</h1>
   <p>Create or load a guide to begin.</p>
 </section>
-}
-
-@if (estimateKind(); as kind) {
-<dialog class="estimate-dialog" open aria-labelledby="estimate-title">
-  <form (submit)="saveEstimate($event)">
-    <p class="eyebrow">Progress estimate</p>
-    <h2 id="estimate-title">How many {{ estimateLabel() }}?</h2>
-    @if (kind === 'characterMoves') {
-    <label class="create-field">
-      <span>Character</span>
-      <select
-        [value]="estimateCharacterKey()"
-        (change)="estimateCharacterKey.set($any($event.target).value)"
-      >
-        @for (character of characters(); track character.semanticKey) {
-        <option [value]="character.semanticKey">{{ character.name }}</option>
-        }
-      </select>
-    </label>
-    }
-    <label class="create-field">
-      <span>Expected total</span>
-      <input
-        type="number"
-        min="0"
-        step="1"
-        required
-        autofocus
-        [value]="estimateValue()"
-        (input)="estimateValue.set($any($event.target).value)"
-      />
-    </label>
-    @if (estimateError()) {
-    <p class="estimate-error" role="alert">{{ estimateError() }}</p>
-    }
-    <div class="estimate-actions">
-      <button type="button" (click)="closeEstimateDialog()">Cancel</button>
-      <button class="create-button" type="submit">Save estimate</button>
-    </div>
-  </form>
-</dialog>
 }

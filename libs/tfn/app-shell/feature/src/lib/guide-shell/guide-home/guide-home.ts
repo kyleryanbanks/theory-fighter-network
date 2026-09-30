@@ -3,20 +3,21 @@ import { Router, RouterLink } from '@angular/router';
 import {
   GuideProgressStore,
   LocalGuideFacadeStore,
-  ResearchValuesStore,
+  TodoStore,
+  type TodoEstimateKey,
 } from '@tfn/app-shell/data';
-import { ProgressMeter, TodoQuickAdd } from '@tfn/shared/ui';
+import { TodoQuickAdd } from '@tfn/shared/ui';
 
 @Component({
   selector: 'tfn-guide-home',
-  imports: [ProgressMeter, RouterLink, TodoQuickAdd],
+  imports: [RouterLink, TodoQuickAdd],
   templateUrl: './guide-home.html',
   styleUrl: './guide-home.css',
 })
 export class GuideHome {
   readonly facade = inject(LocalGuideFacadeStore);
   readonly progress = inject(GuideProgressStore);
-  readonly research = inject(ResearchValuesStore);
+  readonly todos = inject(TodoStore);
   private readonly router = inject(Router);
   readonly creationTypes: Array<{ key: CreationType; label: string }> = [
     { key: 'character', label: 'Character' },
@@ -31,81 +32,74 @@ export class GuideHome {
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? [],
   );
-  readonly estimateKind = signal<EstimateKind | null>(null);
-  readonly estimateValue = signal('');
-  readonly estimateCharacterKey = signal('');
-  readonly estimateError = signal('');
-
-  estimateLabel(): string {
-    if (this.estimateKind() === 'universalMoves') return 'universal Moves';
-    if (this.estimateKind() === 'characterMoves') {
-      const character = this.characters().find(
-        (item) => item.semanticKey === this.estimateCharacterKey(),
-      );
-      return `${character?.name ?? 'character'} Moves`;
-    }
-    return this.estimateKind() ?? '';
-  }
-
-  openEstimateDialog(stepKey: string): void {
-    const kindByStep: Record<string, EstimateKind> = {
-      'character-count': 'characters',
-      'stage-count': 'stages',
-      'universal-move-count': 'universalMoves',
-      'character-move-count': 'characterMoves',
-    };
-    const kind = kindByStep[stepKey];
-    if (!kind) return;
-    this.estimateKind.set(kind);
-    this.estimateValue.set('');
-    this.estimateCharacterKey.set(this.characters()[0]?.semanticKey ?? '');
-    this.estimateError.set('');
-  }
-
-  closeEstimateDialog(): void {
-    this.estimateKind.set(null);
-    this.estimateError.set('');
-  }
-
-  async saveEstimate(event: SubmitEvent): Promise<void> {
-    event.preventDefault();
-    const kind = this.estimateKind();
-    const value = Number(this.estimateValue());
-    if (!kind || !Number.isInteger(value) || value < 0) {
-      this.estimateError.set('Enter a whole number of zero or greater.');
-      return;
-    }
-
-    if (kind === 'characterMoves') {
-      if (!this.estimateCharacterKey()) {
-        this.estimateError.set('Select a character first.');
-        return;
-      }
-      const setExpectedCharacterMoves =
-        this.research.setExpectedCharacterMoves as unknown as (
-          characterKey: string,
-          count: number,
-        ) => Promise<{ status: string; error?: unknown }>;
-      const result = await setExpectedCharacterMoves(
-        this.estimateCharacterKey(),
-        value,
-      );
-      if (result.status === 'error') {
-        this.estimateError.set('The estimate could not be saved.');
-        return;
-      }
-    } else {
-      const setExpectedCount = this.research.setExpectedCount as unknown as (
-        kind: 'characters' | 'stages' | 'universalMoves',
-        count: number,
-      ) => Promise<{ status: string; error?: unknown }>;
-      const result = await setExpectedCount(kind, value);
-      if (result.status === 'error') {
-        this.estimateError.set('The estimate could not be saved.');
-        return;
+  readonly trackingEntities = computed(() => {
+    const entities = this.facade.guide()?.entities;
+    if (!entities) return [];
+    return [
+      {
+        entityType: 'game' as const,
+        entityKey: entities.game.semanticKey,
+        label: `Game · ${entities.game.name}`,
+      },
+      ...entities.characters.map((entity) => ({
+        entityType: 'character' as const,
+        entityKey: entity.semanticKey,
+        label: `Character · ${entity.name}`,
+      })),
+      ...entities.stages.map((entity) => ({
+        entityType: 'stage' as const,
+        entityKey: entity.semanticKey,
+        label: `Stage · ${entity.name}`,
+      })),
+      ...entities.teams.map((entity) => ({
+        entityType: 'team' as const,
+        entityKey: entity.semanticKey,
+        label: `Team · ${entity.semanticKey}`,
+      })),
+      ...entities.moves.map((entity) => ({
+        entityType: 'move' as const,
+        entityKey: entity.semanticKey,
+        label: `Move · ${entity.name}`,
+      })),
+      ...entities.sequences.map((entity) => ({
+        entityType: 'sequence' as const,
+        entityKey: entity.semanticKey,
+        label: `Sequence · ${entity.semanticKey}`,
+      })),
+      ...entities.projectiles.map((entity) => ({
+        entityType: 'projectile' as const,
+        entityKey: entity.semanticKey,
+        label: `Projectile · ${entity.semanticKey}`,
+      })),
+      ...entities.matchups.map((entity) => ({
+        entityType: 'matchup' as const,
+        entityKey: entity.semanticKey,
+        label: `Matchup · ${entity.semanticKey}`,
+      })),
+    ];
+  });
+  async populateTodos(): Promise<void> {
+    const existingKeys = new Set(
+      this.todos
+        .todos()
+        .map((todo) =>
+          todo.tracking?.type === 'estimated-count'
+            ? todo.tracking.key
+            : undefined,
+        )
+        .filter((key): key is TodoEstimateKey => Boolean(key)),
+    );
+    for (const task of this.progress.tasks()) {
+      for (const step of task.steps) {
+        const key = step.key as TodoEstimateKey;
+        if (existingKeys.has(key)) continue;
+        await this.todos.createTracked({
+          text: `TODO: ${step.title}`,
+          tracking: { type: 'estimated-count', key },
+        });
+        existingKeys.add(key);
       }
     }
-    this.closeEstimateDialog();
   }
 
   needsCreationScope(): boolean {
@@ -131,7 +125,6 @@ export class GuideHome {
     });
   }
 }
-
 type CreationType =
   | 'character'
   | 'move'
@@ -139,9 +132,3 @@ type CreationType =
   | 'sequence'
   | 'team'
   | 'matchup';
-
-type EstimateKind =
-  | 'characters'
-  | 'stages'
-  | 'universalMoves'
-  | 'characterMoves';

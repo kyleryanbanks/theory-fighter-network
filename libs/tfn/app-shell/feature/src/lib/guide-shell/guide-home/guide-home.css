@@ -24,6 +24,7 @@ h2 { margin-bottom: 0; font-size: 1.2rem; letter-spacing: -.02em; }
 .task-row { display: grid; gap: .6rem; padding: .9rem 0; border-top: 1px solid #284936; }
 .task-title { display: flex; align-items: center; gap: .55rem; font-weight: 700; }
 .task-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #e7b84b; }
+.starter-todo { justify-self: start; border: 1px solid #527461; border-radius: 4px; padding: .35rem .6rem; background: transparent; color: #e7b84b; cursor: pointer; }
 .todo-panel { display: block; }
 .todo-note { margin-top: 1.25rem; font-size: .88rem; line-height: 1.5; }
 .checklist-panel { margin-top: 1rem; }
