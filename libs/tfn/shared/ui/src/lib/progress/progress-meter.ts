@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'tfn-progress-meter',
@@ -20,7 +20,13 @@ import { Component, Input } from '@angular/core';
     >
       <span class="meter-fill" [style.width.%]="percent"></span>
     </div>
-    <small>{{ total === undefined ? 'Estimate needed' : percent + '%' }}</small>
+    @if (total === undefined) {
+      <button class="estimate-link" type="button" (click)="estimateRequested.emit()">
+        Estimate needed
+      </button>
+    } @else {
+      <small>{{ percent + '%' }}</small>
+    }
   `,
   styles: `
     :host {
@@ -50,12 +56,22 @@ import { Component, Input } from '@angular/core';
     small {
       color: #91a89a;
     }
+    .estimate-link {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: #e7b84b;
+      font: inherit;
+      text-decoration: underline;
+      cursor: pointer;
+    }
   `,
 })
 export class ProgressMeter {
   @Input() completed = 0;
   @Input() total: number | undefined;
   @Input() label = 'Progress';
+  @Output() estimateRequested = new EventEmitter<void>();
 
   get percent(): number {
     if (this.total === undefined || this.total <= 0) return 0;

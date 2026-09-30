@@ -10,6 +10,12 @@ import { ProgressMeter } from './progress-meter';
 })
 class TestHost {}
 
+@Component({
+  imports: [ProgressMeter],
+  template: '<tfn-progress-meter [completed]="2" label="Characters" />',
+})
+class MissingTotalHost {}
+
 describe('ProgressMeter', () => {
   it('renders progress values and a percentage', async () => {
     await TestBed.configureTestingModule({
@@ -21,5 +27,16 @@ describe('ProgressMeter', () => {
 
     expect(fixture.nativeElement.textContent).toContain('2 / 4');
     expect(fixture.nativeElement.textContent).toContain('50%');
+  });
+
+  it('renders an estimate action when the total is missing', async () => {
+    await TestBed.configureTestingModule({
+      imports: [TestHost],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(MissingTotalHost);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.estimate-link')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Estimate needed');
   });
 });

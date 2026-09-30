@@ -14,6 +14,20 @@
     >
   </header>
 
+  <section class="panel todo-panel" aria-labelledby="todo-title">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Working memory</p>
+        <h2 id="todo-title">Capture the next question</h2>
+      </div>
+      <a class="text-link" routerLink="/todos">View all</a>
+    </div>
+    <tfn-todo-quick-add />
+    <p class="todo-note">
+      Small unanswered questions become useful research trails.
+    </p>
+  </section>
+
   <div class="home-grid">
     <section class="panel create-panel" aria-labelledby="create-title">
       <div class="section-heading">
@@ -76,25 +90,13 @@
           [label]="step.title"
           [completed]="step.progress.completed"
           [total]="step.progress.total"
+          (estimateRequested)="openEstimateDialog(step.key)"
         />
         }
       </article>
       }
     </section>
 
-    <section class="panel todo-panel" aria-labelledby="todo-title">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Working memory</p>
-          <h2 id="todo-title">Capture the next question</h2>
-        </div>
-        <a class="text-link" routerLink="/todos">View all</a>
-      </div>
-      <tfn-todo-quick-add />
-      <p class="todo-note">
-        Small unanswered questions become useful research trails.
-      </p>
-    </section>
   </div>
 
   <section class="panel checklist-panel" aria-labelledby="checklist-title">
@@ -124,4 +126,45 @@
   <h1>No guide open</h1>
   <p>Create or load a guide to begin.</p>
 </section>
+}
+
+@if (estimateKind(); as kind) {
+<dialog class="estimate-dialog" open aria-labelledby="estimate-title">
+  <form (submit)="saveEstimate($event)">
+    <p class="eyebrow">Progress estimate</p>
+    <h2 id="estimate-title">How many {{ estimateLabel() }}?</h2>
+    @if (kind === 'characterMoves') {
+    <label class="create-field">
+      <span>Character</span>
+      <select
+        [value]="estimateCharacterKey()"
+        (change)="estimateCharacterKey.set($any($event.target).value)"
+      >
+        @for (character of characters(); track character.semanticKey) {
+        <option [value]="character.semanticKey">{{ character.name }}</option>
+        }
+      </select>
+    </label>
+    }
+    <label class="create-field">
+      <span>Expected total</span>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        required
+        autofocus
+        [value]="estimateValue()"
+        (input)="estimateValue.set($any($event.target).value)"
+      />
+    </label>
+    @if (estimateError()) {
+    <p class="estimate-error" role="alert">{{ estimateError() }}</p>
+    }
+    <div class="estimate-actions">
+      <button type="button" (click)="closeEstimateDialog()">Cancel</button>
+      <button class="create-button" type="submit">Save estimate</button>
+    </div>
+  </form>
+</dialog>
 }

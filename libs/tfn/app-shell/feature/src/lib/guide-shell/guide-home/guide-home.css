@@ -2,22 +2,29 @@
 .home-page { max-width: 1180px; margin: 0 auto; padding: 2.5rem clamp(1rem, 4vw, 3.5rem) 4rem; color: #e7f1eb; }
 .home-hero { display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding-bottom: 2rem; border-bottom: 1px solid #315441; }
 .eyebrow { margin: 0 0 .4rem; color: #e7b84b; font-size: .72rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
-h1 { margin-bottom: .5rem; color: #f7fbf8; font-size: clamp(2rem, 5vw, 4.5rem); line-height: .95; letter-spacing: -.04em; }
+h1 { margin-bottom: .5rem; color: #142b21; font-size: clamp(2rem, 5vw, 4.5rem); line-height: .95; letter-spacing: -.04em; }
 h2 { margin-bottom: 0; font-size: 1.2rem; letter-spacing: -.02em; }
 .subline, .todo-note { margin: 0; color: #9db3a4; }
 .quiet-link, .text-link { color: #e7b84b; text-decoration: none; font-weight: 700; }
 .home-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(280px, .8fr); gap: 1rem; margin-top: 1rem; }
-.create-panel { grid-column: 1 / -1; }
+.create-panel, .task-panel { grid-column: 1 / -1; }
 .create-field { display: grid; gap: .4rem; margin-bottom: .8rem; color: #9db3a4; font-size: .82rem; font-weight: 700; }
 .create-field select { min-height: 2.5rem; border: 1px solid #527461; border-radius: 4px; padding: 0 .7rem; background: #0d2118; color: #f7fbf8; font: inherit; }
 .create-button { min-height: 2.6rem; border: 1px solid #e7b84b; border-radius: 4px; padding: 0 .9rem; background: #e7b84b; color: #142b21; font-weight: 800; cursor: pointer; }
+.estimate-dialog { position: fixed; top: 50%; left: 50%; z-index: 1000; width: min(420px, calc(100% - 2rem)); max-height: calc(100vh - 2rem); box-sizing: border-box; margin: 0; transform: translate(-50%, -50%); border: 1px solid #527461; border-radius: 6px; padding: 1.5rem; background: #142b21; color: #e7f1eb; }
+.estimate-dialog::backdrop { background: rgba(5, 16, 11, .72); }
+.estimate-dialog h2 { margin: 0 0 1rem; }
+.estimate-dialog input { min-height: 2.5rem; border: 1px solid #527461; border-radius: 4px; padding: 0 .7rem; background: #0d2118; color: #f7fbf8; font: inherit; }
+.estimate-actions { display: flex; justify-content: flex-end; gap: .6rem; }
+.estimate-actions button { min-height: 2.5rem; border: 1px solid #527461; border-radius: 4px; padding: 0 .8rem; background: transparent; color: #e7f1eb; cursor: pointer; }
+.estimate-error { color: #ffb4ab; }
 .panel { border: 1px solid #315441; border-radius: 6px; background: #142b21; padding: 1.25rem; }
 .section-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1.2rem; }
 .panel-mark { color: #527461; font-size: .75rem; font-weight: 800; }
 .task-row { display: grid; gap: .6rem; padding: .9rem 0; border-top: 1px solid #284936; }
 .task-title { display: flex; align-items: center; gap: .55rem; font-weight: 700; }
 .task-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #e7b84b; }
-.todo-panel { display: grid; align-content: start; }
+.todo-panel { display: block; }
 .todo-note { margin-top: 1.25rem; font-size: .88rem; line-height: 1.5; }
 .checklist-panel { margin-top: 1rem; }
 .coverage-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; }
