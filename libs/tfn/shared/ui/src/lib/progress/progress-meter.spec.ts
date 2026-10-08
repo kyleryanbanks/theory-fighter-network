@@ -16,6 +16,13 @@ class TestHost {}
 })
 class MissingTotalHost {}
 
+@Component({
+  imports: [ProgressMeter],
+  template:
+    '<tfn-progress-meter label="Team completion" [mappingPending]="true" />',
+})
+class MappingPendingHost {}
+
 describe('ProgressMeter', () => {
   it('renders progress values and a percentage', async () => {
     await TestBed.configureTestingModule({
@@ -40,23 +47,19 @@ describe('ProgressMeter', () => {
     expect(fixture.nativeElement.textContent).toContain('Estimate needed');
   });
 
-  it('shows pending mapping instead of an estimate action when requested', async () => {
-    @Component({
-      imports: [ProgressMeter],
-      template:
-        '<tfn-progress-meter label="Character Ryu" [mappingPending]="true" />',
-    })
-    class PendingHost {}
-
+  it('renders a pending state instead of an estimate action while mapping is pending', async () => {
     await TestBed.configureTestingModule({
-      imports: [PendingHost],
+      imports: [MappingPendingHost],
     }).compileComponents();
-    const fixture = TestBed.createComponent(PendingHost);
+    const fixture = TestBed.createComponent(MappingPendingHost);
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain(
       'Progress mapping pending',
     );
+    expect(
+      fixture.nativeElement.querySelector('[role="progressbar"]'),
+    ).toBeNull();
     expect(fixture.nativeElement.querySelector('.estimate-link')).toBeNull();
   });
 });

@@ -1,0 +1,125 @@
+<h2 mat-dialog-title>What did you find?</h2>
+<mat-dialog-content>
+  <div class="actions" role="group" aria-label="Finding action">
+    <button
+      matButton
+      type="button"
+      data-testid="finding-mode-create"
+      [class.selected]="model().action === 'create'"
+      [attr.aria-pressed]="model().action === 'create'"
+      (click)="selectAction('create')"
+    >
+      Create entity
+    </button>
+    <button
+      matButton
+      type="button"
+      data-testid="finding-mode-update"
+      [class.selected]="model().action === 'update'"
+      [attr.aria-pressed]="model().action === 'update'"
+      (click)="selectAction('update')"
+    >
+      Update entity
+    </button>
+    <button
+      matButton
+      type="button"
+      data-testid="finding-mode-note"
+      [class.selected]="model().action === 'note'"
+      [attr.aria-pressed]="model().action === 'note'"
+      (click)="selectAction('note')"
+    >
+      Add note
+    </button>
+  </div>
+
+  @if (model().action === 'create') {
+  <label class="field">
+    <span>Entity type</span>
+    <select
+      data-testid="finding-entity-type"
+      [value]="model().entityType"
+      (change)="selectEntityType($any($event.target).value)"
+    >
+      @for (option of createTypes; track option.type) {
+      <option [value]="option.type">{{ option.label }}</option>
+      }
+    </select>
+  </label>
+
+  @if (model().entityType === 'move' || model().entityType === 'sequence') {
+  <label class="field">
+    <span>Character scope (optional)</span>
+    <select
+      data-testid="finding-character-scope"
+      [value]="model().characterKey"
+      (change)="selectCharacterScope($any($event.target).value)"
+    >
+      <option value="">Universal</option>
+      @for (character of characters(); track character.key) {
+      <option [value]="character.key">{{ character.label }}</option>
+      }
+    </select>
+  </label>
+  }
+  <p class="handoff">Continue in the existing editor.</p>
+  } @else {
+  <label class="field">
+    <span>Entity type</span>
+    <select
+      data-testid="finding-entity-type"
+      [value]="model().entityType"
+      (change)="selectEntityType($any($event.target).value)"
+    >
+      @for (option of entityTypes; track option.type) {
+      <option [value]="option.type">{{ option.label }}</option>
+      }
+    </select>
+  </label>
+  <label class="field">
+    <span>Entity</span>
+    <select
+      data-testid="finding-entity"
+      [value]="model().entityKey"
+      (change)="selectEntity($any($event.target).value)"
+    >
+      <option value="">Choose an entity</option>
+      @for (entity of entityOptions(); track entity.key) {
+      <option [value]="entity.key">{{ entity.label }}</option>
+      }
+    </select>
+  </label>
+
+  @if (model().action === 'note') {
+  <label class="field">
+    <span>Finding</span>
+    <textarea
+      data-testid="finding-note"
+      rows="4"
+      maxlength="2000"
+      placeholder="What did you discover?"
+      [value]="model().note"
+      (input)="setNote($any($event.target).value)"
+    ></textarea>
+  </label>
+  } @else {
+  <p class="handoff">
+    Continue to this entity's existing detail or management page.
+  </p>
+  } } @if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button matButton type="button" (click)="close()">Cancel</button>
+  <button
+    matButton="filled"
+    type="button"
+    data-testid="finding-continue"
+    [disabled]="!canSubmit() || isSaving()"
+    (click)="submit()"
+  >
+    @if (model().action === 'create') { Open editor } @else if (model().action
+    === 'update') { Open entity } @else { Add finding }
+  </button>
+</mat-dialog-actions>

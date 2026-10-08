@@ -1,5 +1,15 @@
 <tfn-guide-nav />
 
 <section>
-	<router-outlet />
+  <router-outlet />
 </section>
+
+<button
+  mat-fab
+  class="finding-fab"
+  aria-label="Add a finding"
+  title="Add a finding"
+  (click)="openFindingDialog()"
+>
+  <span aria-hidden="true">+</span>
+</button>

@@ -1,0 +1,71 @@
+:host {
+	display: block;
+	min-width: min(30rem, calc(100vw - 3rem));
+}
+
+.actions {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.25rem;
+	margin-bottom: 1.25rem;
+	padding: 0.25rem;
+	border-radius: 0.5rem;
+	background: var(--mat-sys-surface-container);
+}
+
+.actions button {
+	min-width: 0;
+	white-space: normal;
+}
+
+.actions button.selected {
+	background: var(--mat-sys-primary-container);
+	color: var(--mat-sys-on-primary-container);
+}
+
+.field {
+	display: grid;
+	gap: 0.35rem;
+	margin: 0 0 1rem;
+	color: var(--mat-sys-on-surface);
+	font-size: 0.875rem;
+}
+
+.field select,
+.field textarea {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 2.75rem;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--mat-sys-outline-variant);
+	border-radius: 0.35rem;
+	background: var(--mat-sys-surface);
+	color: var(--mat-sys-on-surface);
+	font: inherit;
+}
+
+.field textarea {
+	min-height: 7rem;
+	resize: vertical;
+}
+
+.handoff {
+	margin: 0.25rem 0 0.75rem;
+	color: var(--mat-sys-on-surface-variant);
+	font-size: 0.875rem;
+}
+
+.error {
+	margin: 0.5rem 0 0;
+	color: var(--mat-sys-error);
+}
+
+@media (max-width: 480px) {
+	:host {
+		min-width: min(22rem, calc(100vw - 2rem));
+	}
+
+	.actions {
+		grid-template-columns: 1fr;
+	}
+}

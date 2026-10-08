@@ -16,3 +16,22 @@ section {
 section>router-outlet+* {
 	flex: 1;
 }
+
+.finding-fab {
+	position: fixed;
+	right: 1.5rem;
+	bottom: 1.5rem;
+	z-index: 10;
+}
+
+.finding-fab span {
+	font-size: 1.75rem;
+	line-height: 1;
+}
+
+@media (max-width: 600px) {
+	.finding-fab {
+		right: 1rem;
+		bottom: 1rem;
+	}
+}

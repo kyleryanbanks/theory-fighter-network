@@ -6,37 +6,37 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   template: `
     <div class="meter-heading">
       <span>{{ label }}</span>
-      <strong
-        >{{ completed }}{{ total === undefined ? '' : ' / ' + total }}</strong
+      <strong>{{
+        mappingPending
+          ? 'Pending'
+          : completed + (total === undefined ? '' : ' / ' + total)
+      }}</strong>
+    </div>
+    @if (mappingPending) {
+      <p class="mapping-pending" role="status">Progress mapping pending</p>
+    } @else {
+      <div
+        class="meter-track"
+        role="progressbar"
+        [attr.aria-label]="label"
+        [attr.aria-valuenow]="percent"
+        [attr.aria-valuemin]="0"
+        [attr.aria-valuemax]="100"
       >
-    </div>
-    <div
-      class="meter-track"
-      role="progressbar"
-      [attr.aria-label]="label"
-      [attr.aria-valuenow]="percent"
-      [attr.aria-valuemin]="0"
-      [attr.aria-valuemax]="100"
-    >
-      <span class="meter-fill" [style.width.%]="percent"></span>
-    </div>
-    <div class="meter-footer">
-      @if (total === undefined) {
-        @if (mappingPending) {
-          <small>Progress mapping pending</small>
-        } @else {
-          <button
-            class="estimate-link"
-            type="button"
-            (click)="estimateRequested.emit()"
-          >
-            Estimate needed
-          </button>
-        }
-      } @else {
-        <small>{{ percent + '%' }}</small>
-      }
-    </div>
+        <span class="meter-fill" [style.width.%]="percent"></span>
+      </div>
+    }
+    @if (!mappingPending && total === undefined) {
+      <button
+        class="estimate-link"
+        type="button"
+        (click)="estimateRequested.emit()"
+      >
+        Estimate needed
+      </button>
+    } @else if (!mappingPending) {
+      <small>{{ percent + '%' }}</small>
+    }
   `,
   styles: `
     :host {
@@ -66,11 +66,6 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     small {
       color: #91a89a;
     }
-    .meter-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-    }
     .estimate-link {
       border: 0;
       padding: 0;
@@ -79,6 +74,11 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       font: inherit;
       text-decoration: underline;
       cursor: pointer;
+    }
+    .mapping-pending {
+      margin: 0.45rem 0 0.3rem;
+      color: #91a89a;
+      font-size: 0.8rem;
     }
   `,
 })
