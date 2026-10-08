@@ -10,8 +10,7 @@ export const appShellRoutes: Route[] = [
   },
   {
     path: 'todos',
-    loadComponent: () =>
-      import('../todo-page/todo-page').then((m) => m.TodoPage),
+    loadComponent: () => import('@tfn/todo/feature').then((m) => m.TodoPage),
   },
   { path: 'game', component: GameRoot },
   {
