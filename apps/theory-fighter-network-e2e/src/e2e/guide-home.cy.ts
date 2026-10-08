@@ -65,6 +65,9 @@ describe('guide home', () => {
       'Pinned to TODOs',
     );
     cy.get('[data-testid="guide-nav-todos"]').click();
+    cy.get('[data-testid="populate-todos"]').click();
+    cy.get('[data-testid="tracker-manager-dialog"]').should('be.visible');
+    cy.get('[aria-label="Close tracker manager"]').click();
     cy.get('.todo-row').should('have.length', 1);
   });
 
