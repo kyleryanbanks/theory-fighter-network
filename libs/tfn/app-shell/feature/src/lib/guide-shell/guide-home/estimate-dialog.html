@@ -1,0 +1,38 @@
+<form class="estimate-form" (submit)="save($event)">
+  <h2 mat-dialog-title id="estimate-title">How many {{ label() }}?</h2>
+  <mat-dialog-content>
+    <p class="eyebrow">Progress estimate</p>
+    @if (data.kind === 'characterMoves') {
+    <label class="field">
+      <span>Character</span>
+      <select
+        [value]="characterKey()"
+        (change)="characterKey.set($any($event.target).value)"
+      >
+        @for (character of data.characters; track character.semanticKey) {
+        <option [value]="character.semanticKey">{{ character.name }}</option>
+        }
+      </select>
+    </label>
+    }
+    <label class="field">
+      <span>Expected total</span>
+      <input
+        class="estimate-input"
+        type="number"
+        min="0"
+        step="1"
+        required
+        [value]="value()"
+        (input)="value.set($any($event.target).value)"
+      />
+    </label>
+    @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+    }
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button matButton type="button" (click)="close()">Cancel</button>
+    <button matButton="filled" type="submit">Save estimate</button>
+  </mat-dialog-actions>
+</form>

@@ -76,7 +76,7 @@
           [label]="step.title"
           [completed]="step.progress.completed"
           [total]="step.progress.total"
-          (estimateRequested)="openEstimateDialog(step.key)"
+          (estimateRequested)="openEstimateDialog(step.key, step.progress.total)"
         />
         }
       </article>
@@ -125,43 +125,4 @@
   <h1>No guide open</h1>
   <p>Create or load a guide to begin.</p>
 </section>
-} @if (estimateKind(); as kind) {
-<dialog class="estimate-dialog" open aria-labelledby="estimate-title">
-  <form (submit)="saveEstimate($event)">
-    <p class="eyebrow">Progress estimate</p>
-    <h2 id="estimate-title">How many {{ estimateLabel() }}?</h2>
-    @if (kind === 'characterMoves') {
-    <label class="create-field">
-      <span>Character</span>
-      <select
-        [value]="estimateCharacterKey()"
-        (change)="estimateCharacterKey.set($any($event.target).value)"
-      >
-        @for (character of characters(); track character.semanticKey) {
-        <option [value]="character.semanticKey">{{ character.name }}</option>
-        }
-      </select>
-    </label>
-    }
-    <label class="create-field">
-      <span>Expected total</span>
-      <input
-        type="number"
-        min="0"
-        step="1"
-        required
-        autofocus
-        [value]="estimateValue()"
-        (input)="estimateValue.set($any($event.target).value)"
-      />
-    </label>
-    @if (estimateError()) {
-    <p class="estimate-error" role="alert">{{ estimateError() }}</p>
-    }
-    <div class="estimate-actions">
-      <button type="button" (click)="closeEstimateDialog()">Cancel</button>
-      <button class="create-button" type="submit">Save estimate</button>
-    </div>
-  </form>
-</dialog>
 }
