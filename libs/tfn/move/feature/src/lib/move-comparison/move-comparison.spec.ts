@@ -21,7 +21,9 @@ describe('MoveComparison', () => {
     phases: [
       {
         startup: { duration: { relative: 20 } },
-        effects: { onHit: { hitStop: { relative: 40 }, stun: { relative: 60 } } },
+        effects: {
+          onHit: { hitStop: { relative: 40 }, stun: { relative: 60 } },
+        },
       },
       {
         startup: { duration: { relative: 80 } },
@@ -70,13 +72,19 @@ describe('MoveComparison', () => {
   });
 
   it('lists frame data and hit property fields grouped for selection', () => {
-    const groupLabels = fixture.componentInstance.fieldGroups.map((group) => group.label);
+    const groupLabels = fixture.componentInstance.fieldGroups.map(
+      (group) => group.label,
+    );
     expect(groupLabels).toEqual(['Frame Data', 'Hit Properties']);
 
-    const frameFieldIds = fixture.componentInstance.fieldGroups[0].fields.map((field) => field.id);
+    const frameFieldIds = fixture.componentInstance.fieldGroups[0].fields.map(
+      (field) => field.id,
+    );
     expect(frameFieldIds).toContain('startup.duration');
 
-    const hitFieldIds = fixture.componentInstance.fieldGroups[1].fields.map((field) => field.id);
+    const hitFieldIds = fixture.componentInstance.fieldGroups[1].fields.map(
+      (field) => field.id,
+    );
     expect(hitFieldIds).toContain('effects.onHit.hitStop');
   });
 
@@ -97,7 +105,10 @@ describe('MoveComparison', () => {
   });
 
   it('writes duration changes through updateMovePhaseDuration', async () => {
-    await fixture.componentInstance.updatePosition({ key: 'move-a', relative: 55 });
+    await fixture.componentInstance.updatePosition({
+      key: 'move-a',
+      relative: 55,
+    });
 
     expect(updateMovePhaseDuration).toHaveBeenCalledWith({
       moveKey: 'move-a',
@@ -111,7 +122,10 @@ describe('MoveComparison', () => {
     fixture.componentInstance.setComparisonField('effects.onHit.hitStop');
     fixture.detectChanges();
 
-    await fixture.componentInstance.updatePosition({ key: 'move-a', relative: 55 });
+    await fixture.componentInstance.updatePosition({
+      key: 'move-a',
+      relative: 55,
+    });
 
     expect(updateMoveOutcomeDataValue).toHaveBeenCalledWith({
       moveKey: 'move-a',

@@ -133,7 +133,10 @@ export class MoveComparison {
   private readonly route = inject(ActivatedRoute);
   readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
   readonly selectedKeys = signal(
-    this.route.snapshot.queryParamMap.get('moveKeys')?.split(',').filter(Boolean) ?? [],
+    this.route.snapshot.queryParamMap
+      .get('moveKeys')
+      ?.split(',')
+      .filter(Boolean) ?? [],
   );
   readonly comparisonType = signal<ComparisonType>({
     fieldId: 'startup.duration',
