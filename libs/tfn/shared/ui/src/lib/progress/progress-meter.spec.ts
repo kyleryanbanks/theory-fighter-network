@@ -24,7 +24,7 @@ class MissingTotalHost {}
 class MappingPendingHost {}
 
 describe('ProgressMeter', () => {
-  it('renders progress values and a percentage', async () => {
+  it('renders progress values, a percentage, and the estimate action', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHost],
     }).compileComponents();
@@ -34,9 +34,17 @@ describe('ProgressMeter', () => {
 
     expect(fixture.nativeElement.textContent).toContain('2 / 4');
     expect(fixture.nativeElement.textContent).toContain('50%');
+    expect(
+      fixture.nativeElement.querySelector('.estimate-link')?.textContent,
+    ).toContain('Update estimate');
+
+    const footer = fixture.nativeElement.querySelector('.meter-footer');
+    expect(footer.querySelector('.estimate-link')).toBeTruthy();
+    expect(footer.querySelector('small').textContent.trim()).toBe('50%');
+    expect(getComputedStyle(footer).justifyContent).toBe('space-between');
   });
 
-  it('renders an estimate action when the total is missing', async () => {
+  it('renders the update estimate action when the total is missing', async () => {
     await TestBed.configureTestingModule({
       imports: [TestHost],
     }).compileComponents();
@@ -44,7 +52,7 @@ describe('ProgressMeter', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.estimate-link')).toBeTruthy();
-    expect(fixture.nativeElement.textContent).toContain('Estimate needed');
+    expect(fixture.nativeElement.textContent).toContain('Update estimate');
   });
 
   it('renders a pending state instead of an estimate action while mapping is pending', async () => {

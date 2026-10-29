@@ -26,16 +26,17 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
         <span class="meter-fill" [style.width.%]="percent"></span>
       </div>
     }
-    @if (!mappingPending && total === undefined) {
-      <button
-        class="estimate-link"
-        type="button"
-        (click)="estimateRequested.emit()"
-      >
-        Estimate needed
-      </button>
-    } @else if (!mappingPending) {
-      <small>{{ percent + '%' }}</small>
+    @if (!mappingPending) {
+      <div class="meter-footer">
+        <button
+          class="estimate-link"
+          type="button"
+          (click)="estimateRequested.emit()"
+        >
+          Update estimate
+        </button>
+        <small>{{ percent + '%' }}</small>
+      </div>
     }
   `,
   styles: `
@@ -65,6 +66,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     }
     small {
       color: #91a89a;
+    }
+    .meter-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.3rem;
     }
     .estimate-link {
       border: 0;
