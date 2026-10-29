@@ -1,5 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   createDataValue,
   createFrameStage,
@@ -130,8 +130,11 @@ function getIn(
 })
 export class MoveComparison {
   readonly facade = inject(LocalGuideFacadeStore);
+  private readonly route = inject(ActivatedRoute);
   readonly moves = computed(() => this.facade.guide()?.entities.moves ?? []);
-  readonly selectedKeys = signal<string[]>([]);
+  readonly selectedKeys = signal(
+    this.route.snapshot.queryParamMap.get('moveKeys')?.split(',').filter(Boolean) ?? [],
+  );
   readonly comparisonType = signal<ComparisonType>({
     fieldId: 'startup.duration',
     phaseIndex: 0,

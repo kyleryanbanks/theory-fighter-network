@@ -96,7 +96,7 @@ describe('quick finding flow', () => {
 
     cy.get('[data-testid="move-name"]').type('Jab');
     cy.get('[data-testid="add-move"]').click();
-    cy.contains('[data-testid="move-entry"]', 'Jab').should('be.visible');
+    cy.contains('td.mat-column-move', 'Jab').should('be.visible');
 
     openFinding();
     cy.get('[data-testid="finding-entity-type"]').select('sequence');

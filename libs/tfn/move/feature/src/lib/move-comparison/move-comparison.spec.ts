@@ -1,11 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import {
+  ActivatedRoute,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
 import { LocalGuideFacadeStore } from '@tfn/app-shell/data';
 import { vi } from 'vitest';
 import { MoveComparison } from './move-comparison';
 
 describe('MoveComparison', () => {
   let fixture: ComponentFixture<MoveComparison>;
+  const routeSnapshot = { queryParamMap: convertToParamMap({}) };
   const moveA = {
     gameKey: 'game-1',
     semanticKey: 'move-a',
@@ -27,12 +32,14 @@ describe('MoveComparison', () => {
   const updateMoveOutcomeDataValue = vi.fn(async () => ({ status: 'success' }));
 
   beforeEach(async () => {
+    routeSnapshot.queryParamMap = convertToParamMap({});
     updateMovePhaseDuration.mockClear();
     updateMoveOutcomeDataValue.mockClear();
     await TestBed.configureTestingModule({
       imports: [MoveComparison],
       providers: [
         provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: routeSnapshot } },
         {
           provide: LocalGuideFacadeStore,
           useValue: {
@@ -52,6 +59,14 @@ describe('MoveComparison', () => {
   it('defaults to comparing startup duration on the first phase', () => {
     const [pin] = fixture.componentInstance.pins();
     expect(pin.relative).toBe(20);
+  });
+
+  it('initializes selected moves from the move table route parameters', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({ moveKeys: 'move-a' });
+    const routedFixture = TestBed.createComponent(MoveComparison);
+    routedFixture.detectChanges();
+
+    expect(routedFixture.componentInstance.selectedKeys()).toEqual(['move-a']);
   });
 
   it('lists frame data and hit property fields grouped for selection', () => {
