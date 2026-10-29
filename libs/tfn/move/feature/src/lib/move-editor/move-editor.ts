@@ -69,9 +69,9 @@ export class MoveEditor {
   readonly searchQuery = signal('');
   readonly completenessFilter = signal<CompletenessFilter>('all');
   readonly selectedMoveKeys = signal<string[]>([]);
-  readonly todoFeedback = signal<
-    { message: string; error: boolean } | null
-  >(null);
+  readonly todoFeedback = signal<{ message: string; error: boolean } | null>(
+    null,
+  );
   readonly rowKey = (row: MoveTableRow) => row.move.semanticKey;
 
   readonly allMoveRows = computed((): MoveTableRow[] => {

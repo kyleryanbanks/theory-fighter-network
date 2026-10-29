@@ -146,10 +146,14 @@ describe('MoveEditor', () => {
         entityKey: 'move-parry',
       },
     });
-    expect(fixture.nativeElement.querySelector('[role="status"]')?.textContent)
-      .toContain('Todo added for Universal Parry');
-    expect(fixture.nativeElement.querySelector('[role="status"] a')?.getAttribute('href'))
-      .toBe('/todos');
+    expect(
+      fixture.nativeElement.querySelector('[role="status"]')?.textContent,
+    ).toContain('Todo added for Universal Parry');
+    expect(
+      fixture.nativeElement
+        .querySelector('[role="status"] a')
+        ?.getAttribute('href'),
+    ).toBe('/todos');
   });
 
   it('reports when the Todo could not be added', async () => {
@@ -167,8 +171,9 @@ describe('MoveEditor', () => {
       .click();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent)
-      .toContain('Todo could not be added');
+    expect(
+      fixture.nativeElement.querySelector('[role="alert"]')?.textContent,
+    ).toContain('Todo could not be added');
   });
 
   it('carries selected move keys into the comparison route', () => {

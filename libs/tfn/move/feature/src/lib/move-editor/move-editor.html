@@ -77,11 +77,9 @@
 
   @if (moveError()) {
   <p class="move-alert" role="alert">{{ moveError() }}</p>
-  }
-  @if (todoFeedback(); as feedback) {
+  } @if (todoFeedback(); as feedback) {
   <p class="todo-feedback" [attr.role]="feedback.error ? 'alert' : 'status'">
-    {{ feedback.message }}
-    @if (!feedback.error) {
+    {{ feedback.message }} @if (!feedback.error) {
     <a routerLink="/todos">View Todos</a>
     }
   </p>
