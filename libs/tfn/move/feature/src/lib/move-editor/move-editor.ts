@@ -12,17 +12,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import type { DataValue, MoveDocument, MovePhase } from '@tfn/app-shell/data';
 import {
   LocalGuideFacadeStore,
   TodoStore,
   resolveEffectiveMove,
 } from '@tfn/app-shell/data';
+import type { EntityTableCellContext, EntityTableColumn } from '@tfn/shared/ui';
 import { DeleteButton, EntityTable } from '@tfn/shared/ui';
-import type { DataValue, MoveDocument, MovePhase } from '@tfn/app-shell/data';
-import type {
-  EntityTableCellContext,
-  EntityTableColumn,
-} from '@tfn/shared/ui';
 
 interface MoveDraft {
   name: string;
@@ -61,9 +58,8 @@ export class MoveEditor {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly todos = inject(TodoStore);
-  private readonly actionsCell = viewChild<
-    TemplateRef<EntityTableCellContext<MoveTableRow>>
-  >('actionsCell');
+  private readonly actionsCell =
+    viewChild<TemplateRef<EntityTableCellContext<MoveTableRow>>>('actionsCell');
   readonly characters = computed(
     () => this.facade.guide()?.entities.characters ?? [],
   );
@@ -73,6 +69,9 @@ export class MoveEditor {
   readonly searchQuery = signal('');
   readonly completenessFilter = signal<CompletenessFilter>('all');
   readonly selectedMoveKeys = signal<string[]>([]);
+  readonly todoFeedback = signal<
+    { message: string; error: boolean } | null
+  >(null);
   readonly rowKey = (row: MoveTableRow) => row.move.semanticKey;
 
   readonly allMoveRows = computed((): MoveTableRow[] => {
@@ -90,7 +89,8 @@ export class MoveEditor {
         ? allMoves.filter((move) => !move.characterKey)
         : [
             ...allMoves.filter(
-              (move) => !move.characterKey && !overriddenKeys.has(move.semanticKey),
+              (move) =>
+                !move.characterKey && !overriddenKeys.has(move.semanticKey),
             ),
             ...ownMoves,
           ];
@@ -110,7 +110,7 @@ export class MoveEditor {
           ? `Universal · inherited · ${scopedCharacter?.name ?? 'Character'}`
           : sourceMove.parentKey
             ? `Overrides ${sourceMove.parentKey} · ${character?.name ?? 'Character'}`
-            : character?.name ?? 'Universal',
+            : (character?.name ?? 'Universal'),
         input: formatMoveInput(move),
         inputInherited: !!sourceMove.parentKey && !sourceMove.sequence,
         inherited,
@@ -218,15 +218,28 @@ export class MoveEditor {
     }
   }
 
-  addTodo(row: MoveTableRow): void {
-    void this.todos.createTracked({
-      text: `Research ${row.move.name}`,
-      tracking: {
-        type: 'entity',
-        entityType: 'move',
-        entityKey: row.move.semanticKey,
-      },
-    });
+  async addTodo(row: MoveTableRow): Promise<void> {
+    this.todoFeedback.set(null);
+    try {
+      const result = await this.todos.createTracked({
+        text: `Research ${row.move.name}`,
+        tracking: {
+          type: 'entity',
+          entityType: 'move',
+          entityKey: row.move.semanticKey,
+        },
+      });
+      this.todoFeedback.set(
+        result.status === 'error'
+          ? { message: 'Todo could not be added. Try again.', error: true }
+          : { message: `Todo added for ${row.move.name}.`, error: false },
+      );
+    } catch {
+      this.todoFeedback.set({
+        message: 'Todo could not be added. Try again.',
+        error: true,
+      });
+    }
   }
 
   isCompareSelected(row: MoveTableRow): boolean {
@@ -295,12 +308,32 @@ function getErrorMessage(error: unknown): string {
 }
 
 const frameColumns: EntityTableColumn<MoveTableRow>[] = [
-  frameColumn('startup', 'Startup', (row) => row.move.phases?.[0]?.startup?.duration),
-  frameColumn('active', 'Active', (row) => row.move.phases?.[0]?.active?.duration),
-  frameColumn('recovery', 'Recovery', (row) => row.move.phases?.[0]?.recovery?.duration),
+  frameColumn(
+    'startup',
+    'Startup',
+    (row) => row.move.phases?.[0]?.startup?.duration,
+  ),
+  frameColumn(
+    'active',
+    'Active',
+    (row) => row.move.phases?.[0]?.active?.duration,
+  ),
+  frameColumn(
+    'recovery',
+    'Recovery',
+    (row) => row.move.phases?.[0]?.recovery?.duration,
+  ),
   frameColumn('total', 'Total', (row) => totalDuration(row.move.phases?.[0])),
-  frameColumn('onHit', 'On hit', (row) => row.move.phases?.[0]?.effects?.onHit?.stun),
-  frameColumn('onBlock', 'On block', (row) => row.move.phases?.[0]?.effects?.onBlock?.stun),
+  frameColumn(
+    'onHit',
+    'On hit',
+    (row) => row.move.phases?.[0]?.effects?.onHit?.stun,
+  ),
+  frameColumn(
+    'onBlock',
+    'On block',
+    (row) => row.move.phases?.[0]?.effects?.onBlock?.stun,
+  ),
   frameColumn(
     'counterHit',
     'Counter hit',
@@ -329,7 +362,9 @@ function formatMoveInput(move: MoveDocument): string {
       const direction = step.directions.join('');
       const buttons = step.buttons.join('+');
       const input = [direction, buttons].filter(Boolean).join('+');
-      return step.frames && step.frames > 1 ? `${input} (${step.frames}f)` : input;
+      return step.frames && step.frames > 1
+        ? `${input} (${step.frames}f)`
+        : input;
     })
     .filter(Boolean)
     .join(' ');
@@ -380,7 +415,10 @@ function moveCompleteness(row: MoveTableRow): number {
     firstPhase?.effects?.onBlock?.stun,
     firstPhase?.effects?.onCounterHit?.stun,
   ];
-  return Number(!!row.input) +
-    values.filter((value) => value?.exact !== undefined || value?.relative !== undefined)
-      .length;
+  return (
+    Number(!!row.input) +
+    values.filter(
+      (value) => value?.exact !== undefined || value?.relative !== undefined,
+    ).length
+  );
 }

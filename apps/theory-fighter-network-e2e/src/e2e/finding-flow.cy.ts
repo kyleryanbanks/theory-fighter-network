@@ -97,6 +97,13 @@ describe('quick finding flow', () => {
     cy.get('[data-testid="move-name"]').type('Jab');
     cy.get('[data-testid="add-move"]').click();
     cy.contains('td.mat-column-move', 'Jab').should('be.visible');
+    cy.get('[aria-label="Add Todo for Jab"]').click();
+    cy.get('[role="status"]')
+      .should('contain', 'Todo added for Jab')
+      .find('a')
+      .click();
+    cy.location('pathname').should('eq', '/todos');
+    cy.contains('article.todo-row', 'Research Jab').should('be.visible');
 
     openFinding();
     cy.get('[data-testid="finding-entity-type"]').select('sequence');

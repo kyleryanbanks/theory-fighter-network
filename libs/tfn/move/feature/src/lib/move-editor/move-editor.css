@@ -80,6 +80,23 @@ h2 {
   color: #8c1d18;
 }
 
+.todo-feedback {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  border-left: 3px solid #3f6654;
+  padding: 8px 12px;
+  background: #edf5ef;
+  color: #284b38;
+}
+
+.todo-feedback[role='alert'] {
+  border-color: #b42318;
+  background: #fff1f0;
+  color: #8c1d18;
+}
+
 .move-table {
   display: block;
   flex: 1;

@@ -25,9 +25,9 @@
     >
       <mat-option value="">Universal (Game-level)</mat-option>
       @for (character of characters(); track character.semanticKey) {
-        <mat-option [value]="character.semanticKey">
-          {{ character.name }}
-        </mat-option>
+      <mat-option [value]="character.semanticKey">
+        {{ character.name }}
+      </mat-option>
       }
     </mat-select>
   </mat-form-field>
@@ -67,7 +67,7 @@
         [formField]="moveForm.name"
       />
       @if (moveForm.name().touched() && moveForm.name().invalid()) {
-        <mat-error>{{ moveForm.name().errors()[0].message }}</mat-error>
+      <mat-error>{{ moveForm.name().errors()[0].message }}</mat-error>
       }
     </mat-form-field>
     <button matButton="filled" type="submit" data-testid="add-move">
@@ -76,7 +76,15 @@
   </form>
 
   @if (moveError()) {
-    <p class="move-alert" role="alert">{{ moveError() }}</p>
+  <p class="move-alert" role="alert">{{ moveError() }}</p>
+  }
+  @if (todoFeedback(); as feedback) {
+  <p class="todo-feedback" [attr.role]="feedback.error ? 'alert' : 'status'">
+    {{ feedback.message }}
+    @if (!feedback.error) {
+    <a routerLink="/todos">View Todos</a>
+    }
+  </p>
   }
 
   <tfn-entity-table
@@ -99,7 +107,7 @@
         [attr.aria-label]="'Add Todo for ' + row.move.name"
         (click)="addTodo(row)"
       >
-        Todo
+        Add Todo
       </button>
       <label class="compare-toggle">
         <input
@@ -111,34 +119,33 @@
         Compare
       </label>
       @if (row.inherited) {
-        <button
-          matButton="text"
-          type="button"
-          [attr.aria-label]="'Override ' + row.move.name"
-          (click)="overrideMove(row.move.semanticKey)"
-        >
-          Override
-        </button>
+      <button
+        matButton="text"
+        type="button"
+        [attr.aria-label]="'Override ' + row.move.name"
+        (click)="overrideMove(row.move.semanticKey)"
+      >
+        Override
+      </button>
       } @else if (row.move.parentKey) {
-        <tfn-delete-button
-          [ariaLabel]="'Revert ' + row.move.name + ' to Universal'"
-          (delete)="deleteMove(row.move.semanticKey)"
-        />
+      <tfn-delete-button
+        [ariaLabel]="'Revert ' + row.move.name + ' to Universal'"
+        (delete)="deleteMove(row.move.semanticKey)"
+      />
       } @else if (scopeKey() && row.move.characterKey) {
-        <button
-          matButton="text"
-          type="button"
-          [attr.aria-label]="'Promote ' + row.move.name + ' to Universal'"
-          (click)="promoteMove(row.move.semanticKey)"
-        >
-          Promote
-        </button>
-      }
-      @if (!row.inherited && !row.move.parentKey) {
-        <tfn-delete-button
-          [ariaLabel]="'Delete Move ' + row.move.name"
-          (delete)="deleteMove(row.move.semanticKey)"
-        />
+      <button
+        matButton="text"
+        type="button"
+        [attr.aria-label]="'Promote ' + row.move.name + ' to Universal'"
+        (click)="promoteMove(row.move.semanticKey)"
+      >
+        Promote
+      </button>
+      } @if (!row.inherited && !row.move.parentKey) {
+      <tfn-delete-button
+        [ariaLabel]="'Delete Move ' + row.move.name"
+        (delete)="deleteMove(row.move.semanticKey)"
+      />
       }
     </div>
   </ng-template>

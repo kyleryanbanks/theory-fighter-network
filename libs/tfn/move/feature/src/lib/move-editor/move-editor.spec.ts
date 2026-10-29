@@ -48,7 +48,13 @@ describe('MoveEditor', () => {
     overrideMove: vi.fn(async () => ({ status: 'success' })),
     promoteMove: vi.fn(async () => ({ status: 'success' })),
   };
-  const mockTodoStore = { createTracked: vi.fn() };
+  const mockTodoStore = {
+    createTracked: vi.fn(
+      async (): Promise<{ status: string; error?: Error }> => ({
+        status: 'success',
+      }),
+    ),
+  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -121,15 +127,16 @@ describe('MoveEditor', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Sweep');
   });
 
-  it('creates a Todo linked to the move from its row action', () => {
+  it('creates a Todo linked to the move and confirms it was added', async () => {
     guide.set(
-      buildGuide([], [{ name: 'Universal Parry', semanticKey: 'move-parry' }])
+      buildGuide([], [{ name: 'Universal Parry', semanticKey: 'move-parry' }]),
     );
     fixture.detectChanges();
 
     fixture.nativeElement
       .querySelector('[aria-label="Add Todo for Universal Parry"]')
       .click();
+    await fixture.whenStable();
 
     expect(mockTodoStore.createTracked).toHaveBeenCalledWith({
       text: 'Research Universal Parry',
@@ -139,11 +146,34 @@ describe('MoveEditor', () => {
         entityKey: 'move-parry',
       },
     });
+    expect(fixture.nativeElement.querySelector('[role="status"]')?.textContent)
+      .toContain('Todo added for Universal Parry');
+    expect(fixture.nativeElement.querySelector('[role="status"] a')?.getAttribute('href'))
+      .toBe('/todos');
+  });
+
+  it('reports when the Todo could not be added', async () => {
+    mockTodoStore.createTracked.mockResolvedValueOnce({
+      status: 'error',
+      error: new Error('Storage unavailable'),
+    });
+    guide.set(
+      buildGuide([], [{ name: 'Universal Parry', semanticKey: 'move-parry' }]),
+    );
+    fixture.detectChanges();
+
+    fixture.nativeElement
+      .querySelector('[aria-label="Add Todo for Universal Parry"]')
+      .click();
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent)
+      .toContain('Todo could not be added');
   });
 
   it('carries selected move keys into the comparison route', () => {
     guide.set(
-      buildGuide([], [{ name: 'Universal Parry', semanticKey: 'move-parry' }])
+      buildGuide([], [{ name: 'Universal Parry', semanticKey: 'move-parry' }]),
     );
     const router = TestBed.inject(Router);
     const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -153,7 +183,9 @@ describe('MoveEditor', () => {
       .querySelector('[aria-label="Select Universal Parry for comparison"]')
       .click();
     fixture.detectChanges();
-    fixture.nativeElement.querySelector('[data-testid="compare-selected"]').click();
+    fixture.nativeElement
+      .querySelector('[data-testid="compare-selected"]')
+      .click();
 
     expect(navigate).toHaveBeenCalledWith(['/move-comparison'], {
       queryParams: { moveKeys: 'move-parry' },
@@ -194,7 +226,7 @@ describe('MoveEditor', () => {
             characterKey: 'character-ryu',
           },
         ],
-      )
+      ),
     );
     fixture.componentInstance.setScope('character-ryu');
     fixture.detectChanges();
