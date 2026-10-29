@@ -1,0 +1,61 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.entity-table__viewport {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.entity-table__viewport:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th.mat-mdc-header-cell,
+td.mat-mdc-cell {
+  min-width: 7rem;
+  padding: 10px 12px;
+  white-space: nowrap;
+}
+
+th.mat-mdc-header-cell {
+  font-weight: 700;
+}
+
+th.entity-table__priority,
+td.entity-table__priority {
+  min-width: 5rem;
+}
+
+th.mat-mdc-header-cell.mat-mdc-table-sticky,
+td.mat-mdc-cell.mat-mdc-table-sticky {
+  background: #fff;
+}
+
+.entity-table__empty td {
+  padding: 20px 12px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  th.mat-mdc-header-cell,
+  td.mat-mdc-cell {
+    padding-inline: 10px;
+  }
+
+  th.entity-table__priority,
+  td.entity-table__priority {
+    min-width: 4.5rem;
+  }
+}

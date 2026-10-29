@@ -3,6 +3,7 @@ export * from './lib/delete-button/delete-button';
 export * from './lib/entity-detail-shell/entity-detail-shell';
 export * from './lib/entity-metadata/entity-metadata';
 export * from './lib/entity-notes/entity-notes';
+export * from './lib/entity-table/entity-table';
 export * from './lib/exp-panel/expansion-panel';
 export * from './lib/game-state-manager/game-state-manager';
 export * from './lib/link/link';
