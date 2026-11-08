@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="88" fill="#102624" />
+  <path d="M116 54h190l94 94v310H116z" fill="#f2f0e6" />
+  <path d="M306 54v96h94" fill="#4cc9b0" />
+  <rect x="137" y="176" width="170" height="170" rx="12" fill="#b8dcff" />
+  <rect x="205" y="244" width="170" height="170" rx="12" fill="#ffc4b5" />
+  <rect x="205" y="244" width="102" height="102" fill="#b8dcff" />
+  <g fill="#ffc4b5">
+    <rect x="230.5" y="244" width="25.5" height="25.5" />
+    <rect x="281.5" y="244" width="25.5" height="25.5" />
+    <rect x="205" y="269.5" width="25.5" height="25.5" />
+    <rect x="256" y="269.5" width="25.5" height="25.5" />
+    <rect x="230.5" y="295" width="25.5" height="25.5" />
+    <rect x="281.5" y="295" width="25.5" height="25.5" />
+    <rect x="205" y="320.5" width="25.5" height="25.5" />
+    <rect x="256" y="320.5" width="25.5" height="25.5" />
+  </g>
+  <g fill="#000000" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800" text-anchor="middle">
+    <text x="171" y="312">T</text>
+    <text x="256" y="312">F</text>
+    <text x="341" y="312">N</text>
+  </g>
+</svg>
