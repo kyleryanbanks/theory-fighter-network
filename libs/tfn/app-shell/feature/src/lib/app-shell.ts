@@ -32,8 +32,25 @@ export class AppShell implements OnInit {
 
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      this.registerFileLaunchHandler();
       void this.initializeRecentGuides();
     }
+  }
+
+  private registerFileLaunchHandler(): void {
+    const launchQueue = (globalThis as TfnLaunchGlobal).launchQueue;
+    launchQueue?.setConsumer(async ({ files }) => {
+      const fileHandle = files[0];
+      if (!fileHandle) {
+        return;
+      }
+
+      try {
+        await this.loadGuide(await fileHandle.getFile(), fileHandle);
+      } catch {
+        this.recentGuideError.set('The guide could not be opened.');
+      }
+    });
   }
 
   private async initializeRecentGuides(): Promise<void> {
@@ -281,6 +298,14 @@ interface SaveFileHandle extends RecentFileHandle {
 interface SaveFileWritable {
   write(data: File): Promise<void>;
   close(): Promise<void>;
+}
+
+interface TfnLaunchGlobal {
+  launchQueue?: {
+    setConsumer(
+      consumer: (params: { files: RecentFileHandle[] }) => void | Promise<void>,
+    ): void;
+  };
 }
 
 function delay(milliseconds: number): Promise<void> {

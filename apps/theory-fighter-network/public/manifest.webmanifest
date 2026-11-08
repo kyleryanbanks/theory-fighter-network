@@ -1,0 +1,44 @@
+{
+  "id": "./",
+  "name": "Theory Fighter Network",
+  "short_name": "TFN",
+  "description": "A research workspace for fighting games.",
+  "start_url": "./home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#102624",
+  "theme_color": "#102624",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./home",
+      "name": "TFN Guide",
+      "icons": [
+        {
+          "src": "file-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "file-icon-512.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ],
+      "accept": {
+        "application/json": [".tfn"]
+      }
+    }
+  ]
+}

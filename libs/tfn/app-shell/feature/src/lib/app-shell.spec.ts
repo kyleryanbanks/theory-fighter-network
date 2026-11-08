@@ -1,14 +1,14 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { vi } from 'vitest';
 import {
   LocalGuideFacadeStore,
-  RecentGuideUnavailableError,
   RecentGuidePermissionError,
   RecentGuidesService,
+  RecentGuideUnavailableError,
   type RecentGuide,
 } from '@tfn/app-shell/data';
+import { vi } from 'vitest';
 import { AppShell } from './app-shell';
 
 describe('AppShell', () => {
@@ -25,18 +25,19 @@ describe('AppShell', () => {
   const mockStore = {
     hasGuide: signal(false),
     guide: signal<
-      {
-        entities: {
-          game: {
-            name: string;
-            version: string;
-            frameRate: number;
-            is3d: boolean;
-            teamSize: number;
-            inputs: { directions: []; buttons: [] };
+      | {
+          entities: {
+            game: {
+              name: string;
+              version: string;
+              frameRate: number;
+              is3d: boolean;
+              teamSize: number;
+              inputs: { directions: []; buttons: [] };
+            };
           };
-        };
-      } | undefined
+        }
+      | undefined
     >(undefined),
     isBusy: signal(false),
     clearActiveGuide: vi.fn(() => {
@@ -87,24 +88,24 @@ describe('AppShell', () => {
 
   it('shows create and load choices when no Guide is active', () => {
     const headerSlot: HTMLElement = fixture.nativeElement.querySelector(
-      '[data-testid="guide-header-slot"]'
+      '[data-testid="guide-header-slot"]',
     );
     const emptyState: HTMLElement = fixture.nativeElement.querySelector(
-      '[data-testid="guide-empty-state"]'
+      '[data-testid="guide-empty-state"]',
     );
 
     expect(headerSlot).toBeTruthy();
     expect(headerSlot.nextElementSibling).toBe(emptyState);
     expect(emptyState).toBeTruthy();
     expect(
-      emptyState.querySelector('[data-testid="create-guide"]')
+      emptyState.querySelector('[data-testid="create-guide"]'),
     ).toBeTruthy();
     expect(
-      emptyState.querySelector('[data-testid="import-archive"]')
+      emptyState.querySelector('[data-testid="import-archive"]'),
     ).toBeTruthy();
     expect(fixture.nativeElement.querySelector('tfn-game-root')).toBeNull();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-toolbar"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-toolbar"]'),
     ).toBeNull();
   });
 
@@ -121,7 +122,7 @@ describe('AppShell', () => {
               mockRecentGuides.initialized.set(true);
               resolve();
             };
-          })
+          }),
       );
 
       fixture = TestBed.createComponent(AppShell);
@@ -129,30 +130,40 @@ describe('AppShell', () => {
       fixture.detectChanges();
 
       expect(
-        fixture.nativeElement.querySelector('[data-testid="recent-guides-loading"]')
+        fixture.nativeElement.querySelector(
+          '[data-testid="recent-guides-loading"]',
+        ),
       ).toBeNull();
       expect(
-        fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+        fixture.nativeElement.querySelector(
+          '[data-testid="guide-empty-state"]',
+        ),
       ).toBeNull();
 
       await vi.advanceTimersByTimeAsync(200);
       fixture.detectChanges();
       expect(
-        fixture.nativeElement.querySelector('[data-testid="recent-guides-loading"]')
+        fixture.nativeElement.querySelector(
+          '[data-testid="recent-guides-loading"]',
+        ),
       ).toBeTruthy();
 
       finishInitialization?.();
       await vi.advanceTimersByTimeAsync(399);
       fixture.detectChanges();
       expect(
-        fixture.nativeElement.querySelector('[data-testid="recent-guides-loading"]')
+        fixture.nativeElement.querySelector(
+          '[data-testid="recent-guides-loading"]',
+        ),
       ).toBeTruthy();
 
       await vi.advanceTimersByTimeAsync(1);
       fixture.detectChanges();
 
       expect(
-        fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+        fixture.nativeElement.querySelector(
+          '[data-testid="guide-empty-state"]',
+        ),
       ).toBeTruthy();
     } finally {
       vi.useRealTimers();
@@ -209,7 +220,7 @@ describe('AppShell', () => {
       () =>
         new Promise<File>((resolve) => {
           finishOpen = () => resolve(file);
-        })
+        }),
     );
 
     fixture = TestBed.createComponent(AppShell);
@@ -219,10 +230,12 @@ describe('AppShell', () => {
     fixture.detectChanges();
 
     expect(
-      fixture.nativeElement.querySelector('[data-testid="recent-guides-loading"]')
+      fixture.nativeElement.querySelector(
+        '[data-testid="recent-guides-loading"]',
+      ),
     ).toBeNull();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeNull();
 
     finishOpen?.();
@@ -242,7 +255,7 @@ describe('AppShell', () => {
     fixture.destroy();
     recentGuides.set([recentGuide]);
     mockRecentGuides.open.mockRejectedValueOnce(
-      new RecentGuideUnavailableError('missing-fighter.tfn')
+      new RecentGuideUnavailableError('missing-fighter.tfn'),
     );
 
     fixture = TestBed.createComponent(AppShell);
@@ -251,11 +264,11 @@ describe('AppShell', () => {
     fixture.detectChanges();
 
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeTruthy();
     expect(
       fixture.nativeElement.querySelector('[data-testid="recent-guide-error"]')
-        .textContent
+        .textContent,
     ).toContain('missing-fighter.tfn is no longer available');
   });
 
@@ -272,7 +285,7 @@ describe('AppShell', () => {
     fixture.destroy();
     recentGuides.set([recentGuide]);
     mockRecentGuides.open.mockRejectedValueOnce(
-      new RecentGuidePermissionError('permission-fighter.tfn')
+      new RecentGuidePermissionError('permission-fighter.tfn'),
     );
 
     fixture = TestBed.createComponent(AppShell);
@@ -285,7 +298,7 @@ describe('AppShell', () => {
       useSnapshot: true,
     });
     expect(
-      fixture.nativeElement.querySelector('[data-testid="recent-guide-error"]')
+      fixture.nativeElement.querySelector('[data-testid="recent-guide-error"]'),
     ).toBeNull();
   });
 
@@ -310,13 +323,13 @@ describe('AppShell', () => {
 
     expect(mockRecentGuides.open).not.toHaveBeenCalled();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeTruthy();
   });
 
   it('opens the Game editor when creating a new Guide', () => {
     const button: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="create-guide"]'
+      '[data-testid="create-guide"]',
     );
 
     button.click();
@@ -324,7 +337,7 @@ describe('AppShell', () => {
 
     expect(fixture.nativeElement.querySelector('tfn-game-root')).toBeTruthy();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeNull();
   });
 
@@ -332,27 +345,31 @@ describe('AppShell', () => {
     mockStore.hasGuide.set(true);
     fixture.detectChanges();
     const toolbar: HTMLElement = fixture.nativeElement.querySelector(
-      '[data-testid="guide-toolbar"]'
+      '[data-testid="guide-toolbar"]',
     );
     const headerSlot: HTMLElement = fixture.nativeElement.querySelector(
-      '[data-testid="guide-header-slot"]'
+      '[data-testid="guide-header-slot"]',
     );
 
     expect(toolbar).toBeTruthy();
     expect(headerSlot.contains(toolbar)).toBe(true);
     expect(toolbar.querySelector('[data-testid="guide-key"]')).toBeTruthy();
     expect(toolbar.querySelector('[data-testid="busy-status"]')).toBeTruthy();
-    expect(toolbar.querySelector('[data-testid="import-archive"]')).toBeTruthy();
-    expect(toolbar.querySelector('[data-testid="export-archive"]')).toBeTruthy();
-    expect(headerSlot.nextElementSibling?.classList.contains('guide-layout')).toBe(
-      true
-    );
+    expect(
+      toolbar.querySelector('[data-testid="import-archive"]'),
+    ).toBeTruthy();
+    expect(
+      toolbar.querySelector('[data-testid="export-archive"]'),
+    ).toBeTruthy();
+    expect(
+      headerSlot.nextElementSibling?.classList.contains('guide-layout'),
+    ).toBe(true);
     expect(fixture.nativeElement.querySelector('tfn-guide-nav')).toBeTruthy();
   });
 
   it('loads a .tfn file when selected', async () => {
     const input: HTMLInputElement = fixture.nativeElement.querySelector(
-      '[data-testid="import-archive"]'
+      '[data-testid="import-archive"]',
     );
     const file = new File(['{}'], 'import.tfn', {
       type: 'application/json',
@@ -369,7 +386,7 @@ describe('AppShell', () => {
     expect(mockRecentGuides.remember).toHaveBeenCalledWith(
       file,
       'import.tfn',
-      undefined
+      undefined,
     );
     expect(input.accept).toBe('.tfn');
   });
@@ -382,7 +399,7 @@ describe('AppShell', () => {
     const showOpenFilePicker = vi.fn(async () => [handle]);
     vi.stubGlobal('showOpenFilePicker', showOpenFilePicker);
     const fallbackInput: HTMLInputElement = fixture.nativeElement.querySelector(
-      '[data-testid="import-archive"]'
+      '[data-testid="import-archive"]',
     );
 
     await component.chooseTfn(fallbackInput);
@@ -391,7 +408,36 @@ describe('AppShell', () => {
     expect(mockRecentGuides.remember).toHaveBeenCalledWith(
       file,
       'native.tfn',
-      handle
+      handle,
+    );
+  });
+
+  it('loads a .tfn file launched by the installed app', async () => {
+    const file = new File(['{}'], 'launched.tfn', {
+      type: 'application/json',
+    });
+    const handle = { getFile: vi.fn(async () => file) };
+    let consumer:
+      | ((params: { files: (typeof handle)[] }) => void | Promise<void>)
+      | undefined;
+    vi.stubGlobal('launchQueue', {
+      setConsumer: vi.fn((callback) => {
+        consumer = callback;
+      }),
+    });
+
+    fixture.destroy();
+    fixture = TestBed.createComponent(AppShell);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    await consumer?.({ files: [handle] });
+
+    expect(mockStore.importArchive).toHaveBeenCalledWith(file);
+    expect(mockRecentGuides.remember).toHaveBeenCalledWith(
+      file,
+      'launched.tfn',
+      handle,
     );
   });
 
@@ -409,7 +455,7 @@ describe('AppShell', () => {
     fixture.detectChanges();
 
     const button: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="recent-guide-guide-1"]'
+      '[data-testid="recent-guide-guide-1"]',
     );
     button.click();
     await fixture.whenStable();
@@ -420,7 +466,7 @@ describe('AppShell', () => {
     });
     expect(mockStore.importArchive).toHaveBeenCalledWith(expect.any(File));
     const recentButton: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="recent-guide-guide-1"]'
+      '[data-testid="recent-guide-guide-1"]',
     );
     expect(recentButton.textContent).toContain('Marvel Tokon');
     expect(recentButton.textContent).toContain('locals.tfn');
@@ -438,7 +484,7 @@ describe('AppShell', () => {
     };
     recentGuides.set([recentGuide]);
     mockRecentGuides.open.mockRejectedValueOnce(
-      new RecentGuideUnavailableError('missing.tfn')
+      new RecentGuideUnavailableError('missing.tfn'),
     );
     fixture.detectChanges();
 
@@ -449,13 +495,13 @@ describe('AppShell', () => {
     fixture.detectChanges();
 
     const error: HTMLElement = fixture.nativeElement.querySelector(
-      '[data-testid="recent-guide-error"]'
+      '[data-testid="recent-guide-error"]',
     );
     expect(error.textContent).toContain(
-      'missing.tfn is no longer available. Load it again to update this entry.'
+      'missing.tfn is no longer available. Load it again to update this entry.',
     );
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeTruthy();
   });
 
@@ -485,10 +531,9 @@ describe('AppShell', () => {
     });
     fixture.detectChanges();
 
-    const button: HTMLButtonElement =
-      fixture.nativeElement.querySelector(
-        '[data-testid="export-archive"]'
-      );
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+      '[data-testid="export-archive"]',
+    );
 
     button.click();
     await fixture.whenStable();
@@ -510,7 +555,7 @@ describe('AppShell', () => {
     expect(mockRecentGuides.remember).toHaveBeenCalledWith(
       savedFile,
       'MARVEL Tōkon: Fighting Souls',
-      fileHandle
+      fileHandle,
     );
   });
 
@@ -519,24 +564,24 @@ describe('AppShell', () => {
     fixture.detectChanges();
 
     const button: HTMLButtonElement = fixture.nativeElement.querySelector(
-      '[data-testid="close-guide"]'
+      '[data-testid="close-guide"]',
     );
     button.click();
     fixture.detectChanges();
 
     expect(mockStore.clearActiveGuide).toHaveBeenCalledTimes(1);
     expect(
-      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]')
+      fixture.nativeElement.querySelector('[data-testid="guide-empty-state"]'),
     ).toBeTruthy();
     expect(fixture.nativeElement.querySelector('tfn-game-root')).toBeNull();
   });
 
   it('does not expose directory persistence actions', () => {
     expect(
-      fixture.nativeElement.querySelector('[data-testid="open-directory"]')
+      fixture.nativeElement.querySelector('[data-testid="open-directory"]'),
     ).toBeNull();
     expect(
-      fixture.nativeElement.querySelector('[data-testid="save-directory"]')
+      fixture.nativeElement.querySelector('[data-testid="save-directory"]'),
     ).toBeNull();
   });
 });
