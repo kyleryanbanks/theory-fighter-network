@@ -9,6 +9,7 @@ This folder contains the authoritative planning documents for current work. Arch
 - **[03-workflows.md](./03-workflows.md)** — Runtime workflows, persistence, and community behavior
 - **[04-implementation.md](./04-implementation.md)** — Active implementation roadmap and future phases
 - **[05-tfn-format.md](./05-tfn-format.md)** — Locked `.tfn` archive format, validation, and migration rules
+- **[06-regions-and-evidence.md](./06-regions-and-evidence.md)** — Game-agnostic 2D region authoring, image evidence, and follow-on simulation direction
 
 ## Read Policy
 
